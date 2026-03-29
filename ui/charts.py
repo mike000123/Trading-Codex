@@ -3,6 +3,11 @@ ui/charts.py
 ────────────
 Reusable Plotly chart builders.
 All functions return a plotly Figure – call st.plotly_chart(fig, use_container_width=True).
+
+NOTE: We deliberately avoid add_vline() entirely. In recent Plotly versions the
+annotation_position helper (shapeannotation.py) tries to compute _mean(x0, x1)
+which fails when x values are pandas Timestamps. We use add_shape() + add_annotation()
+instead, which bypasses that code path completely.
 """
 from __future__ import annotations
 
@@ -10,10 +15,9 @@ from typing import Optional
 
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 
-# ─── Colour palette (matches theme CSS vars where possible) ─────────────────
+# ─── Colour palette ──────────────────────────────────────────────────────────
 _GREEN = "#26a69a"
 _RED   = "#ef5350"
 _BLUE  = "#4a9eff"
@@ -21,10 +25,32 @@ _GOLD  = "#ffd54f"
 _GREY  = "#9e9eb8"
 
 
+def _draw_vline(fig: go.Figure, ts, color: str, label: str, anchor: str = "right") -> None:
+    """
+    Draw a vertical dashed line + label without using add_vline().
+    ts can be a pandas Timestamp, datetime, or string – all are normalised to ISO str.
+    """
+    x_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
+    fig.add_shape(
+        type="line", xref="x", yref="paper",
+        x0=x_str, x1=x_str, y0=0, y1=1,
+        line=dict(color=color, width=1.5, dash="dash"),
+    )
+    fig.add_annotation(
+        text=label, xref="x", x=x_str,
+        yref="paper", y=0.97,
+        showarrow=False,
+        font=dict(color=color, size=11),
+        bgcolor="rgba(14,17,23,0.6)",
+        borderpad=3,
+        xanchor=anchor,
+    )
+
+
 def price_chart(
     data: pd.DataFrame,
-    entry_date: Optional[pd.Timestamp] = None,
-    exit_date: Optional[pd.Timestamp] = None,
+    entry_date=None,
+    exit_date=None,
     take_profit: Optional[float] = None,
     stop_loss: Optional[float] = None,
     title: str = "Price",
@@ -32,7 +58,6 @@ def price_chart(
     """Candlestick chart with optional entry/exit markers and TP/SL lines."""
     fig = go.Figure()
 
-    # Candlesticks
     fig.add_trace(go.Candlestick(
         x=data["date"],
         open=data["open"],
@@ -44,38 +69,33 @@ def price_chart(
         decreasing_line_color=_RED,
     ))
 
-    # TP / SL horizontal lines
+    # TP / SL horizontal lines (add_hline is safe – it only operates on y)
     if take_profit is not None:
-        fig.add_hline(y=take_profit, line_dash="dot", line_color=_GREEN,
-                      annotation_text=f"TP {take_profit:.4f}",
-                      annotation_position="right")
+        fig.add_hline(y=take_profit, line_dash="dot", line_color=_GREEN)
+        fig.add_annotation(
+            text=f"TP {take_profit:.4f}", xref="paper", x=1.01,
+            y=take_profit, yref="y", showarrow=False,
+            font=dict(color=_GREEN, size=11), xanchor="left",
+        )
     if stop_loss is not None:
-        fig.add_hline(y=stop_loss, line_dash="dot", line_color=_RED,
-                      annotation_text=f"SL {stop_loss:.4f}",
-                      annotation_position="right")
+        fig.add_hline(y=stop_loss, line_dash="dot", line_color=_RED)
+        fig.add_annotation(
+            text=f"SL {stop_loss:.4f}", xref="paper", x=1.01,
+            y=stop_loss, yref="y", showarrow=False,
+            font=dict(color=_RED, size=11), xanchor="left",
+        )
 
-    # Entry / Exit vertical lines
-    # Plotly's add_vline requires a numeric (ms since epoch) or str, not a pandas Timestamp
-    def _to_vline_x(ts) -> str:
-        """Convert any timestamp-like value to an ISO string Plotly accepts."""
-        if ts is None:
-            return None
-        if hasattr(ts, "isoformat"):
-            return ts.isoformat()
-        return str(ts)
-
+    # Entry / Exit vertical lines — safe path, no add_vline
     if entry_date is not None:
-        fig.add_vline(x=_to_vline_x(entry_date), line_dash="dash", line_color=_GREEN,
-                      annotation_text="Entry", annotation_position="top left")
+        _draw_vline(fig, entry_date, _GREEN, "Entry", anchor="right")
     if exit_date is not None:
-        fig.add_vline(x=_to_vline_x(exit_date), line_dash="dash", line_color=_RED,
-                      annotation_text="Exit", annotation_position="top right")
+        _draw_vline(fig, exit_date, _RED, "Exit", anchor="left")
 
     fig.update_layout(
         title=title,
         xaxis_rangeslider_visible=False,
         height=400,
-        margin=dict(l=10, r=10, t=40, b=10),
+        margin=dict(l=10, r=10, t=40, b=30),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#c9d8f5"),
@@ -157,7 +177,14 @@ def pnl_distribution(trades_df: pd.DataFrame) -> go.Figure:
     colors = [_GREEN if v >= 0 else _RED for v in pnl]
 
     fig = go.Figure(go.Bar(x=pnl, marker_color=colors, name="P&L %"))
-    fig.add_vline(x=0, line_color=_GREY, line_dash="dash")
+
+    # Zero line — safe: x-axis here is numeric (return %), not datetime
+    fig.add_shape(
+        type="line", xref="x", yref="paper",
+        x0=0, x1=0, y0=0, y1=1,
+        line=dict(color=_GREY, width=1, dash="dash"),
+    )
+
     fig.update_layout(
         title="Trade P&L Distribution (%)",
         xaxis_title="Return %",
