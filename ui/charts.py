@@ -55,11 +55,20 @@ def price_chart(
                       annotation_position="right")
 
     # Entry / Exit vertical lines
+    # Plotly's add_vline requires a numeric (ms since epoch) or str, not a pandas Timestamp
+    def _to_vline_x(ts) -> str:
+        """Convert any timestamp-like value to an ISO string Plotly accepts."""
+        if ts is None:
+            return None
+        if hasattr(ts, "isoformat"):
+            return ts.isoformat()
+        return str(ts)
+
     if entry_date is not None:
-        fig.add_vline(x=entry_date, line_dash="dash", line_color=_GREEN,
+        fig.add_vline(x=_to_vline_x(entry_date), line_dash="dash", line_color=_GREEN,
                       annotation_text="Entry", annotation_position="top left")
     if exit_date is not None:
-        fig.add_vline(x=exit_date, line_dash="dash", line_color=_RED,
+        fig.add_vline(x=_to_vline_x(exit_date), line_dash="dash", line_color=_RED,
                       annotation_text="Exit", annotation_position="top right")
 
     fig.update_layout(
