@@ -103,7 +103,7 @@ def render() -> None:
 
         # ── Equity curve ─────────────────────────────────────────────────────
         if not result.equity_curve.empty:
-            st.plotly_chart(equity_curve_chart(result.equity_curve, f"{symbol} Equity Curve"), use_container_width=True)
+            st.altair_chart(equity_curve_chart(result.equity_curve, f"{symbol} Equity Curve"), use_container_width=True)
 
         # ── P&L distribution ─────────────────────────────────────────────────
         if result.trades:
@@ -118,7 +118,7 @@ def render() -> None:
                 }
                 for t in result.trades
             ])
-            st.plotly_chart(pnl_distribution(trades_df), use_container_width=True)
+            st.altair_chart(pnl_distribution(trades_df), use_container_width=True)
 
             with st.expander("📋 Trade Log", expanded=False):
                 st.dataframe(trades_df.sort_values("entry_time", ascending=False), use_container_width=True)

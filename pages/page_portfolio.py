@@ -66,21 +66,20 @@ def render() -> None:
             eq = eq.sort_values("exit_time")
             eq["equity"] = 10_000 + eq["pnl"].cumsum()
             eq_chart_df = eq.rename(columns={"exit_time": "date"})
-            st.plotly_chart(
+            st.altair_chart(
                 equity_curve_chart(eq_chart_df, f"Cumulative P&L{' – ' + mode if mode else ''}"),
-                use_container_width=True,
             )
 
         # ── P&L distribution ─────────────────────────────────────────────────
         if not closed.empty:
-            st.plotly_chart(pnl_distribution(closed), use_container_width=True)
+            st.altair_chart(pnl_distribution(closed), use_container_width=True)
 
         # ── Open positions allocation ─────────────────────────────────────────
         open_pos = df[df["outcome"] == "Open"].to_dict("records")
         if open_pos:
             col1, col2 = st.columns([0.4, 0.6])
             with col1:
-                st.plotly_chart(portfolio_allocation_pie(open_pos), use_container_width=True)
+                st.altair_chart(portfolio_allocation_pie(open_pos), use_container_width=True)
             with col2:
                 st.subheader("Open Positions")
                 st.dataframe(

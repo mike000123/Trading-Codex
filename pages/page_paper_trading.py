@@ -135,7 +135,7 @@ def render() -> None:
             stop_loss=sl,
             title=f"{symbol} – Paper Order",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.altair_chart(fig, use_container_width=True)
 
     # ── Open paper positions ─────────────────────────────────────────────────
     st.divider()
