@@ -1,15 +1,15 @@
 """
 pages/page_simulator.py
 ────────────────────────
-Historical Trade Outcome Simulator  (migrated from the original app.py)
-Two modes:
-  1. Given TP/SL → find first hit date
-  2. Given desired profit → suggest TP/SL
+Historical Trade Outcome Simulator (migrated from original app.py).
+Charts built with Altair only — no Plotly, avoids the add_vline/add_hline
+Timestamp bug in the installed Plotly version on the server.
 """
 from __future__ import annotations
 
 from typing import Optional, Tuple
 
+import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -17,10 +17,96 @@ from core.models import Direction, TradeOutcome
 from risk.manager import RiskManager
 from config.settings import settings
 from ui.components import render_mode_banner, render_data_source_selector
-from ui.charts import price_chart
 
 
-# ─── Pure simulation logic (ported from original app.py) ─────────────────
+# ─── Altair chart (replaces price_chart from ui/charts.py) ───────────────────
+
+def _altair_price_chart(
+    data: pd.DataFrame,
+    entry_date=None,
+    exit_date=None,
+    take_profit: Optional[float] = None,
+    stop_loss: Optional[float] = None,
+    title: str = "Price",
+) -> alt.LayerChart:
+    """Pure Altair candlestick-style close-line chart with markers."""
+    base = alt.Chart(data).mark_line(color="#4a9eff").encode(
+        x=alt.X("date:T", title="Date"),
+        y=alt.Y("close:Q", title="Close", scale=alt.Scale(zero=False)),
+        tooltip=["date:T", "close:Q"],
+    )
+
+    layers: list = [base]
+
+    # TP / SL horizontal rules
+    if take_profit is not None:
+        tp_df = pd.DataFrame({"y": [take_profit], "label": [f"TP {take_profit:.4f}"]})
+        tp_rule = alt.Chart(tp_df).mark_rule(color="#26a69a", strokeDash=[4, 4]).encode(y="y:Q")
+        tp_text = alt.Chart(tp_df).mark_text(
+            color="#26a69a", align="right", dx=-4, dy=-6, fontSize=11
+        ).encode(
+            y="y:Q",
+            x=alt.value(560),
+            text="label:N",
+        )
+        layers += [tp_rule, tp_text]
+
+    if stop_loss is not None:
+        sl_df = pd.DataFrame({"y": [stop_loss], "label": [f"SL {stop_loss:.4f}"]})
+        sl_rule = alt.Chart(sl_df).mark_rule(color="#ef5350", strokeDash=[4, 4]).encode(y="y:Q")
+        sl_text = alt.Chart(sl_df).mark_text(
+            color="#ef5350", align="right", dx=-4, dy=-6, fontSize=11
+        ).encode(
+            y="y:Q",
+            x=alt.value(560),
+            text="label:N",
+        )
+        layers += [sl_rule, sl_text]
+
+    # Entry / Exit vertical rules
+    marker_rows = []
+    if entry_date is not None:
+        marker_rows.append({"date": pd.Timestamp(entry_date), "label": "Entry"})
+    if exit_date is not None:
+        marker_rows.append({"date": pd.Timestamp(exit_date), "label": "Exit"})
+
+    if marker_rows:
+        marker_df = pd.DataFrame(marker_rows)
+        colour_scale = alt.Scale(
+            domain=["Entry", "Exit"],
+            range=["#26a69a", "#ef5350"],
+        )
+        rules = (
+            alt.Chart(marker_df)
+            .mark_rule(strokeWidth=2)
+            .encode(
+                x="date:T",
+                color=alt.Color("label:N", scale=colour_scale, legend=None),
+                tooltip=["date:T", "label:N"],
+            )
+        )
+        text_marks = (
+            alt.Chart(marker_df)
+            .mark_text(dy=-10, fontWeight="bold", fontSize=12)
+            .encode(
+                x="date:T",
+                y=alt.value(20),
+                text="label:N",
+                color=alt.Color("label:N", scale=colour_scale, legend=None),
+            )
+        )
+        layers += [rules, text_marks]
+
+    return (
+        alt.layer(*layers)
+        .properties(title=title, height=320)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(gridColor="#1e2130", labelColor="#c9d8f5", titleColor="#c9d8f5")
+        .configure_title(color="#c9d8f5")
+    )
+
+
+# ─── Simulation logic ─────────────────────────────────────────────────────────
 
 def _leveraged_return(entry: float, exit_p: float, lev: float, direction: Direction) -> float:
     raw = (exit_p - entry) / entry
@@ -36,7 +122,8 @@ def _simulate_trade(
 ) -> dict:
     subset = data[data["date"] >= entry_date]
     if subset.empty:
-        return {"outcome": TradeOutcome.NO_DATA, "date": None, "exit_price": None, "ret_pct": None, "notes": "No rows from entry date."}
+        return {"outcome": TradeOutcome.NO_DATA, "date": None, "exit_price": None,
+                "ret_pct": None, "notes": "No rows from entry date."}
 
     entry_price = float(subset.iloc[0]["close"])
     for _, row in subset.iterrows():
@@ -44,17 +131,22 @@ def _simulate_trade(
         hit_tp = high >= take_price if direction == Direction.LONG else low <= take_price
         hit_sl = low <= stop_price if direction == Direction.LONG else high >= stop_price
         if hit_tp and hit_sl:
-            return {"outcome": TradeOutcome.AMBIGUOUS, "date": row["date"], "exit_price": None, "ret_pct": None,
+            return {"outcome": TradeOutcome.AMBIGUOUS, "date": row["date"],
+                    "exit_price": None, "ret_pct": None,
                     "notes": "TP and SL both touched in the same candle."}
         if hit_tp:
-            return {"outcome": TradeOutcome.TAKE_PROFIT, "date": row["date"], "exit_price": take_price,
-                    "ret_pct": _leveraged_return(entry_price, take_price, leverage, direction), "notes": ""}
+            return {"outcome": TradeOutcome.TAKE_PROFIT, "date": row["date"],
+                    "exit_price": take_price,
+                    "ret_pct": _leveraged_return(entry_price, take_price, leverage, direction),
+                    "notes": ""}
         if hit_sl:
-            return {"outcome": TradeOutcome.STOP_LOSS, "date": row["date"], "exit_price": stop_price,
-                    "ret_pct": _leveraged_return(entry_price, stop_price, leverage, direction), "notes": ""}
+            return {"outcome": TradeOutcome.STOP_LOSS, "date": row["date"],
+                    "exit_price": stop_price,
+                    "ret_pct": _leveraged_return(entry_price, stop_price, leverage, direction),
+                    "notes": ""}
 
-    return {"outcome": TradeOutcome.OPEN, "date": None, "exit_price": None, "ret_pct": None,
-            "notes": "Neither threshold hit in available data."}
+    return {"outcome": TradeOutcome.OPEN, "date": None, "exit_price": None,
+            "ret_pct": None, "notes": "Neither threshold hit in available data."}
 
 
 def _suggest_levels(
@@ -83,7 +175,7 @@ def _suggest_levels(
     return take, stop, first_hit, "Stop set just beyond worst adverse move before first TP hit."
 
 
-# ─── Page render ─────────────────────────────────────────────────────────
+# ─── Page ─────────────────────────────────────────────────────────────────────
 
 def render() -> None:
     render_mode_banner()
@@ -91,19 +183,20 @@ def render() -> None:
     st.caption("Load OHLC data, then test leveraged long/short scenarios from any historical date.")
 
     prices = render_data_source_selector()
-
     if prices is None:
         st.info("← Select a data source in the sidebar to begin.")
         return
 
     symbol = st.session_state.get("loaded_symbol", "DATA")
-    st.success(f"**{symbol}** — {len(prices)} bars · {prices['date'].min().date()} → {prices['date'].max().date()}")
+    st.success(
+        f"**{symbol}** — {len(prices)} bars · "
+        f"{prices['date'].min().date()} → {prices['date'].max().date()}"
+    )
 
     with st.expander("📋 Data Preview", expanded=False):
         st.dataframe(prices.tail(50), use_container_width=True)
 
     st.divider()
-
     controls, results = st.columns([1.1, 0.9])
 
     with controls:
@@ -125,7 +218,7 @@ def render() -> None:
         max_loss_pct = 50.0
         st.caption(f"Max stop-loss cap: **{max_loss_pct}%** of capital (enforced automatically)")
 
-        entry_ts = pd.Timestamp(entry_date)
+        entry_ts    = pd.Timestamp(entry_date)
         entry_slice = prices[prices["date"] >= entry_ts]
         entry_close = float(entry_slice.iloc[0]["close"]) if not entry_slice.empty else None
 
@@ -149,26 +242,29 @@ def render() -> None:
             stop_price = c2.number_input("Stop-loss price",   0.0, value=default_sl, key="sim_sl")
 
             if st.button("▶ Run Simulation", type="primary", key="sim_run1"):
-                check = risk.check(
+                check  = risk.check(
                     direction=direction, entry_price=entry_close,
                     take_profit=take_price, stop_loss=stop_price,
                     leverage=leverage, capital_requested=capital,
                 )
                 eff_sl = check.adjusted_sl or stop_price
                 result = _simulate_trade(prices, entry_ts, direction, leverage, take_price, eff_sl)
+                exit_date = result.get("date")
 
                 with results:
                     st.subheader("Result")
                     _show_result(result, capital, eff_sl != stop_price, stop_price, eff_sl)
-                    fig = price_chart(
-                        prices,
-                        entry_date=entry_slice.iloc[0]["date"] if not entry_slice.empty else None,
-                        exit_date=result.get("date"),
-                        take_profit=take_price,
-                        stop_loss=eff_sl,
-                        title=f"{symbol} – Simulation",
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
+
+                entry_marker = entry_slice.iloc[0]["date"] if not entry_slice.empty else None
+                fig = _altair_price_chart(
+                    prices,
+                    entry_date=entry_marker,
+                    exit_date=exit_date,
+                    take_profit=take_price,
+                    stop_loss=eff_sl,
+                    title=f"{symbol} – Simulation",
+                )
+                st.altair_chart(fig, use_container_width=True)
 
         # ── Mode 2 ──────────────────────────────────────────────────────────
         else:
@@ -184,29 +280,35 @@ def render() -> None:
                     if take is None:
                         st.error(note)
                     else:
-                        check = risk.check(
+                        check  = risk.check(
                             direction=direction, entry_price=entry_close,
                             take_profit=take, stop_loss=stop,
                             leverage=leverage, capital_requested=capital,
                         )
                         eff_sl = check.adjusted_sl or stop
-                        sim = _simulate_trade(prices, entry_ts, direction, leverage, take, eff_sl)
+                        sim    = _simulate_trade(prices, entry_ts, direction, leverage, take, eff_sl)
                         _show_levels(take, eff_sl, stop, entry_close, leverage, direction, capital, sim)
-                        fig = price_chart(
-                            prices,
-                            entry_date=entry_slice.iloc[0]["date"] if not entry_slice.empty else None,
-                            exit_date=sim.get("date"),
-                            take_profit=take, stop_loss=eff_sl,
-                            title=f"{symbol} – Suggested Levels",
-                        )
-                        st.plotly_chart(fig, use_container_width=True)
                         st.info(note)
 
+                entry_marker = entry_slice.iloc[0]["date"] if not entry_slice.empty else None
+                fig = _altair_price_chart(
+                    prices,
+                    entry_date=entry_marker,
+                    exit_date=sim.get("date") if take else None,
+                    take_profit=take,
+                    stop_loss=eff_sl if take else None,
+                    title=f"{symbol} – Suggested Levels",
+                )
+                st.altair_chart(fig, use_container_width=True)
 
-def _show_result(result: dict, capital: float, was_capped: bool, orig_sl: float, eff_sl: float) -> None:
+
+# ─── Result display helpers ───────────────────────────────────────────────────
+
+def _show_result(result: dict, capital: float, was_capped: bool,
+                 orig_sl: float, eff_sl: float) -> None:
     outcome = result["outcome"]
-    ret = result.get("ret_pct")
-    cols = st.columns(2)
+    ret     = result.get("ret_pct")
+    cols    = st.columns(2)
     cols[0].metric("Outcome", outcome.value if hasattr(outcome, "value") else str(outcome))
     cols[1].metric("Exit Date", str(result["date"].date()) if result["date"] else "N/A")
     cols[0].metric("Exit Price", f"{result['exit_price']:.4f}" if result["exit_price"] else "N/A")
@@ -214,8 +316,7 @@ def _show_result(result: dict, capital: float, was_capped: bool, orig_sl: float,
                    delta=f"{ret:.2f}%" if ret is not None else None)
     if ret is not None:
         final = capital * (1 + ret / 100)
-        pnl = final - capital
-        st.metric("Final Portfolio Value", f"${final:,.2f}", delta=f"${pnl:+,.2f}")
+        st.metric("Final Portfolio Value", f"${final:,.2f}", delta=f"${final - capital:+,.2f}")
     if was_capped:
         st.warning(f"SL adjusted {orig_sl:.4f} → {eff_sl:.4f} (max-loss cap applied)")
     if result.get("notes"):
@@ -229,15 +330,12 @@ def _show_levels(
 ) -> None:
     tp_move = (take - entry) / entry * (1 if direction == Direction.LONG else -1) * 100
     sl_move = (eff_sl - entry) / entry * (1 if direction == Direction.LONG else -1) * 100
-    tp_ret = tp_move * leverage
-    sl_ret = sl_move * leverage
-
-    c1, c2 = st.columns(2)
-    c1.metric("Take-Profit", f"{take:.4f}", delta=f"{tp_ret:+.2f}% leveraged")
-    c2.metric("Stop-Loss", f"{eff_sl:.4f}", delta=f"{sl_ret:+.2f}% leveraged")
+    c1, c2  = st.columns(2)
+    c1.metric("Take-Profit", f"{take:.4f}", delta=f"{tp_move * leverage:+.2f}% leveraged")
+    c2.metric("Stop-Loss",   f"{eff_sl:.4f}", delta=f"{sl_move * leverage:+.2f}% leveraged")
     if abs(eff_sl - orig_sl) > 1e-6:
         st.warning(f"SL adjusted {orig_sl:.4f} → {eff_sl:.4f} (max-loss cap)")
-    ret = sim.get("ret_pct")
+    ret     = sim.get("ret_pct")
     outcome = sim.get("outcome")
     st.metric("Simulated Outcome", outcome.value if hasattr(outcome, "value") else str(outcome))
     if ret is not None:
