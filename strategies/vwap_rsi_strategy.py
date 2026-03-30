@@ -94,8 +94,8 @@ class VWAPRSIStrategy(BaseStrategy):
     def default_params(self) -> dict[str, Any]:
         return {
             "rsi_period":     9,
-            "rsi_oversold":   35,    # slightly relaxed — VWAP cross provides extra filter
-            "rsi_overbought": 65,
+            "rsi_oversold":   30,    # universal default; tune per instrument (UVXY→20, GC=F→30)
+            "rsi_overbought": 70,    # universal default; tune per instrument (UVXY→80, GC=F→70)
             "atr_period":     14,
             "atr_sl_mult":    1.5,   # stop-loss = 1.5 × ATR from entry
             "atr_tp_mult":    2.5,   # take-profit = 2.5 × ATR from entry (~1.67 R:R)
