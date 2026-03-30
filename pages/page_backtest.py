@@ -344,7 +344,7 @@ def render() -> None:
             help="When ON: opposing RSI signal closes the current trade and opens the reverse.")
 
     st.divider()
-    params = render_strategy_params(selected_id)
+    params = render_strategy_params(selected_id, leverage=leverage, max_capital_loss_pct=float(max_loss))
 
     # ── Run button — stores result in session_state ───────────────────────────
     if st.button("▶ Run Backtest", type="primary", key="bt_run"):

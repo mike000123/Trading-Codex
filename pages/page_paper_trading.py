@@ -61,7 +61,7 @@ def render() -> None:
     with col_strat:
         selected_name = st.selectbox("Strategy", list(strat_names.keys()), key="pt_strategy")
         selected_id   = strat_names[selected_name]
-        params        = render_strategy_params(selected_id)
+        params        = render_strategy_params(selected_id, leverage=leverage if "leverage" in dir() else 1.0)
 
     with col_order:
         direction_override = st.selectbox("Direction", ["Follow signal", "Force Long", "Force Short"], key="pt_dir")
