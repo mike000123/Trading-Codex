@@ -109,6 +109,19 @@ _PARAM_META: dict[str, dict] = {
     "fast_period": {"label": "MACD Fast",       "help": ""},
     "slow_period": {"label": "MACD Slow",       "help": ""},
     "signal_period":{"label": "Signal Period",  "help": ""},
+    # ATR-based params (shared)
+    "atr_period":     {"label": "ATR Period",          "help": "Lookback for Average True Range (volatility measure). Default 14."},
+    "atr_sl_mult":    {"label": "SL × ATR",            "help": "Stop-loss = this × ATR from entry. 1.5 = 1.5 ATR away. Adapts to volatility automatically."},
+    "atr_tp_mult":    {"label": "TP × ATR",            "help": "Take-profit = this × ATR from entry. 2.5 gives ~1.67 R:R with 1.5 SL mult."},
+    "tp_disabled":    {"label": "Disable TP",          "help": "If checked, no price TP — exit via counter-signal or SL only."},
+    # VWAP+RSI
+    "rsi_oversold":   {"label": "RSI Oversold",        "help": "RSI level to trigger BUY. Slightly higher than pure RSI strategy because VWAP acts as extra filter."},
+    "rsi_overbought": {"label": "RSI Overbought",      "help": "RSI level to trigger SELL."},
+    # Bollinger
+    "bb_period":      {"label": "BB Period",           "help": "Bollinger Bands SMA period. Default 20."},
+    "bb_std":         {"label": "BB Std Devs",         "help": "Standard deviations for upper/lower bands. Default 2.0."},
+    "sl_band_mult":   {"label": "SL beyond band",      "help": "SL = outer band ± (this × band width). Default 0.2."},
+    "require_cross":  {"label": "Require band cross",  "help": "If checked, price must break through the band, not just touch it."},
     # Fixed level
     "direction":        {"label": "Direction",          "help": "Long or Short"},
     "signal_frequency": {"label": "Signal Frequency",   "help": "first_bar = one trade then hold; every_bar = re-signal each bar"},
