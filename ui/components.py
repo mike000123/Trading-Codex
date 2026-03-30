@@ -128,41 +128,99 @@ _PARAM_META: dict[str, dict] = {
 }
 
 
-def render_strategy_params(strategy_id: str) -> dict:
-    """Render param form with labels, help text, and type-aware widgets."""
+def render_strategy_params(strategy_id: str, leverage: float = 1.0,
+                           max_capital_loss_pct: float = 50.0) -> dict:
+    """
+    Render param form with labels, help text, and type-aware widgets.
+
+    Args:
+        strategy_id          – registered strategy ID
+        leverage             – current leverage setting (used to derive max SL)
+        max_capital_loss_pct – platform cap on capital loss per trade (default 50%)
+                               eToro / Alpaca: 50%. This caps sl_pct to
+                               max_capital_loss_pct / leverage as a price move %.
+    """
     from strategies import get_strategy
     cls      = get_strategy(strategy_id)
     instance = cls()
     defaults = instance.default_params()
 
+    # ── Derived leverage constraint ────────────────────────────────────────────
+    # Max price move % before capital loss cap is hit:
+    #   sl_pct_max = max_capital_loss_pct / leverage
+    # e.g. 50% cap, leverage 5× → max 10% price drop allowed
+    max_sl_price_pct = max_capital_loss_pct / max(leverage, 1.0)
+
     st.subheader(f"⚙️ {cls.name} Parameters")
     st.caption(cls.description)
 
-    # Special note for RSI optional TP
+    # ── Strategy-specific info boxes ───────────────────────────────────────────
     if strategy_id == "rsi_threshold":
         st.info(
             "💡 **Buy Levels / Sell Levels** accept multiple comma-separated values, "
             "e.g. `25, 30` for buy or `70, 75` for sell.  \n"
-            "**Leave a field blank** (or type `none`) to disable that trade direction entirely — "
-            "e.g. blank buy_levels = Short-only mode.  \n"
-            "Set **Take-Profit % = 0** to disable TP and exit on counter-signal or SL only."
+            "**Leave a field blank** to disable that direction.  \n"
+            "Set **Take-Profit % = 0** to exit on counter-signal or SL only."
+        )
+    elif strategy_id == "vwap_rsi":
+        st.info(
+            "📊 **VWAP + RSI** — Best for GC=F intraday (1-min / 5-min bars).  \n"
+            "Enters when price crosses VWAP **and** RSI confirms direction.  \n"
+            "ATR-based stops adapt automatically to gold's intraday volatility."
+        )
+    elif strategy_id == "bollinger_rsi":
+        st.info(
+            "📉 **Bollinger + RSI** — Best for UVXY after VIX spikes (mean reversion).  \n"
+            "Short when price hits upper Bollinger Band **and** RSI is overbought.  \n"
+            "Target = middle band (natural mean reversion level). Keep hold time < 2 days on UVXY."
+        )
+    elif strategy_id == "atr_rsi":
+        st.info(
+            "🎯 **ATR-Adaptive RSI** — Works for both GC=F and UVXY.  \n"
+            "Stops and targets scale automatically with current volatility (ATR).  \n"
+            "More robust than fixed-% stops across different market conditions."
         )
 
+    # ── Leverage constraint warning ────────────────────────────────────────────
+    if leverage > 1.0:
+        st.warning(
+            f"⚡ **Leverage {leverage:.1f}×** active.  "
+            f"Platform cap: max **{max_capital_loss_pct:.0f}% capital loss** per trade.  \n"
+            f"→ Maximum allowed **price move SL = {max_sl_price_pct:.2f}%** "
+            f"(= {max_capital_loss_pct:.0f}% ÷ {leverage:.1f}).  \n"
+            f"Any `sl_pct` or ATR-mult value implying a larger price drop will be "
+            f"auto-clamped by the Risk Manager."
+        )
+
+    # ── Widget rendering ───────────────────────────────────────────────────────
+    # Use strategy's defaults but reset when strategy changes
+    # (Streamlit persists widget state by key; include strategy_id in key so
+    #  switching strategies resets to the new strategy's defaults)
     filled: dict = {}
     cols = st.columns(2)
     for i, (param, default) in enumerate(defaults.items()):
-        col  = cols[i % 2]
-        meta = _PARAM_META.get(param, {})
+        col   = cols[i % 2]
+        meta  = _PARAM_META.get(param, {})
         label = meta.get("label", param)
         help_ = meta.get("help", "") or None
-        key   = f"param_{strategy_id}_{param}"
+        # Key includes strategy_id → forces reset when strategy changes
+        key   = f"p_{strategy_id}_{param}"
+
+        # For sl_pct: show derived max and add constraint context to label
+        if param == "sl_pct":
+            label = f"Stop-Loss % (price move) · max {max_sl_price_pct:.2f}%"
+            help_ = (
+                f"Raw price move % that triggers SL. Capital loss = this × leverage. "
+                f"With {leverage:.1f}× leverage and {max_capital_loss_pct:.0f}% cap, "
+                f"maximum allowed = {max_sl_price_pct:.2f}%. "
+                f"Risk Manager will clamp any larger value automatically."
+            )
 
         with col:
             if isinstance(default, bool):
                 filled[param] = st.checkbox(label, value=default, key=key, help=help_)
 
             elif param in ("buy_levels", "sell_levels"):
-                # Always text input for comma-separated thresholds
                 filled[param] = st.text_input(label, value=str(default), key=key, help=help_)
 
             elif param == "ma_type":
@@ -175,11 +233,23 @@ def render_strategy_params(strategy_id: str) -> dict:
                 filled[param] = st.selectbox(label, ["first_bar", "every_bar"], index=0, key=key, help=help_)
 
             elif isinstance(default, int):
-                filled[param] = st.number_input(label, value=int(default), step=1, key=key, help=help_)
+                filled[param] = st.number_input(label, value=int(default), step=1,
+                                                  key=key, help=help_)
 
             elif isinstance(default, float):
-                filled[param] = st.number_input(label, value=float(default), format="%.2f",
-                                                 min_value=0.0, key=key, help=help_)
+                # For sl_pct: cap the max_value in the widget itself
+                if param == "sl_pct":
+                    capped_default = min(float(default), max_sl_price_pct)
+                    filled[param] = st.number_input(
+                        label, value=round(capped_default, 4),
+                        format="%.4f", min_value=0.0001,
+                        max_value=round(max_sl_price_pct, 4),
+                        key=key, help=help_,
+                    )
+                else:
+                    filled[param] = st.number_input(label, value=float(default),
+                                                     format="%.2f", min_value=0.0,
+                                                     key=key, help=help_)
             else:
                 filled[param] = st.text_input(label, value=str(default), key=key, help=help_)
 
