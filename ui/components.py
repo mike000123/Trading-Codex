@@ -37,11 +37,11 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
     data: Optional[pd.DataFrame] = None
 
     if source == "Yahoo Finance":
-        ticker   = st.sidebar.text_input("Ticker", value="AAPL", key="yf_ticker")
+        ticker   = st.sidebar.text_input("Ticker", value="UVXY", key="yf_ticker")
         interval = st.sidebar.selectbox("Interval",
-            ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"], index=5, key="yf_interval")
+            ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"], index=0, key="yf_interval")  # default 1m
         col1, col2 = st.sidebar.columns(2)
-        start = col1.date_input("Start", value=(pd.Timestamp.today() - pd.Timedelta(days=365)).date(), key="yf_start")
+        start = col1.date_input("Start", value=pd.Timestamp("2026-03-23").date(), key="yf_start")
         end   = col2.date_input("End",   value=pd.Timestamp.today().date(), key="yf_end")
         if st.sidebar.button("Fetch Data", type="primary", key="yf_fetch"):
             from data.ingestion import load_from_ticker
@@ -157,28 +157,35 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
     # ── Strategy-specific info boxes ───────────────────────────────────────────
     if strategy_id == "rsi_threshold":
         st.info(
-            "💡 **Buy Levels / Sell Levels** accept multiple comma-separated values, "
-            "e.g. `25, 30` for buy or `70, 75` for sell.  \n"
-            "**Leave a field blank** to disable that direction.  \n"
-            "Set **Take-Profit % = 0** to exit on counter-signal or SL only."
+            "💡 **Buy Levels / Sell Levels** accept comma-separated values (e.g. `25, 30`).  \n"
+            "Leave blank to disable that direction. Set TP % = 0 for counter-signal exit only.  \n"
+            "🎯 Recommended thresholds: **UVXY** → buy=20 / sell=80 · "
+            "**GC=F** → buy=30 / sell=70  \n"
+            "*(RSI scale is universal — thresholds are instrument-specific, not strategy-specific)*"
         )
     elif strategy_id == "vwap_rsi":
         st.info(
             "📊 **VWAP + RSI** — Best for GC=F intraday (1-min / 5-min bars).  \n"
             "Enters when price crosses VWAP **and** RSI confirms direction.  \n"
-            "ATR-based stops adapt automatically to gold's intraday volatility."
+            "ATR-based stops adapt automatically to gold's intraday volatility.  \n"
+            "🎯 Recommended thresholds: **GC=F** → oversold 30 / overbought 70 · "
+            "**UVXY** → oversold 20 / overbought 80 (more extreme = fewer, cleaner signals)"
         )
     elif strategy_id == "bollinger_rsi":
         st.info(
             "📉 **Bollinger + RSI** — Best for UVXY after VIX spikes (mean reversion).  \n"
             "Short when price hits upper Bollinger Band **and** RSI is overbought.  \n"
-            "Target = middle band (natural mean reversion level). Keep hold time < 2 days on UVXY."
+            "Target = middle band (mean reversion). Keep hold time < 2 days on UVXY.  \n"
+            "🎯 Recommended thresholds: **UVXY** → oversold 20 / overbought 80 · "
+            "**GC=F** → oversold 30 / overbought 70"
         )
     elif strategy_id == "atr_rsi":
         st.info(
             "🎯 **ATR-Adaptive RSI** — Works for both GC=F and UVXY.  \n"
             "Stops and targets scale automatically with current volatility (ATR).  \n"
-            "More robust than fixed-% stops across different market conditions."
+            "More robust than fixed-% stops across different market conditions.  \n"
+            "🎯 Recommended thresholds: **UVXY** → buy_levels=20 / sell_levels=80 · "
+            "**GC=F** → buy_levels=30 / sell_levels=70"
         )
 
     # ── Leverage constraint warning ────────────────────────────────────────────
