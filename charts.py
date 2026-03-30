@@ -1,24 +1,12 @@
 """
-ui/charts.py
-────────────
-Reusable Plotly chart builders.
-
-IMPORTANT: This file intentionally avoids add_vline(), add_hline() with
-annotation_text, and any Plotly helper that internally calls
-shapeannotation.axis_spanning_shape_annotation(). That function is broken
-in current Plotly when the x-axis contains pandas Timestamps — it tries
-_mean([x0, x1]) which fails because Timestamps don't support __radd__.
-
-Safe replacements used throughout:
-  vertical line   → add_shape(type="line") + add_annotation()
-  horizontal line → add_shape(type="line") + add_annotation()
+ui/charts.py  —  pure Altair, zero Plotly imports.
 """
 from __future__ import annotations
 
 from typing import Optional
 
+import altair as alt
 import pandas as pd
-import plotly.graph_objects as go
 
 _GREEN = "#26a69a"
 _RED   = "#ef5350"
@@ -26,50 +14,7 @@ _BLUE  = "#4a9eff"
 _GOLD  = "#ffd54f"
 _GREY  = "#9e9eb8"
 
-_LAYOUT = dict(
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(color="#c9d8f5"),
-    margin=dict(l=10, r=10, t=40, b=10),
-    xaxis=dict(showgrid=True, gridcolor="#1e2130"),
-    yaxis=dict(showgrid=True, gridcolor="#1e2130"),
-)
-
-
-def _hline(fig: go.Figure, y: float, color: str, label: str) -> None:
-    """Horizontal line + right-side label. No add_hline()."""
-    fig.add_shape(
-        type="line", xref="paper", yref="y",
-        x0=0, x1=1, y0=y, y1=y,
-        line=dict(color=color, width=1, dash="dot"),
-        layer="below",
-    )
-    fig.add_annotation(
-        text=label, xref="paper", x=1.01,
-        yref="y", y=y,
-        showarrow=False,
-        font=dict(color=color, size=10),
-        xanchor="left",
-    )
-
-
-def _vline(fig: go.Figure, ts, color: str, label: str, anchor: str = "right") -> None:
-    """Vertical line + top label. No add_vline()."""
-    x_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
-    fig.add_shape(
-        type="line", xref="x", yref="paper",
-        x0=x_str, x1=x_str, y0=0, y1=1,
-        line=dict(color=color, width=1.5, dash="dash"),
-    )
-    fig.add_annotation(
-        text=label, xref="x", x=x_str,
-        yref="paper", y=0.97,
-        showarrow=False,
-        font=dict(color=color, size=11),
-        bgcolor="rgba(14,17,23,0.6)",
-        borderpad=3,
-        xanchor=anchor,
-    )
+_AXIS_CFG = dict(gridColor="#1e2130", labelColor="#c9d8f5", titleColor="#c9d8f5")
 
 
 def price_chart(
@@ -79,132 +24,210 @@ def price_chart(
     take_profit: Optional[float] = None,
     stop_loss: Optional[float] = None,
     title: str = "Price",
-) -> go.Figure:
-    fig = go.Figure()
-
-    fig.add_trace(go.Candlestick(
-        x=data["date"],
-        open=data["open"],
-        high=data["high"],
-        low=data["low"],
-        close=data["close"],
-        name="Price",
-        increasing_line_color=_GREEN,
-        decreasing_line_color=_RED,
-    ))
+) -> alt.LayerChart:
+    """Altair close-line chart with TP/SL rules and entry/exit markers."""
+    base = (
+        alt.Chart(data)
+        .mark_line(color=_BLUE)
+        .encode(
+            x=alt.X("date:T", title="Date"),
+            y=alt.Y("close:Q", title="Close", scale=alt.Scale(zero=False)),
+            tooltip=["date:T", "close:Q"],
+        )
+    )
+    layers: list = [base]
 
     if take_profit is not None:
-        _hline(fig, take_profit, _GREEN, f"TP {take_profit:.4f}")
+        tp_df = pd.DataFrame({"y": [take_profit], "label": [f"TP {take_profit:.4f}"]})
+        layers.append(alt.Chart(tp_df).mark_rule(color=_GREEN, strokeDash=[4, 4]).encode(y="y:Q"))
+        layers.append(
+            alt.Chart(tp_df).mark_text(color=_GREEN, align="left", dx=4, dy=-6, fontSize=11)
+            .encode(y="y:Q", x=alt.value(4), text="label:N")
+        )
+
     if stop_loss is not None:
-        _hline(fig, stop_loss, _RED, f"SL {stop_loss:.4f}")
+        sl_df = pd.DataFrame({"y": [stop_loss], "label": [f"SL {stop_loss:.4f}"]})
+        layers.append(alt.Chart(sl_df).mark_rule(color=_RED, strokeDash=[4, 4]).encode(y="y:Q"))
+        layers.append(
+            alt.Chart(sl_df).mark_text(color=_RED, align="left", dx=4, dy=-6, fontSize=11)
+            .encode(y="y:Q", x=alt.value(4), text="label:N")
+        )
+
+    rows = []
     if entry_date is not None:
-        _vline(fig, entry_date, _GREEN, "Entry", anchor="right")
+        rows.append({"date": pd.Timestamp(entry_date), "label": "Entry"})
     if exit_date is not None:
-        _vline(fig, exit_date, _RED, "Exit", anchor="left")
+        rows.append({"date": pd.Timestamp(exit_date), "label": "Exit"})
 
-    fig.update_layout(
-        title=title,
-        xaxis_rangeslider_visible=False,
-        height=400,
-        **_LAYOUT,
+    if rows:
+        m_df = pd.DataFrame(rows)
+        cs   = alt.Scale(domain=["Entry", "Exit"], range=[_GREEN, _RED])
+        layers.append(
+            alt.Chart(m_df).mark_rule(strokeWidth=2)
+            .encode(x="date:T", color=alt.Color("label:N", scale=cs, legend=None))
+        )
+        layers.append(
+            alt.Chart(m_df).mark_text(dy=-10, fontWeight="bold", fontSize=12)
+            .encode(x="date:T", y=alt.value(20), text="label:N",
+                    color=alt.Color("label:N", scale=cs, legend=None))
+        )
+
+    return (
+        alt.layer(*layers)
+        .properties(title=title, height=320)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(**_AXIS_CFG)
+        .configure_title(color="#c9d8f5")
     )
-    return fig
 
 
-def equity_curve_chart(equity_df: pd.DataFrame, title: str = "Equity Curve") -> go.Figure:
+def equity_curve_chart(equity_df: pd.DataFrame, title: str = "Equity Curve") -> alt.Chart:
     if equity_df.empty:
-        return go.Figure()
+        return alt.Chart(pd.DataFrame()).mark_line()
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=equity_df["date"],
-        y=equity_df["equity"],
-        mode="lines",
-        name="Equity",
-        line=dict(color=_BLUE, width=2),
-        fill="tozeroy",
-        fillcolor="rgba(74,158,255,0.08)",
-    ))
-    fig.update_layout(title=title, height=300, **_LAYOUT)
-    return fig
+    return (
+        alt.Chart(equity_df)
+        .mark_area(
+            line={"color": _BLUE},
+            color=alt.Gradient(
+                gradient="linear",
+                stops=[
+                    alt.GradientStop(color="rgba(74,158,255,0.3)", offset=0),
+                    alt.GradientStop(color="rgba(74,158,255,0.0)", offset=1),
+                ],
+                x1=1, x2=1, y1=1, y2=0,
+            ),
+        )
+        .encode(
+            x=alt.X("date:T", title="Date"),
+            y=alt.Y("equity:Q", title="Equity ($)", scale=alt.Scale(zero=False)),
+            tooltip=["date:T", alt.Tooltip("equity:Q", format="$,.2f")],
+        )
+        .properties(title=title, height=280)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(**_AXIS_CFG)
+        .configure_title(color="#c9d8f5")
+    )
 
 
-def rsi_chart(data: pd.DataFrame, period: int = 14) -> go.Figure:
+def rsi_chart(data: pd.DataFrame, period: int = 14) -> alt.LayerChart:
     delta    = data["close"].diff()
     gain     = delta.clip(lower=0)
     loss     = -delta.clip(upper=0)
     avg_gain = gain.ewm(com=period - 1, min_periods=period).mean()
     avg_loss = loss.ewm(com=period - 1, min_periods=period).mean()
     rs       = avg_gain / avg_loss.replace(0, float("nan"))
-    rsi      = 100 - (100 / (1 + rs))
+    rsi_vals = (100 - (100 / (1 + rs))).rename("rsi")
+    df       = pd.concat([data[["date"]], rsi_vals], axis=1).dropna()
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=data["date"], y=rsi,
-        mode="lines", name="RSI",
-        line=dict(color=_GOLD, width=1.5),
-    ))
+    rsi_line = (
+        alt.Chart(df).mark_line(color=_GOLD)
+        .encode(
+            x=alt.X("date:T", title="Date"),
+            y=alt.Y("rsi:Q", title="RSI", scale=alt.Scale(domain=[0, 100])),
+            tooltip=["date:T", "rsi:Q"],
+        )
+    )
+    ob_df = pd.DataFrame({"y": [70], "label": ["Overbought 70"]})
+    os_df = pd.DataFrame({"y": [30], "label": ["Oversold 30"]})
+    ob_rule = alt.Chart(ob_df).mark_rule(color=_RED,   strokeDash=[4, 4]).encode(y="y:Q")
+    os_rule = alt.Chart(os_df).mark_rule(color=_GREEN, strokeDash=[4, 4]).encode(y="y:Q")
 
-    # Overbought / oversold bands — shapes only, no add_hline
-    for y, color in [(70, _RED), (30, _GREEN)]:
-        _hline(fig, y, color, str(y))
-
-    fig.add_shape(type="rect", xref="paper", yref="y",
-                  x0=0, x1=1, y0=70, y1=100,
-                  fillcolor=_RED, opacity=0.04, line_width=0, layer="below")
-    fig.add_shape(type="rect", xref="paper", yref="y",
-                  x0=0, x1=1, y0=0, y1=30,
-                  fillcolor=_GREEN, opacity=0.04, line_width=0, layer="below")
-
-    layout = dict(**_LAYOUT)
-    layout["yaxis"] = dict(range=[0, 100], showgrid=True, gridcolor="#1e2130")
-    fig.update_layout(title=f"RSI ({period})", height=200, **layout)
-    return fig
+    return (
+        alt.layer(rsi_line, ob_rule, os_rule)
+        .properties(title=f"RSI ({period})", height=180)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(**_AXIS_CFG)
+        .configure_title(color="#c9d8f5")
+    )
 
 
-def pnl_distribution(trades_df: pd.DataFrame) -> go.Figure:
+def pnl_distribution(trades_df: pd.DataFrame) -> alt.LayerChart:
+    """
+    Per-trade waterfall bar chart — one bar per trade, ordered by entry time.
+    Green = win, Red = loss. Avoids histogram bin-collapse when all returns are similar.
+    """
     if trades_df.empty or "leveraged_return_pct" not in trades_df.columns:
-        return go.Figure()
+        return alt.Chart(pd.DataFrame({"x": [], "y": []})).mark_bar()
 
-    pnl    = trades_df["leveraged_return_pct"].dropna()
-    colors = [_GREEN if v >= 0 else _RED for v in pnl]
+    df = trades_df.dropna(subset=["leveraged_return_pct"]).copy()
+    if df.empty:
+        return alt.Chart(pd.DataFrame()).mark_bar()
 
-    fig = go.Figure(go.Bar(x=pnl, marker_color=colors, name="P&L %"))
+    # Sort by entry time if available
+    if "entry_time" in df.columns:
+        df = df.sort_values("entry_time").reset_index(drop=True)
+    df["trade_n"]  = [f"T{i+1}" for i in range(len(df))]
+    df["result"]   = df["leveraged_return_pct"].apply(lambda v: "Win" if v >= 0 else "Loss")
+    df["ret_fmt"]  = df["leveraged_return_pct"].round(3)
 
-    # Zero line — x-axis is numeric here so safe to use a plain shape
-    fig.add_shape(
-        type="line", xref="x", yref="paper",
-        x0=0, x1=0, y0=0, y1=1,
-        line=dict(color=_GREY, width=1, dash="dash"),
+    # Zero reference line
+    zero_df = pd.DataFrame({"y": [0]})
+    zero_rule = alt.Chart(zero_df).mark_rule(color=_GREY, strokeDash=[3, 3]).encode(y="y:Q")
+
+    bars = (
+        alt.Chart(df)
+        .mark_bar(width={"band": 0.7})
+        .encode(
+            x=alt.X("trade_n:N", sort=None, title="Trade #",
+                    axis=alt.Axis(labelAngle=0, labelColor="#c9d8f5", titleColor="#c9d8f5")),
+            y=alt.Y("leveraged_return_pct:Q", title="Leveraged Return %",
+                    axis=alt.Axis(labelColor="#c9d8f5", titleColor="#c9d8f5")),
+            color=alt.Color(
+                "result:N",
+                scale=alt.Scale(domain=["Win", "Loss"], range=[_GREEN, _RED]),
+                legend=alt.Legend(title="Result", labelColor="#c9d8f5", titleColor="#c9d8f5"),
+            ),
+            tooltip=[
+                alt.Tooltip("trade_n:N",               title="Trade"),
+                alt.Tooltip("ret_fmt:Q",                title="Return %",    format=".3f"),
+                alt.Tooltip("entry_price:Q",            title="Entry price", format=".4f"),
+                alt.Tooltip("exit_price:Q",             title="Exit price",  format=".4f"),
+                alt.Tooltip("outcome:N",                title="Outcome"),
+                alt.Tooltip("direction:N",              title="Direction"),
+            ] if "entry_price" in df.columns else [
+                alt.Tooltip("trade_n:N",   title="Trade"),
+                alt.Tooltip("ret_fmt:Q",   title="Return %", format=".3f"),
+            ],
+        )
     )
 
-    fig.update_layout(
-        title="Trade P&L Distribution (%)",
-        xaxis_title="Return %",
-        yaxis_title="Count",
-        height=280,
-        **_LAYOUT,
+    text = (
+        alt.Chart(df)
+        .mark_text(dy=-8, fontSize=9, color="#c9d8f5")
+        .encode(
+            x=alt.X("trade_n:N", sort=None),
+            y=alt.Y("leveraged_return_pct:Q"),
+            text=alt.Text("ret_fmt:Q", format=".1f"),
+        )
     )
-    return fig
+
+    return (
+        alt.layer(zero_rule, bars, text)
+        .properties(title="Per-Trade Leveraged Return (%)", height=260)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(gridColor="#1e2130")
+        .configure_title(color="#c9d8f5")
+    )
 
 
-def portfolio_allocation_pie(positions: list[dict]) -> go.Figure:
+def portfolio_allocation_pie(positions: list[dict]) -> alt.Chart:
     if not positions:
-        return go.Figure()
+        return alt.Chart(pd.DataFrame()).mark_arc()
 
-    labels = [p["symbol"] for p in positions]
-    values = [abs(p.get("capital_allocated", 1)) for p in positions]
+    df = pd.DataFrame({
+        "symbol": [p["symbol"] for p in positions],
+        "value":  [abs(p.get("capital_allocated", 1)) for p in positions],
+    })
 
-    fig = go.Figure(go.Pie(
-        labels=labels, values=values,
-        hole=0.4,
-        marker=dict(colors=[_BLUE, _GREEN, _GOLD, _GREY, _RED]),
-    ))
-    fig.update_layout(
-        title="Position Allocation",
-        height=280,
-        margin=dict(l=10, r=10, t=40, b=10),
-        paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#c9d8f5"),
+    return (
+        alt.Chart(df)
+        .mark_arc(innerRadius=50)
+        .encode(
+            theta=alt.Theta("value:Q"),
+            color=alt.Color("symbol:N", legend=alt.Legend(labelColor="#c9d8f5")),
+            tooltip=["symbol:N", "value:Q"],
+        )
+        .properties(title="Position Allocation", height=240)
+        .configure_title(color="#c9d8f5")
     )
-    return fig
