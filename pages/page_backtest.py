@@ -457,14 +457,20 @@ def render() -> None:
 
     # ── RSI chart ─────────────────────────────────────────────────────────────
     if selected_id_r == "rsi_threshold":
-        period      = int(params_r.get("rsi_period", 9))
-        buy_levels  = _parse_levels(params_r.get("buy_levels",  "30"))
-        sell_levels = _parse_levels(params_r.get("sell_levels", "70"))
-        tp_disabled = float(params_r.get("tp_pct", 3.0)) == 0
-        st.markdown(
-            f"#### 📉 RSI ({period})"
-            + ("  ·  ⚠️ TP=0: exits via RSI signal or SL only" if tp_disabled else "")
-        )
+        period        = int(params_r.get("rsi_period", 9))
+        buy_levels    = _parse_levels(params_r.get("buy_levels",  "30"))
+        sell_levels   = _parse_levels(params_r.get("sell_levels", "70"))
+        tp_disabled   = float(params_r.get("tp_pct", 3.0)) == 0
+        buy_disabled  = not buy_levels
+        sell_disabled = not sell_levels
+
+        mode_notes = []
+        if buy_disabled:  mode_notes.append("🚫 No Long entries (buy_levels blank)")
+        if sell_disabled: mode_notes.append("🚫 No Short entries (sell_levels blank)")
+        if tp_disabled:   mode_notes.append("⚠️ TP=0 — exits via RSI signal or SL only")
+        note_str = ("  ·  " + "  ·  ".join(mode_notes)) if mode_notes else ""
+
+        st.markdown(f"#### 📉 RSI ({period}){note_str}")
         st.altair_chart(
             _rsi_chart(prices_r, result.trades, period, buy_levels, sell_levels,
                        bar_label_r, symbol_r,
