@@ -127,7 +127,7 @@ class BacktestEngine:
                     open_trade.leveraged_return_pct = pct * open_trade.leverage * 100
                     open_trade.exit_price = exit_px
                     open_trade.exit_time  = current_date if isinstance(current_date, datetime) else current_date.to_pydatetime()
-                    open_trade.outcome    = TradeOutcome.TAKE_PROFIT  # signal-driven close
+                    open_trade.outcome    = TradeOutcome.SIGNAL_EXIT   # closed by counter-signal, not price TP
                     open_trade.notes     += " | Closed by counter-signal"
                     trade_pnl = open_trade.capital_allocated * open_trade.leveraged_return_pct / 100
                     equity += trade_pnl
