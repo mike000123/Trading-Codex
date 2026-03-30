@@ -131,7 +131,10 @@ def render() -> None:
 
         if selected_id == "rsi_threshold":
             period = int(params.get("rsi_period", 14))
-            st.altair_chart(rsi_chart(prices, period), use_container_width=True)
+            
+            buy_lvls  = [float(x) for x in str(params.get("buy_levels","30")).replace(";",",").split(",") if x.strip()]
+            sell_lvls = [float(x) for x in str(params.get("sell_levels","70")).replace(";",",").split(",") if x.strip()]
+            st.altair_chart(rsi_chart(prices, period, buy_lvls, sell_lvls), use_container_width=True)
 
         with st.expander("📋 All Signals", expanded=False):
             active = signals_df[signals_df["action"] != "HOLD"].copy()
