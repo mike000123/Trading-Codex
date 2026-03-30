@@ -65,10 +65,12 @@ class BacktestEngine:
         strategy: BaseStrategy,
         risk_manager: Optional[RiskManager] = None,
         direction_filter: Optional[Direction] = None,
+        counter_signal_exit: bool = True,
     ) -> None:
         self.strategy = strategy
         self.risk = risk_manager
-        self.direction_filter = direction_filter  # None = follow signal, Long/Short = force
+        self.direction_filter = direction_filter
+        self.counter_signal_exit = counter_signal_exit  # close + reverse on opposing signal
 
     def run(
         self,
@@ -92,7 +94,12 @@ class BacktestEngine:
             bar = data.iloc[i]
             current_date = bar["date"]
 
-            # ── Check if open trade hit TP or SL ───────────────────────────
+            # ── Always generate signal first (needed for counter-signal exit) ──
+            window = data.iloc[: i + 1].copy()
+            signal: Signal = self.strategy.generate_signal(window, symbol)
+            new_direction = self._signal_to_direction(signal)
+
+            # ── Check if open trade hit TP or SL ────────────────────────────
             if open_trade is not None:
                 open_trade = self._check_exit(open_trade, bar)
                 if open_trade.outcome != TradeOutcome.OPEN:
@@ -103,45 +110,74 @@ class BacktestEngine:
                     trades.append(open_trade)
                     open_trade = None
 
-            # ── Generate signal on data up to current bar ──────────────────
-            if open_trade is None:
-                window = data.iloc[: i + 1].copy()
-                signal: Signal = self.strategy.generate_signal(window, symbol)
+            # ── Counter-signal exit: close trade if signal reverses direction ─
+            # e.g. Long open + SELL signal → close Long at current close price
+            # Gated by self.counter_signal_exit (UI checkbox).
+            if self.counter_signal_exit and open_trade is not None and new_direction is not None:
+                current_dir = open_trade.direction
+                is_reversal = (
+                    (current_dir == Direction.LONG  and new_direction == Direction.SHORT) or
+                    (current_dir == Direction.SHORT and new_direction == Direction.LONG)
+                )
+                if is_reversal:
+                    exit_px = float(bar["close"])
+                    pct = (exit_px - open_trade.entry_price) / open_trade.entry_price
+                    if current_dir == Direction.SHORT:
+                        pct = -pct
+                    open_trade.leveraged_return_pct = pct * open_trade.leverage * 100
+                    open_trade.exit_price = exit_px
+                    open_trade.exit_time  = current_date if isinstance(current_date, datetime) else current_date.to_pydatetime()
+                    open_trade.outcome    = TradeOutcome.TAKE_PROFIT  # signal-driven close
+                    open_trade.notes     += " | Closed by counter-signal"
+                    trade_pnl = open_trade.capital_allocated * open_trade.leveraged_return_pct / 100
+                    equity += trade_pnl
+                    open_trade.pnl = trade_pnl
+                    trades.append(open_trade)
+                    open_trade = None
+                    log.debug(f"COUNTER-SIGNAL EXIT: {symbol} closed @ {exit_px:.4f}")
 
-                direction = self._signal_to_direction(signal)
-                if direction is not None and signal.suggested_sl is not None:
-
-                    if self.risk:
-                        check = self.risk.check(
-                            direction=direction,
-                            entry_price=float(bar["close"]),
-                            take_profit=signal.suggested_tp,
-                            stop_loss=signal.suggested_sl,
-                            leverage=leverage,
-                            capital_requested=capital_per_trade,
-                        )
-                        if not check.approved:
-                            continue
-                        effective_sl = check.adjusted_sl or signal.suggested_sl
-                        effective_capital = check.adjusted_size or capital_per_trade
-                    else:
-                        effective_sl = signal.suggested_sl
-                        effective_capital = capital_per_trade
-
-                    open_trade = TradeRecord(
-                        id=str(uuid.uuid4()),
-                        symbol=symbol,
-                        direction=direction,
+            # ── Open new trade if no position and signal fired ───────────────
+            if open_trade is None and new_direction is not None and signal.suggested_sl is not None:
+                if self.risk:
+                    check = self.risk.check(
+                        direction=new_direction,
                         entry_price=float(bar["close"]),
                         take_profit=signal.suggested_tp,
-                        stop_loss=effective_sl,
+                        stop_loss=signal.suggested_sl,
                         leverage=leverage,
-                        capital_allocated=effective_capital,
-                        entry_time=current_date if isinstance(current_date, datetime) else current_date.to_pydatetime(),
-                        mode="backtest",
-                        strategy_id=self.strategy.strategy_id,
-                        outcome=TradeOutcome.OPEN,
+                        capital_requested=capital_per_trade,
                     )
+                    if not check.approved:
+                        equity_curve.append({"date": current_date, "equity": equity})
+                        continue
+                    effective_sl = check.adjusted_sl or signal.suggested_sl
+                    effective_capital = check.adjusted_size or capital_per_trade
+                else:
+                    effective_sl = signal.suggested_sl
+                    effective_capital = capital_per_trade
+
+                entry_px = float(bar["close"])
+                raw_sl   = signal.suggested_sl
+                log.debug(
+                    f"TRADE OPEN: {symbol} {new_direction.value} @ {entry_px:.4f} | "
+                    f"strategy_sl={raw_sl:.4f} effective_sl={effective_sl:.4f} | "
+                    f"TP={signal.suggested_tp} | lev={leverage}x"
+                )
+                open_trade = TradeRecord(
+                    id=str(uuid.uuid4()),
+                    symbol=symbol,
+                    direction=new_direction,
+                    entry_price=entry_px,
+                    take_profit=signal.suggested_tp,
+                    stop_loss=effective_sl,
+                    leverage=leverage,
+                    capital_allocated=effective_capital,
+                    entry_time=current_date if isinstance(current_date, datetime) else current_date.to_pydatetime(),
+                    mode="backtest",
+                    strategy_id=self.strategy.strategy_id,
+                    outcome=TradeOutcome.OPEN,
+                    notes=f"SL={effective_sl:.4f} (strategy suggested {raw_sl:.4f}); TP={signal.suggested_tp}",
+                )
 
             equity_curve.append({"date": current_date, "equity": equity})
 
