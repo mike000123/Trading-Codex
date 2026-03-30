@@ -32,12 +32,14 @@ class OrderStatus(str, Enum):
 
 
 class TradeOutcome(str, Enum):
-    TAKE_PROFIT  = "Take-profit hit"
-    STOP_LOSS    = "Stop-loss hit"
-    SIGNAL_EXIT  = "Counter-signal exit"   # closed by opposing RSI/strategy signal
-    AMBIGUOUS    = "Ambiguous candle"
-    OPEN         = "Open"
-    NO_DATA      = "No data"
+    TAKE_PROFIT      = "TP hit"              # price reached take-profit level
+    STOP_LOSS        = "SL hit"              # price reached stop-loss level
+    SIGNAL_RSI_OB    = "RSI overbought exit" # RSI crossed above sell threshold → close Long
+    SIGNAL_RSI_OS    = "RSI oversold exit"   # RSI crossed below buy threshold → close Short
+    SIGNAL_EXIT      = "Counter-signal exit" # generic counter-signal (non-RSI strategies)
+    AMBIGUOUS        = "Ambiguous candle"    # TP and SL both touched same bar
+    OPEN             = "Open"
+    NO_DATA          = "No data"
 
 
 class SignalAction(str, Enum):
