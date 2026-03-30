@@ -97,8 +97,8 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
 _PARAM_META: dict[str, dict] = {
     # RSI strategy
     "rsi_period":  {"label": "RSI Period",          "help": "Number of bars for RSI calculation. Default 9 (intraday 1-min/5-min). Shorter = faster reaction, more noise. Longer = smoother, more lag. Common: 9 (intraday), 14 (daily)."},
-    "buy_levels":  {"label": "Buy Levels (OS)",      "help": "Comma-separated RSI levels. BUY when RSI crosses below. e.g. '25, 30'"},
-    "sell_levels": {"label": "Sell Levels (OB)",     "help": "Comma-separated RSI levels. SELL when RSI crosses above. e.g. '70, 75'"},
+    "buy_levels":  {"label": "Buy Levels (OS)",      "help": "Comma-separated RSI thresholds for LONG entry (RSI crosses below). e.g. '25, 30'. Leave BLANK to disable Long trades entirely."},
+    "sell_levels": {"label": "Sell Levels (OB)",     "help": "Comma-separated RSI thresholds for SHORT entry (RSI crosses above). e.g. '70, 75'. Leave BLANK to disable Short trades entirely."},
     "tp_pct":      {"label": "Take-Profit % (price, 0=off)","help": "Raw price move % to take profit. Capital gain = this × leverage. Set to 0 to disable (SL-only exit)."},
     "sl_pct":      {"label": "Stop-Loss % (price move)",  "help": "Raw price move % that triggers SL. Capital loss = this × leverage. RiskManager caps it further if needed."},
     # MA crossover
@@ -127,9 +127,13 @@ def render_strategy_params(strategy_id: str) -> dict:
 
     # Special note for RSI optional TP
     if strategy_id == "rsi_threshold":
-        st.info("💡 **Buy Levels / Sell Levels** accept multiple comma-separated values, "
-                "e.g. `25, 30` for buy or `70, 75` for sell.  \n"
-                "Set **Take-Profit % = 0** to disable TP and exit on SL only.")
+        st.info(
+            "💡 **Buy Levels / Sell Levels** accept multiple comma-separated values, "
+            "e.g. `25, 30` for buy or `70, 75` for sell.  \n"
+            "**Leave a field blank** (or type `none`) to disable that trade direction entirely — "
+            "e.g. blank buy_levels = Short-only mode.  \n"
+            "Set **Take-Profit % = 0** to disable TP and exit on counter-signal or SL only."
+        )
 
     filled: dict = {}
     cols = st.columns(2)
