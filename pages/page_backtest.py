@@ -456,7 +456,7 @@ def render() -> None:
     )
 
     # ── RSI chart ─────────────────────────────────────────────────────────────
-    if selected_id_r == "rsi_threshold":
+    if selected_id_r in ("rsi_threshold", "atr_rsi", "vwap_rsi", "bollinger_rsi"):
         period        = int(params_r.get("rsi_period", 9))
         buy_levels    = _parse_levels(params_r.get("buy_levels",  "30"))
         sell_levels   = _parse_levels(params_r.get("sell_levels", "70"))
