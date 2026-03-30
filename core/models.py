@@ -32,11 +32,12 @@ class OrderStatus(str, Enum):
 
 
 class TradeOutcome(str, Enum):
-    TAKE_PROFIT = "Take-profit hit"
-    STOP_LOSS = "Stop-loss hit"
-    AMBIGUOUS = "Ambiguous candle"
-    OPEN = "Open"
-    NO_DATA = "No data"
+    TAKE_PROFIT  = "Take-profit hit"
+    STOP_LOSS    = "Stop-loss hit"
+    SIGNAL_EXIT  = "Counter-signal exit"   # closed by opposing RSI/strategy signal
+    AMBIGUOUS    = "Ambiguous candle"
+    OPEN         = "Open"
+    NO_DATA      = "No data"
 
 
 class SignalAction(str, Enum):
