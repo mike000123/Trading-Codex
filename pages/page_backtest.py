@@ -55,8 +55,8 @@ def _calc_rsi(series: pd.Series, period: int) -> pd.Series:
     delta    = series.diff()
     gain     = delta.clip(lower=0)
     loss     = -delta.clip(upper=0)
-    avg_gain = gain.ewm(com=period - 1, min_periods=period).mean()
-    avg_loss = loss.ewm(com=period - 1, min_periods=period).mean()
+    avg_gain = gain.ewm(alpha=1/period, adjust=False, min_periods=period).mean()
+    avg_loss = loss.ewm(alpha=1/period, adjust=False, min_periods=period).mean()
     rs       = avg_gain / avg_loss.replace(0, float("nan"))
     return 100 - (100 / (1 + rs))
 
