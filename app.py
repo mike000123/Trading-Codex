@@ -54,9 +54,13 @@ PAGES = {
 with st.sidebar:
     st.markdown("---")
     st.markdown("### 📈 AlgoTrader Pro")
+    page_keys = list(PAGES.keys())
+    default_page = "⏪ Backtester"
+    default_idx  = page_keys.index(default_page) if default_page in page_keys else 0
     page_name = st.radio(
         "Navigation",
-        list(PAGES.keys()),
+        page_keys,
+        index=default_idx,
         key="nav",
         label_visibility="collapsed",
     )
