@@ -194,7 +194,8 @@ def render() -> None:
     )
 
     with st.expander("📋 Data Preview", expanded=False):
-        st.dataframe(prices.tail(50), use_container_width=True)
+        st.caption(f"{len(prices)} rows total")
+        st.dataframe(prices, use_container_width=True)
 
     st.divider()
     controls, results = st.columns([1.1, 0.9])
