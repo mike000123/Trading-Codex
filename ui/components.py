@@ -122,6 +122,13 @@ _PARAM_META: dict[str, dict] = {
     "bb_std":         {"label": "BB Std Devs",         "help": "Standard deviations for upper/lower bands. Default 2.0."},
     "sl_band_mult":   {"label": "SL beyond band",      "help": "SL = outer band ± (this × band width). Default 0.2."},
     "require_cross":  {"label": "Require band cross",  "help": "If checked, price must break through the band, not just touch it."},
+    # EMA Trend+RSI
+    "fast_ema":        {"label": "Fast EMA",            "help": "Short-term EMA (default 9). Cross above slow EMA = bull regime."},
+    "slow_ema":        {"label": "Slow EMA",            "help": "Medium-term EMA (default 21). Price must also be above Trend EMA."},
+    "trend_ema":       {"label": "Trend EMA",           "help": "Long-term trend filter (default 50). Only trades in direction price is relative to this EMA."},
+    "rsi_bull_entry":  {"label": "RSI Bull Entry",      "help": "RSI level to buy in uptrend (default 40). Lower than standard 30 — catches pullbacks earlier in trending gold."},
+    "rsi_bear_entry":  {"label": "RSI Bear Entry",      "help": "RSI level to sell in downtrend (default 60). Mirror of bull entry — sell the rip in downtrend."},
+    "require_ema_cross":{"label":"Require fresh EMA cross","help": "If checked, only enter on the bar a new EMA crossover occurs. Stricter, fewer trades."},
     # Fixed level
     "direction":        {"label": "Direction",          "help": "Long or Short"},
     "signal_frequency": {"label": "Signal Frequency",   "help": "first_bar = one trade then hold; every_bar = re-signal each bar"},
@@ -178,6 +185,16 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
             "Target = middle band (mean reversion). Keep hold time < 2 days on UVXY.  \n"
             "🎯 Recommended thresholds: **UVXY** → oversold 20 / overbought 80 · "
             "**GC=F** → oversold 30 / overbought 70"
+        )
+    elif strategy_id == "ema_trend_rsi":
+        st.info(
+            "📈 **EMA Trend + RSI Pullback** — Purpose-built for GC=F gold intraday.  \n"
+            "Uses 9 EMA > 21 EMA + price above 50 EMA to confirm a bull/bear regime, "
+            "then RSI pullback to enter WITH the trend.  \n"
+            "**Key difference from pure RSI:** never fades a gold trend — RSI is only "
+            "used to time entries, not to predict reversals.  \n"
+            "🎯 GC=F defaults: fast=9, slow=21, trend=50, RSI bull entry=40, bear entry=60.  \n"
+            "For UVXY, this strategy is not recommended — use Bollinger+RSI instead."
         )
     elif strategy_id == "atr_rsi":
         st.info(
