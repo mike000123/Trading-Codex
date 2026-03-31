@@ -167,39 +167,75 @@ def load_from_alpaca_history(
         raise ImportError("alpaca-py not installed. Run: pip install alpaca-py")
 
     tf_map = {
-        "1Min": TimeFrame(1, TimeFrameUnit.Minute),
-        "5Min": TimeFrame(5, TimeFrameUnit.Minute),
+        "1Min":  TimeFrame(1,  TimeFrameUnit.Minute),
+        "5Min":  TimeFrame(5,  TimeFrameUnit.Minute),
         "15Min": TimeFrame(15, TimeFrameUnit.Minute),
-        "1Hour": TimeFrame(1, TimeFrameUnit.Hour),
-        "1Day": TimeFrame(1, TimeFrameUnit.Day),
+        "30Min": TimeFrame(30, TimeFrameUnit.Minute),
+        "1Hour": TimeFrame(1,  TimeFrameUnit.Hour),
+        "1Day":  TimeFrame(1,  TimeFrameUnit.Day),
     }
     tf = tf_map.get(timeframe, TimeFrame(1, TimeFrameUnit.Day))
 
+    # Use raw keys — StockHistoricalDataClient without trading credentials
+    # works for data-only access (no paper=True/False distinction for data API)
     client = StockHistoricalDataClient(api_key=api_key, secret_key=secret_key)
+
     req = StockBarsRequest(
-        symbol_or_symbols=symbol,
-        timeframe=tf,
-        start=start.to_pydatetime(),
-        end=end.to_pydatetime(),
+        symbol_or_symbols  = symbol,
+        timeframe          = tf,
+        start              = start.to_pydatetime(),
+        end                = end.to_pydatetime(),
+        feed               = "sip",   # SIP = full consolidated tape
+                                       # IEX (default) is the free feed and has
+                                       # very sparse coverage, especially for ETFs
+                                       # and high-frequency 1-min bars.
+                                       # SIP is included in ALL Alpaca accounts
+                                       # (paper and live) at no extra cost.
+        adjustment         = "all",   # include split/dividend adjustments
     )
-    bars = client.get_stock_bars(req).df
+
+    response = client.get_stock_bars(req)
+    bars     = response.df
 
     if bars.empty:
-        raise ValueError(f"No Alpaca data returned for {symbol}.")
+        raise ValueError(
+            f"No data returned for {symbol} ({timeframe}) "
+            f"{start.date()} → {end.date()}.\n"
+            f"Check: (1) symbol is correct, (2) date range includes trading days, "
+            f"(3) Alpaca keys are valid paper keys."
+        )
 
+    # Flatten multi-level index (symbol, timestamp) → flat DataFrame
     bars = bars.reset_index()
-    bars["date"] = pd.to_datetime(bars["timestamp"], utc=True).dt.tz_localize(None)
 
-    result = pd.DataFrame(
-        {
-            "date": bars["date"],
-            "open": bars["open"].astype(float),
-            "high": bars["high"].astype(float),
-            "low": bars["low"].astype(float),
-            "close": bars["close"].astype(float),
-            "volume": bars["volume"].astype(float),
-        }
-    ).dropna().sort_values("date").reset_index(drop=True)
+    # Timestamp column may be named "timestamp" or be the index
+    ts_col = None
+    for candidate in ["timestamp", "t"]:
+        if candidate in bars.columns:
+            ts_col = candidate
+            break
+    if ts_col is None:
+        # Last resort: first datetime-like column
+        for col in bars.columns:
+            if pd.api.types.is_datetime64_any_dtype(bars[col]):
+                ts_col = col
+                break
 
-    log.info(f"Alpaca historical data: {symbol} {len(result)} bars")
+    if ts_col is None:
+        raise ValueError(f"Cannot find timestamp column in Alpaca response. "
+                         f"Columns: {list(bars.columns)}")
+
+    bars["date"] = pd.to_datetime(bars[ts_col], utc=True).dt.tz_localize(None)
+
+    result = pd.DataFrame({
+        "date":   bars["date"],
+        "open":   bars["open"].astype(float),
+        "high":   bars["high"].astype(float),
+        "low":    bars["low"].astype(float),
+        "close":  bars["close"].astype(float),
+        "volume": bars["volume"].astype(float),
+    }).dropna().sort_values("date").reset_index(drop=True)
+
+    log.info(f"Alpaca: {symbol} {timeframe} → {len(result)} bars "
+             f"({result['date'].iloc[0].date()} to {result['date'].iloc[-1].date()})")
     return result
