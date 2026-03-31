@@ -69,11 +69,22 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
         if not settings.alpaca.has_paper_credentials():
             st.sidebar.warning("No Alpaca credentials. Add to .env")
         else:
-            symbol = st.sidebar.text_input("Symbol", value="AAPL", key="alp_symbol")
-            tf     = st.sidebar.selectbox("Timeframe", ["1Day", "1Hour", "15Min", "5Min"], key="alp_tf")
+            symbol = st.sidebar.text_input("Symbol", value="UVXY", key="alp_symbol")
+            tf     = st.sidebar.selectbox("Timeframe",
+                         ["1Min","5Min","15Min","30Min","1Hour","1Day"],
+                         index=0, key="alp_tf")
             col1, col2 = st.sidebar.columns(2)
-            start = col1.date_input("Start", value=(pd.Timestamp.today()-pd.Timedelta(days=90)).date(), key="alp_start")
-            end   = col2.date_input("End",   value=pd.Timestamp.today().date(), key="alp_end")
+            # Alpaca has ~5 years of 1-min data — default start 2 years back
+            start = col1.date_input("Start",
+                value=(pd.Timestamp.today()-pd.Timedelta(days=730)).date(),
+                key="alp_start")
+            end   = col2.date_input("End", value=pd.Timestamp.today().date(), key="alp_end")
+            st.sidebar.caption(
+                "💡 **Alpaca data ranges** (SIP feed, free):  \n"
+                "**1Min** → ~5 years back · **5Min+** → ~5 years back  \n"
+                "For UVXY: use **1Min**, start **2020-01-01** to get ~6 years.  \n"
+                "⚠️ Keep date ranges under 3 months at a time for 1Min "
+                "to avoid very large downloads. Load multiple batches.")
             if st.sidebar.button("Fetch from Alpaca", key="alp_fetch"):
                 from data.ingestion import load_from_alpaca_history
                 creds = settings.alpaca
