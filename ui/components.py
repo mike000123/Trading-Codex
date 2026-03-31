@@ -122,13 +122,12 @@ _PARAM_META: dict[str, dict] = {
     "bb_std":         {"label": "BB Std Devs",         "help": "Standard deviations for upper/lower bands. Default 2.0."},
     "sl_band_mult":   {"label": "SL beyond band",      "help": "SL = outer band ± (this × band width). Default 0.2."},
     "require_cross":  {"label": "Require band cross",  "help": "If checked, price must break through the band, not just touch it."},
-    # EMA Trend+RSI
-    "fast_ema":        {"label": "Fast EMA",            "help": "Short-term EMA (default 9). Cross above slow EMA = bull regime."},
-    "slow_ema":        {"label": "Slow EMA",            "help": "Medium-term EMA (default 21). Price must also be above Trend EMA."},
-    "trend_ema":       {"label": "Trend EMA",           "help": "Long-term trend filter (default 50). Only trades in direction price is relative to this EMA."},
-    "rsi_bull_entry":  {"label": "RSI Bull Entry",      "help": "RSI level to buy in uptrend (default 40). Lower than standard 30 — catches pullbacks earlier in trending gold."},
-    "rsi_bear_entry":  {"label": "RSI Bear Entry",      "help": "RSI level to sell in downtrend (default 60). Mirror of bull entry — sell the rip in downtrend."},
-    "require_ema_cross":{"label":"Require fresh EMA cross","help": "If checked, only enter on the bar a new EMA crossover occurs. Stricter, fewer trades."},
+    # EMA Crossover + RSI + Trend Filter (GC=F)
+    "fast_ema":    {"label": "Fast EMA",       "help": "Fast EMA period (default 9). Golden cross above slow EMA = buy signal."},
+    "slow_ema":    {"label": "Slow EMA",       "help": "Slow EMA period (default 21). Death cross below fast EMA = sell signal."},
+    "trend_ema":   {"label": "Trend EMA",      "help": "Long-term trend filter (default 200). Set to 0 to disable. Longs only above, shorts only below."},
+    "rsi_gate":       {"label": "RSI Gate",          "help": "RSI must be above this for longs, below for shorts (default 50). Raise to 55 for stricter momentum filter."},
+    "atr_min_filter": {"label": "Min ATR filter",     "help": "Skip signal if ATR < this value (default 0=off). Set e.g. 0.5 for GC=F to avoid trading in tight choppy ranges. ATR is in price units (dollars for gold)."},
     # Fixed level
     "direction":        {"label": "Direction",          "help": "Long or Short"},
     "signal_frequency": {"label": "Signal Frequency",   "help": "first_bar = one trade then hold; every_bar = re-signal each bar"},
@@ -188,13 +187,15 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
         )
     elif strategy_id == "ema_trend_rsi":
         st.info(
-            "📈 **EMA Trend + RSI Pullback** — Purpose-built for GC=F gold intraday.  \n"
-            "Uses 9 EMA > 21 EMA + price above 50 EMA to confirm a bull/bear regime, "
-            "then RSI pullback to enter WITH the trend.  \n"
-            "**Key difference from pure RSI:** never fades a gold trend — RSI is only "
-            "used to time entries, not to predict reversals.  \n"
-            "🎯 GC=F defaults: fast=9, slow=21, trend=50, RSI bull entry=40, bear entry=60.  \n"
-            "For UVXY, this strategy is not recommended — use Bollinger+RSI instead."
+            "📈 **EMA Crossover + RSI + Trend Filter** — Purpose-built for GC=F 1-min/5-min.  \n"
+            "**Entry:** 9/21 EMA golden/death cross · **RSI gate:** > 50 confirms direction · "
+            "**200 EMA filter:** trades only with the broader trend.  \n"
+            "**Tuning guide:**  \n"
+            "• Near-zero return → raise `atr_tp_mult` (3.0–4.0) so wins outweigh losses  \n"
+            "• Too many losing trades → set `atr_min_filter` to 0.3–0.8 (skip choppy periods)  \n"
+            "• Too few trades → set `trend_ema=0` to remove the 200 EMA filter  \n"
+            "• Faster signals → reduce `slow_ema` from 21 to 13  \n"
+            "🎯 GC=F recommended: trend_ema=200, rsi_gate=50, atr_tp=3.0, atr_min_filter=0.5"
         )
     elif strategy_id == "atr_rsi":
         st.info(
