@@ -134,7 +134,14 @@ def render() -> None:
             
             buy_lvls  = [float(x) for x in str(params.get("buy_levels","30")).replace(";",",").split(",") if x.strip()]
             sell_lvls = [float(x) for x in str(params.get("sell_levels","70")).replace(";",",").split(",") if x.strip()]
-            st.altair_chart(rsi_chart(prices, period, buy_lvls, sell_lvls), use_container_width=True)
+            st.altair_chart(
+                rsi_chart(prices, period, buy_lvls, sell_lvls)
+                .configure_view(strokeOpacity=0)
+                .configure_axis(gridColor="#2a2d3e", labelColor="#d0d4f0",
+                                titleColor="#d0d4f0", labelFontSize=12, titleFontSize=13)
+                .configure_title(color="#e8eaf6", fontSize=14, fontWeight="bold"),
+                use_container_width=True,
+            )
 
         with st.expander("📋 All Signals", expanded=False):
             active = signals_df[signals_df["action"] != "HOLD"].copy()
