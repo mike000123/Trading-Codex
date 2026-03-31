@@ -2,29 +2,8 @@
 pages/page_forward_test.py
 ───────────────────────────
 Forward Test — live data, simulated orders, no broker.
-
-Sits between backtester (historical) and paper trading (broker-connected).
-
-How it works:
-  1. You configure a strategy + symbol + interval
-  2. Click "Start Forward Test" — the app fetches the latest N bars from
-     Yahoo Finance and evaluates the strategy signal RIGHT NOW
-  3. If a signal fires, a simulated trade is opened and stored locally
-  4. Click "Refresh" (or enable auto-refresh) to fetch the next bar and
-     check for exit conditions on open simulated trades
-  5. Full trade log, equity curve, and signal history are shown live
-
-Key differences vs Backtester:
-  - Uses CURRENT market data, not historical replay
-  - Each refresh = one new bar arriving (simulates live feed)
-  - Signals fire in real time — you see exactly what the strategy
-    would do if connected to a broker right now
-  - No order is ever sent anywhere — 100% local simulation
-
-Key differences vs Paper Trading:
-  - No Alpaca connection required
-  - Works on any yfinance symbol including GC=F, UVXY
-  - Designed for strategy validation before going live
+Supports multiple tickers simultaneously.
+All trades persisted to DB with mode="forward_test".
 """
 from __future__ import annotations
 
@@ -37,9 +16,10 @@ import pandas as pd
 import streamlit as st
 
 from config.settings import settings
-from core.models import Direction, SignalAction, TradeOutcome
+from core.models import Direction, SignalAction
 from data.ingestion import load_from_ticker
-from risk.manager import RiskManager, RiskCheckResult
+from db.database import Database
+from risk.manager import RiskManager
 from strategies import list_strategies, get_strategy
 from ui.components import render_mode_banner, render_strategy_params, render_metrics_row
 from ui.charts import rsi_chart
@@ -48,109 +28,117 @@ _GREEN  = "#26a69a"
 _RED    = "#ef5350"
 _BLUE   = "#4a9eff"
 _GOLD   = "#ffd54f"
-_ORANGE = "#ff9800"
 _GREY   = "#9e9eb8"
 _AXIS   = dict(gridColor="#2a2d3e", labelColor="#d0d4f0", titleColor="#d0d4f0",
                labelFontSize=12, titleFontSize=13)
 _TITLE  = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
 
-# ─── Session state keys ───────────────────────────────────────────────────────
-_KEY_TRADES    = "ft_trades"
-_KEY_SIGNALS   = "ft_signals"
-_KEY_PRICES    = "ft_prices"
-_KEY_CONFIG    = "ft_config"
-_KEY_OPEN      = "ft_open_trade"
-_KEY_EQUITY    = "ft_equity_history"
-_KEY_RUNNING   = "ft_running"
+# ── Shared session state (read by page_portfolio) ─────────────────────────────
+# ft_active_runs : dict[symbol → run_config_dict]
+# ft_open_trades : dict[symbol → open_trade_dict | None]
+# ft_all_signals : list[signal_row_dict]
+# ft_prices_cache: dict[symbol → pd.DataFrame]
+_RUNS     = "ft_active_runs"
+_OPEN     = "ft_open_trades"
+_SIGNALS  = "ft_all_signals"
+_CACHE    = "ft_prices_cache"
+_EQUITY   = "ft_equity"   # dict[symbol → list[{time, equity, pnl}]]
+
+
+def _db() -> Database:
+    return Database(settings.db_path)
 
 
 def _init_state() -> None:
-    for key, default in [
-        (_KEY_TRADES,   []),
-        (_KEY_SIGNALS,  []),
-        (_KEY_PRICES,   None),
-        (_KEY_CONFIG,   {}),
-        (_KEY_OPEN,     None),
-        (_KEY_EQUITY,   []),
-        (_KEY_RUNNING,  False),
-    ]:
-        if key not in st.session_state:
-            st.session_state[key] = default
+    for k, v in [(_RUNS, {}), (_OPEN, {}), (_SIGNALS, []),
+                  (_CACHE, {}), (_EQUITY, {})]:
+        if k not in st.session_state:
+            st.session_state[k] = v
 
 
-def _reset_state() -> None:
-    st.session_state[_KEY_TRADES]  = []
-    st.session_state[_KEY_SIGNALS] = []
-    st.session_state[_KEY_PRICES]  = None
-    st.session_state[_KEY_OPEN]    = None
-    st.session_state[_KEY_EQUITY]  = []
-    st.session_state[_KEY_RUNNING] = True
+def _interval_td(interval: str) -> timedelta:
+    return {"1m": timedelta(minutes=1), "2m": timedelta(minutes=2),
+            "5m": timedelta(minutes=5), "15m": timedelta(minutes=15),
+            "30m": timedelta(minutes=30), "1h": timedelta(hours=1),
+            "1d": timedelta(days=1)}.get(interval, timedelta(minutes=5))
 
 
-def _interval_to_timedelta(interval: str) -> timedelta:
-    mapping = {"1m": timedelta(minutes=1), "2m": timedelta(minutes=2),
-               "5m": timedelta(minutes=5), "15m": timedelta(minutes=15),
-               "30m": timedelta(minutes=30), "1h": timedelta(hours=1),
-               "1d": timedelta(days=1)}
-    return mapping.get(interval, timedelta(minutes=5))
+def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
+    delta = _interval_td(interval)
+    end   = pd.Timestamp.now()
+    start = end - delta * max(lookback * 3, 500)
+    data  = load_from_ticker(symbol, interval, start, end)
+    return data.tail(lookback).reset_index(drop=True)
 
 
-def _fetch_latest(symbol: str, interval: str, lookback_bars: int) -> pd.DataFrame:
-    """Fetch the most recent lookback_bars bars for the symbol."""
-    delta     = _interval_to_timedelta(interval)
-    # Add buffer for weekends/holidays
-    buffer    = max(lookback_bars * 3, 500)
-    end       = pd.Timestamp.now()
-    start     = end - delta * buffer
-    data      = load_from_ticker(symbol, interval, start, end)
-    return data.tail(lookback_bars).reset_index(drop=True)
-
-
-def _calc_leveraged_return(entry: float, exit_p: float,
-                            leverage: float, direction: Direction) -> float:
+def _leveraged_ret(entry: float, exit_p: float,
+                   leverage: float, direction: str) -> float:
     raw = (exit_p - entry) / entry
-    if direction == Direction.SHORT:
+    if direction == "Short":
         raw = -raw
     return raw * leverage * 100
 
 
 def _check_exit(trade: dict, bar: pd.Series) -> dict:
-    """Check if an open simulated trade hit SL or TP on this bar."""
-    high = float(bar["high"])
-    low  = float(bar["low"])
-    tp   = trade.get("take_profit")
-    sl   = trade["stop_loss"]
-    ep   = trade["entry_price"]
-    lev  = trade["leverage"]
-    d    = trade["direction"]
-
-    hit_sl = hit_tp = False
-    if d == "Long":
-        hit_sl = low  <= sl
-        hit_tp = tp is not None and high >= tp
-    else:
-        hit_sl = high >= sl
-        hit_tp = tp is not None and low  <= tp
-
+    hi, lo = float(bar["high"]), float(bar["low"])
+    tp, sl = trade.get("take_profit"), trade["stop_loss"]
+    ep, lev, d = trade["entry_price"], trade["leverage"], trade["direction"]
+    hit_sl = hi >= sl if d == "Short" else lo <= sl
+    hit_tp = (lo <= tp if d == "Short" else hi >= tp) if tp else False
     if hit_sl and hit_tp:
-        trade["outcome"]   = "Ambiguous candle"
-        trade["exit_time"] = bar["date"]
+        trade.update({"outcome": "Ambiguous candle", "exit_time": bar["date"]})
     elif hit_sl:
-        trade["outcome"]            = "SL hit"
-        trade["exit_price"]         = sl
-        trade["exit_time"]          = bar["date"]
-        trade["leveraged_return_%"] = _calc_leveraged_return(ep, sl, lev, d)
+        ret = _leveraged_ret(ep, sl, lev, d)
+        trade.update({"outcome": "SL hit", "exit_price": sl,
+                      "exit_time": bar["date"], "leveraged_return_%": ret,
+                      "pnl": round(trade["capital"] * ret / 100, 2)})
     elif hit_tp:
-        trade["outcome"]            = "TP hit"
-        trade["exit_price"]         = tp
-        trade["exit_time"]          = bar["date"]
-        trade["leveraged_return_%"] = _calc_leveraged_return(ep, tp, lev, d)
+        ret = _leveraged_ret(ep, tp, lev, d)
+        trade.update({"outcome": "TP hit", "exit_price": tp,
+                      "exit_time": bar["date"], "leveraged_return_%": ret,
+                      "pnl": round(trade["capital"] * ret / 100, 2)})
     return trade
 
 
-# ─── Chart helpers ────────────────────────────────────────────────────────────
+def _save_trade_to_db(trade: dict, symbol: str, strategy_id: str) -> None:
+    """Persist a closed forward-test trade to the database."""
+    from core.models import TradeRecord, Direction as Dir, TradeOutcome
+    outcome_map = {
+        "SL hit": TradeOutcome.STOP_LOSS,
+        "TP hit": TradeOutcome.TAKE_PROFIT,
+        "Manual close": TradeOutcome.SIGNAL_EXIT,
+        "Ambiguous candle": TradeOutcome.AMBIGUOUS,
+    }
+    try:
+        rec = TradeRecord(
+            id               = trade.get("id", str(uuid.uuid4())[:8]),
+            symbol           = symbol,
+            direction        = Dir(trade["direction"]),
+            entry_price      = trade["entry_price"],
+            take_profit      = trade.get("take_profit"),
+            stop_loss        = trade["stop_loss"],
+            leverage         = trade["leverage"],
+            capital_allocated= trade["capital"],
+            entry_time       = pd.Timestamp(trade["entry_time"]).to_pydatetime(),
+            mode             = "forward_test",
+            strategy_id      = strategy_id,
+            exit_price       = trade.get("exit_price"),
+            exit_time        = (pd.Timestamp(trade["exit_time"]).to_pydatetime()
+                                if trade.get("exit_time") else None),
+            outcome          = outcome_map.get(trade.get("outcome", ""), TradeOutcome.OPEN),
+            leveraged_return_pct = trade.get("leveraged_return_%"),
+            pnl              = trade.get("pnl"),
+            notes            = f"Forward test | strategy={strategy_id}",
+        )
+        _db().save_trade(rec)
+    except Exception as e:
+        pass  # don't crash the UI on DB errors
 
-def _price_chart(prices: pd.DataFrame, trades: list, signals: list,
+
+# ── Charts ────────────────────────────────────────────────────────────────────
+
+def _price_chart(prices: pd.DataFrame, closed_trades: list,
+                 open_trade: Optional[dict], signals: list,
                  symbol: str) -> alt.LayerChart:
     base = (alt.Chart(prices).mark_line(color=_BLUE, strokeWidth=1.4)
             .encode(x=alt.X("date:T", title="Date / Time", axis=alt.Axis(**_AXIS)),
@@ -159,87 +147,176 @@ def _price_chart(prices: pd.DataFrame, trades: list, signals: list,
                     tooltip=["date:T", alt.Tooltip("close:Q", format=".4f")]))
     layers = [base]
 
-    if signals:
-        sig_df = pd.DataFrame(signals)
-        buy_s  = sig_df[sig_df["action"] == "BUY"].copy()
-        sell_s = sig_df[sig_df["action"] == "SELL"].copy()
-        tt     = ["date:T", "action:N", alt.Tooltip("close:Q", format=".4f", title="Price"),
-                  "strategy:N"]
-        if not buy_s.empty:
-            buy_s["y"] = buy_s["close"] * 0.997
-            layers.append(alt.Chart(buy_s)
-                          .mark_point(shape="triangle-up", size=120, filled=True, color=_GREEN)
-                          .encode(x="date:T", y="y:Q", tooltip=tt))
-        if not sell_s.empty:
-            sell_s["y"] = sell_s["close"] * 1.003
-            layers.append(alt.Chart(sell_s)
-                          .mark_point(shape="triangle-down", size=120, filled=True, color=_RED)
-                          .encode(x="date:T", y="y:Q", tooltip=tt))
+    # Signal triangles
+    sig_rows = [s for s in signals if s.get("symbol") == symbol]
+    if sig_rows:
+        sdf   = pd.DataFrame(sig_rows)
+        buys  = sdf[sdf["action"] == "BUY"].copy()
+        sells = sdf[sdf["action"] == "SELL"].copy()
+        tt    = ["date:T", "action:N", alt.Tooltip("close:Q", format=".4f")]
+        if not buys.empty:
+            buys["y"] = buys["close"] * 0.997
+            layers.append(alt.Chart(buys)
+                .mark_point(shape="triangle-up", size=110, filled=True, color=_GREEN)
+                .encode(x="date:T", y="y:Q", tooltip=tt))
+        if not sells.empty:
+            sells["y"] = sells["close"] * 1.003
+            layers.append(alt.Chart(sells)
+                .mark_point(shape="triangle-down", size=110, filled=True, color=_RED)
+                .encode(x="date:T", y="y:Q", tooltip=tt))
 
-    if trades:
-        closed = [t for t in trades if t.get("exit_price")]
-        if closed:
-            ex_df = pd.DataFrame(closed)
-            win   = ex_df[ex_df["leveraged_return_%"].fillna(0) > 0]
-            loss  = ex_df[ex_df["leveraged_return_%"].fillna(0) <= 0]
-            tt_x  = ["exit_time:T", "outcome:N",
-                     alt.Tooltip("exit_price:Q", format=".4f"),
-                     alt.Tooltip("leveraged_return_%:Q", format=".2f", title="Return %")]
-            for sub, col in [(win, _GREEN), (loss, _RED)]:
-                if not sub.empty:
-                    layers.append(alt.Chart(sub.rename(columns={"exit_time":"date",
-                                                                  "exit_price":"price"}))
-                                  .mark_point(shape="cross", size=100,
-                                              strokeWidth=2.5, color=col)
-                                  .encode(x="date:T", y="price:Q", tooltip=tt_x))
+    # Closed trade exits
+    sym_closed = [t for t in closed_trades if t.get("symbol") == symbol
+                  and t.get("exit_price")]
+    if sym_closed:
+        ex_df = pd.DataFrame(sym_closed).rename(
+            columns={"exit_time": "date", "exit_price": "price"})
+        ex_df["date"] = pd.to_datetime(ex_df["date"])
+        win  = ex_df[ex_df.get("leveraged_return_%", pd.Series(dtype=float)).fillna(0) > 0] \
+               if "leveraged_return_%" in ex_df.columns else pd.DataFrame()
+        loss = ex_df[ex_df.get("leveraged_return_%", pd.Series(dtype=float)).fillna(0) <= 0] \
+               if "leveraged_return_%" in ex_df.columns else ex_df
+        tt_x = ["date:T", "outcome:N",
+                alt.Tooltip("price:Q", format=".4f"),
+                alt.Tooltip("leveraged_return_%:Q", format=".2f", title="Return %")]
+        for sub, col in [(win, _GREEN), (loss, _RED)]:
+            if not sub.empty:
+                layers.append(alt.Chart(sub)
+                    .mark_point(shape="cross", size=100, strokeWidth=2.5, color=col)
+                    .encode(x="date:T", y="price:Q", tooltip=tt_x))
+
+    # Open trade SL/TP lines
+    if open_trade:
+        sl = open_trade.get("stop_loss")
+        tp = open_trade.get("take_profit")
+        if sl:
+            sl_df = pd.DataFrame({"y": [sl], "label": [f"SL {sl:.4f}"]})
+            layers += [
+                alt.Chart(sl_df).mark_rule(color=_RED, strokeDash=[4,4], strokeWidth=1.3).encode(y="y:Q"),
+                alt.Chart(sl_df).mark_text(color=_RED, align="left", dx=4, dy=-6, fontSize=11)
+                    .encode(y="y:Q", x=alt.value(4), text="label:N"),
+            ]
+        if tp:
+            tp_df = pd.DataFrame({"y": [tp], "label": [f"TP {tp:.4f}"]})
+            layers += [
+                alt.Chart(tp_df).mark_rule(color=_GREEN, strokeDash=[4,4], strokeWidth=1.3).encode(y="y:Q"),
+                alt.Chart(tp_df).mark_text(color=_GREEN, align="left", dx=4, dy=-6, fontSize=11)
+                    .encode(y="y:Q", x=alt.value(4), text="label:N"),
+            ]
 
     return (alt.layer(*layers)
             .properties(title=alt.TitleParams(
-                f"{symbol} – Forward Test  ·  ▲ BUY  ▼ SELL  ✕ Exit", **_TITLE),
-                height=320)
+                f"{symbol} – Forward Test  ▲ BUY  ▼ SELL  ✕ Exit", **_TITLE), height=300)
             .configure_view(strokeOpacity=0)
-            .configure_axis(**_AXIS)
-            .configure_title(**_TITLE))
+            .configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
-def _equity_chart(equity_history: list, starting_capital: float,
+def _equity_chart(eq_history: list, starting_capital: float,
                   symbol: str) -> alt.LayerChart:
-    if len(equity_history) < 2:
+    if len(eq_history) < 2:
         return alt.Chart(pd.DataFrame()).mark_line()
-
-    df       = pd.DataFrame(equity_history)
-    baseline = (alt.Chart(pd.DataFrame({"y": [starting_capital]}))
-                .mark_rule(color=_GREY, strokeDash=[4, 4], strokeWidth=1)
-                .encode(y="y:Q"))
-    line     = (alt.Chart(df)
-                .mark_area(line={"color": _BLUE, "strokeWidth": 2},
-                           color=alt.Gradient(gradient="linear",
-                               stops=[alt.GradientStop(color="rgba(74,158,255,0.2)", offset=0),
-                                      alt.GradientStop(color="rgba(74,158,255,0.0)", offset=1)],
-                               x1=1, x2=1, y1=1, y2=0))
-                .encode(x=alt.X("time:T", title="Time", axis=alt.Axis(**_AXIS)),
-                        y=alt.Y("equity:Q", title="Equity ($)",
-                                scale=alt.Scale(zero=False), axis=alt.Axis(**_AXIS)),
-                        tooltip=["time:T",
-                                 alt.Tooltip("equity:Q", format="$,.2f"),
-                                 alt.Tooltip("pnl:Q",    format="+$,.2f", title="Last P&L")]))
-    dots     = (alt.Chart(df)
-                .mark_point(size=50, filled=True)
-                .encode(x="time:T", y="equity:Q",
-                        color=alt.condition(alt.datum.pnl > 0,
-                                            alt.value(_GREEN), alt.value(_RED)),
-                        tooltip=["time:T",
-                                 alt.Tooltip("equity:Q", format="$,.2f"),
-                                 alt.Tooltip("pnl:Q",    format="+$,.2f", title="Last P&L")]))
-    return (alt.layer(baseline, line, dots)
-            .properties(title=alt.TitleParams(
-                f"{symbol} – Simulated Equity (forward test)", **_TITLE), height=260)
-            .configure_view(strokeOpacity=0)
-            .configure_axis(**_AXIS)
-            .configure_title(**_TITLE))
+    df   = pd.DataFrame(eq_history)
+    base = (alt.Chart(pd.DataFrame({"y": [starting_capital]}))
+            .mark_rule(color=_GREY, strokeDash=[4,4], strokeWidth=1).encode(y="y:Q"))
+    area = (alt.Chart(df)
+            .mark_area(line={"color": _BLUE, "strokeWidth": 2},
+                       color=alt.Gradient(gradient="linear",
+                           stops=[alt.GradientStop(color="rgba(74,158,255,0.2)", offset=0),
+                                  alt.GradientStop(color="rgba(74,158,255,0.0)", offset=1)],
+                           x1=1, x2=1, y1=1, y2=0))
+            .encode(x=alt.X("time:T", title="Time", axis=alt.Axis(**_AXIS)),
+                    y=alt.Y("equity:Q", title="Equity ($)", scale=alt.Scale(zero=False),
+                            axis=alt.Axis(**_AXIS)),
+                    tooltip=["time:T",
+                             alt.Tooltip("equity:Q", format="$,.2f"),
+                             alt.Tooltip("pnl:Q",    format="+$,.2f", title="P&L")]))
+    dots = (alt.Chart(df).mark_point(size=50, filled=True)
+            .encode(x="time:T", y="equity:Q",
+                    color=alt.condition(alt.datum.pnl > 0,
+                                        alt.value(_GREEN), alt.value(_RED)),
+                    tooltip=["time:T",
+                             alt.Tooltip("equity:Q", format="$,.2f"),
+                             alt.Tooltip("pnl:Q",    format="+$,.2f", title="P&L")]))
+    return (alt.layer(base, area, dots)
+            .properties(title=alt.TitleParams(f"{symbol} – Equity", **_TITLE), height=220)
+            .configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
-# ─── Page ─────────────────────────────────────────────────────────────────────
+# ── Core fetch + evaluate logic (called per symbol per refresh) ───────────────
+
+def _run_tick(symbol: str, run: dict, closed_trades_acc: list) -> None:
+    """Fetch latest bar, check exits, check entries, store results."""
+    try:
+        prices = _fetch(symbol, run["interval"], run["lookback"])
+        st.session_state[_CACHE][symbol] = prices
+    except Exception as e:
+        st.warning(f"⚠️ {symbol}: data fetch failed — {e}")
+        return
+
+    latest = prices.iloc[-1]
+    latest_ts = latest["date"]
+
+    # Check open trade exit
+    open_trade = st.session_state[_OPEN].get(symbol)
+    if open_trade:
+        open_trade = _check_exit(open_trade, latest)
+        if open_trade.get("outcome") not in (None, "Open"):
+            closed_trades_acc.append(open_trade)
+            _save_trade_to_db(open_trade, symbol, run["strategy_id"])
+            # Update equity
+            pnl = open_trade.get("pnl", 0)
+            prev_eq = (st.session_state[_EQUITY].get(symbol, [{"equity": run["capital"]}])[-1]["equity"])
+            st.session_state[_EQUITY].setdefault(symbol, []).append(
+                {"time": latest_ts, "equity": round(prev_eq + pnl, 2), "pnl": round(pnl, 2)})
+            st.session_state[_OPEN][symbol] = None
+            open_trade = None
+
+    # Generate signal
+    if open_trade is None:
+        cls      = get_strategy(run["strategy_id"])
+        strategy = cls(params=run["params"])
+        signal   = strategy.generate_signal(prices, symbol)
+
+        sig_row = {
+            "date": latest_ts, "symbol": symbol,
+            "action": signal.action.value,
+            "close": float(latest["close"]),
+            "strategy": cls.name,
+            "rsi": signal.metadata.get("rsi"),
+        }
+        st.session_state[_SIGNALS].append(sig_row)
+
+        if signal.action != SignalAction.HOLD and signal.suggested_sl is not None:
+            risk = RiskManager(settings.risk)
+            direction = (Direction.LONG if signal.action == SignalAction.BUY
+                         else Direction.SHORT)
+            check = risk.check(
+                direction=direction,
+                entry_price=float(latest["close"]),
+                take_profit=signal.suggested_tp,
+                stop_loss=signal.suggested_sl,
+                leverage=run["leverage"],
+                capital_requested=run["capital"],
+            )
+            if check.approved:
+                eff_sl = check.adjusted_sl or signal.suggested_sl
+                new_trade = {
+                    "id":          str(uuid.uuid4())[:8],
+                    "symbol":      symbol,
+                    "direction":   direction.value,
+                    "entry_price": float(latest["close"]),
+                    "take_profit": signal.suggested_tp,
+                    "stop_loss":   eff_sl,
+                    "leverage":    run["leverage"],
+                    "capital":     run["capital"],
+                    "entry_time":  latest_ts,
+                    "strategy":    cls.name,
+                    "outcome":     "Open",
+                }
+                st.session_state[_OPEN][symbol] = new_trade
+
+
+# ── Page ─────────────────────────────────────────────────────────────────────
 
 def render() -> None:
     _init_state()
@@ -247,337 +324,268 @@ def render() -> None:
 
     st.title("🔭 Forward Test")
     st.caption(
-        "Run your strategy on **live market data** with **simulated orders** — "
-        "no broker connection needed. Each refresh fetches the latest bar and "
-        "evaluates the strategy in real time."
+        "Run strategies on **live market data** with **simulated orders** — "
+        "no broker needed. Supports multiple tickers simultaneously. "
+        "All trades saved to the Portfolio."
     )
-
     st.info(
-        "**How this differs from Backtester and Paper Trading:**  \n"
-        "• **Backtester** — replays historical data you already have  \n"
-        "• **Forward Test** ← you are here — fetches live data, simulates locally, no broker  \n"
-        "• **Paper Trading** — connects to Alpaca paper account, sends real API orders"
+        "**Flow:** Backtester → **Forward Test** ← you are here → Paper Trading → Live  \n"
+        "Forward Test = real-time data + local simulation. No orders sent anywhere."
     )
-
     st.divider()
 
-    # ── Configuration ─────────────────────────────────────────────────────────
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        symbol   = st.text_input("Symbol", value="GC=F", key="ft_symbol").upper()
-        interval = st.selectbox("Interval",
-                                ["1m","2m","5m","15m","30m","1h","1d"],
-                                index=0, key="ft_interval")
-    with col2:
-        lookback = st.number_input("Warm-up bars", min_value=50,
-                                   max_value=1000, value=200, step=50,
-                                   key="ft_lookback",
-                                   help="How many recent bars to load for indicator warm-up. "
-                                        "Must be > your slowest indicator period.")
-        capital  = st.number_input("Capital per trade ($)", min_value=10.0,
-                                   value=1000.0, key="ft_capital")
-    with col3:
-        leverage = st.number_input("Leverage", min_value=1.0,
-                                   max_value=100.0, value=1.0, step=0.5,
-                                   key="ft_leverage")
-        max_loss = st.slider("Max capital loss %", 5, 100, 50,
-                             key="ft_maxloss")
+    # ── Add new ticker run ────────────────────────────────────────────────────
+    with st.expander("➕ Add Symbol to Forward Test", expanded=len(st.session_state[_RUNS]) == 0):
+        strategies  = list_strategies()
+        strat_names = {s["name"]: s["id"] for s in strategies}
 
-    strategies  = list_strategies()
-    strat_names = {s["name"]: s["id"] for s in strategies}
-    selected_name = st.selectbox("Strategy", list(strat_names.keys()),
-                                 key="ft_strategy")
-    selected_id   = strat_names[selected_name]
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            new_symbol   = st.text_input("Symbol", value="UVXY", key="ft_new_sym").upper()
+            new_interval = st.selectbox("Interval",
+                                        ["1m","2m","5m","15m","30m","1h","1d"],
+                                        index=0, key="ft_new_interval")
+        with col2:
+            new_lookback = st.number_input("Warm-up bars", 50, 1000, 200, 50, key="ft_new_lb")
+            new_capital  = st.number_input("Capital / trade ($)", 10.0, value=1000.0, key="ft_new_cap")
+        with col3:
+            new_leverage = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="ft_new_lev")
+            new_max_loss = st.slider("Max capital loss %", 5, 100, 50, key="ft_new_ml")
 
-    params = render_strategy_params(selected_id, leverage=leverage,
-                                    max_capital_loss_pct=float(max_loss))
+        new_strat_name = st.selectbox("Strategy", list(strat_names.keys()), key="ft_new_strat")
+        new_strat_id   = strat_names[new_strat_name]
+        new_params     = render_strategy_params(new_strat_id,
+                                                leverage=new_leverage,
+                                                max_capital_loss_pct=float(new_max_loss))
 
-    st.divider()
-
-    # ── Control buttons ───────────────────────────────────────────────────────
-    col_start, col_refresh, col_stop, col_close = st.columns(4)
-
-    start_clicked   = col_start.button("▶ Start Forward Test",
-                                       type="primary", key="ft_start")
-    refresh_clicked = col_refresh.button("🔄 Fetch Next Bar",
-                                         key="ft_refresh",
-                                         disabled=not st.session_state[_KEY_RUNNING])
-    stop_clicked    = col_stop.button("⏹ Stop",
-                                      key="ft_stop",
-                                      disabled=not st.session_state[_KEY_RUNNING])
-    close_clicked   = col_close.button("❌ Close Open Trade",
-                                       key="ft_close_open",
-                                       disabled=st.session_state[_KEY_OPEN] is None)
-
-    # Auto-refresh toggle
-    auto_refresh = st.checkbox(
-        "Auto-refresh every minute",
-        value=False, key="ft_auto",
-        help="When checked, the page re-fetches data automatically. "
-             "Streamlit re-runs on each interaction — use this to simulate "
-             "a live bar arriving."
-    )
-
-    if auto_refresh and st.session_state[_KEY_RUNNING]:
-        import time
-        st.caption(f"⏱ Auto-refresh active — last update: {datetime.now().strftime('%H:%M:%S')}")
-
-    # ── Start ─────────────────────────────────────────────────────────────────
-    if start_clicked:
-        _reset_state()
-        st.session_state[_KEY_CONFIG] = {
-            "symbol": symbol, "interval": interval,
-            "lookback": lookback, "capital": capital,
-            "leverage": leverage, "max_loss": max_loss,
-            "strategy_id": selected_id, "params": dict(params),
-            "started_at": datetime.now().isoformat(),
-        }
-        st.rerun()
-
-    # ── Stop ──────────────────────────────────────────────────────────────────
-    if stop_clicked:
-        st.session_state[_KEY_RUNNING] = False
-        st.success("Forward test stopped. Results preserved below.")
-
-    # ── Nothing started yet ───────────────────────────────────────────────────
-    if not st.session_state[_KEY_RUNNING] and not st.session_state[_KEY_TRADES]:
-        st.info("Configure your strategy above and click **▶ Start Forward Test**.")
-        return
-
-    # ── Fetch + evaluate (on start, refresh, or auto-refresh) ─────────────────
-    cfg = st.session_state[_KEY_CONFIG]
-    should_fetch = (start_clicked or refresh_clicked or
-                    (auto_refresh and st.session_state[_KEY_RUNNING]))
-
-    if should_fetch and st.session_state[_KEY_RUNNING]:
-        with st.spinner(f"Fetching latest {cfg['lookback']} bars for {cfg['symbol']}…"):
-            try:
-                prices = _fetch_latest(cfg["symbol"], cfg["interval"],
-                                       cfg["lookback"])
-                st.session_state[_KEY_PRICES] = prices
-            except Exception as e:
-                st.error(f"Data fetch failed: {e}")
-                return
-
-        prices     = st.session_state[_KEY_PRICES]
-        latest_bar = prices.iloc[-1]
-        latest_ts  = latest_bar["date"]
-
-        # ── Check open trade exit ──────────────────────────────────────────
-        open_trade = st.session_state[_KEY_OPEN]
-        if open_trade is not None:
-            open_trade = _check_exit(open_trade, latest_bar)
-            if open_trade.get("outcome") not in (None, "Open"):
-                pnl = (open_trade["capital"] *
-                       open_trade.get("leveraged_return_%", 0) / 100)
-                open_trade["pnl"] = round(pnl, 2)
-                st.session_state[_KEY_TRADES].append(open_trade)
-                # Update equity
-                prev_eq = (st.session_state[_KEY_EQUITY][-1]["equity"]
-                           if st.session_state[_KEY_EQUITY]
-                           else cfg["capital"])
-                st.session_state[_KEY_EQUITY].append({
-                    "time":   latest_ts,
-                    "equity": round(prev_eq + pnl, 2),
-                    "pnl":    round(pnl, 2),
-                })
-                st.session_state[_KEY_OPEN] = None
-                open_trade = None
-
-        # ── Generate signal ────────────────────────────────────────────────
-        if open_trade is None:
-            cls      = get_strategy(cfg["strategy_id"])
-            strategy = cls(params=cfg["params"])
-            signal   = strategy.generate_signal(prices, cfg["symbol"])
-
-            sig_row = {
-                "date":     latest_ts,
-                "action":   signal.action.value,
-                "close":    float(latest_bar["close"]),
-                "strategy": cls.name,
-                "tp":       signal.suggested_tp,
-                "sl":       signal.suggested_sl,
-                "rsi":      signal.metadata.get("rsi"),
+        if st.button("➕ Add & Start", type="primary", key="ft_add"):
+            run_cfg = {
+                "symbol":      new_symbol,
+                "interval":    new_interval,
+                "lookback":    new_lookback,
+                "capital":     new_capital,
+                "leverage":    new_leverage,
+                "max_loss":    new_max_loss,
+                "strategy_id": new_strat_id,
+                "params":      dict(new_params),
+                "started_at":  datetime.now().isoformat(),
+                "active":      True,
             }
-            st.session_state[_KEY_SIGNALS].append(sig_row)
-
-            # Open simulated trade if signal fired
-            if signal.action != SignalAction.HOLD and signal.suggested_sl is not None:
-                risk = RiskManager(settings.risk)
-                direction = (Direction.LONG if signal.action == SignalAction.BUY
-                             else Direction.SHORT)
-                check = risk.check(
-                    direction=direction,
-                    entry_price=float(latest_bar["close"]),
-                    take_profit=signal.suggested_tp,
-                    stop_loss=signal.suggested_sl,
-                    leverage=cfg["leverage"],
-                    capital_requested=cfg["capital"],
-                )
-                if check.approved:
-                    eff_sl = check.adjusted_sl or signal.suggested_sl
-                    st.session_state[_KEY_OPEN] = {
-                        "id":          str(uuid.uuid4())[:8],
-                        "symbol":      cfg["symbol"],
-                        "direction":   direction.value,
-                        "entry_price": float(latest_bar["close"]),
-                        "take_profit": signal.suggested_tp,
-                        "stop_loss":   eff_sl,
-                        "leverage":    cfg["leverage"],
-                        "capital":     cfg["capital"],
-                        "entry_time":  latest_ts,
-                        "strategy":    cls.name,
-                        "outcome":     "Open",
-                        "exit_price":  None,
-                        "exit_time":   None,
-                    }
-
-    # ── Manual close open trade ────────────────────────────────────────────────
-    if close_clicked and st.session_state[_KEY_OPEN] is not None:
-        prices = st.session_state.get(_KEY_PRICES)
-        if prices is not None:
-            t   = st.session_state[_KEY_OPEN]
-            ep  = t["entry_price"]
-            xp  = float(prices.iloc[-1]["close"])
-            d   = t["direction"]
-            lev = t["leverage"]
-            raw = (xp - ep) / ep * (1 if d == "Long" else -1)
-            ret = raw * lev * 100
-            pnl = t["capital"] * ret / 100
-            t.update({"outcome": "Manual close", "exit_price": xp,
-                      "exit_time": prices.iloc[-1]["date"],
-                      "leveraged_return_%": round(ret, 3),
-                      "pnl": round(pnl, 2)})
-            st.session_state[_KEY_TRADES].append(t)
-            st.session_state[_KEY_OPEN] = None
+            st.session_state[_RUNS][new_symbol]  = run_cfg
+            st.session_state[_OPEN][new_symbol]  = None
+            st.session_state[_EQUITY][new_symbol] = []
             st.rerun()
 
-    # ── Display ────────────────────────────────────────────────────────────────
-    prices = st.session_state.get(_KEY_PRICES)
-    if prices is None:
+    # ── Active runs ───────────────────────────────────────────────────────────
+    runs = st.session_state[_RUNS]
+    if not runs:
+        st.info("No active forward tests. Add a symbol above.")
         return
 
-    latest = prices.iloc[-1]
+    # Global controls
+    gcol1, gcol2, gcol3 = st.columns(3)
+    refresh_all = gcol1.button("🔄 Refresh All Symbols", type="primary", key="ft_refresh_all")
+    auto        = gcol2.checkbox("Auto-refresh (60s)", value=False, key="ft_auto")
+    if gcol3.button("🗑️ Clear All", key="ft_clear"):
+        for k in [_RUNS, _OPEN, _SIGNALS, _CACHE, _EQUITY]:
+            st.session_state[k] = {} if isinstance(st.session_state[k], dict) else []
+        st.rerun()
 
-    # Status bar
-    open_trade = st.session_state[_KEY_OPEN]
-    status_col1, status_col2, status_col3, status_col4 = st.columns(4)
-    status_col1.metric("Symbol", cfg["symbol"])
-    status_col2.metric("Last Price", f"{latest['close']:.4f}")
-    status_col3.metric("Last Bar Time",
-                       pd.Timestamp(latest["date"]).strftime("%H:%M:%S"))
-    status_col4.metric("Open Position",
-                       f"{open_trade['direction']} @ {open_trade['entry_price']:.4f}"
-                       if open_trade else "None")
+    # ── Collect all closed trades from DB for this session ────────────────────
+    try:
+        db_trades = _db().get_trades(mode="forward_test")
+        closed_this_session = [t for t in db_trades
+                                if any(t.get("symbol") == sym for sym in runs)]
+    except Exception:
+        closed_this_session = []
 
-    # Open trade details
-    if open_trade:
-        tp_str = f"{open_trade['take_profit']:.4f}" if open_trade.get("take_profit") else "—"
-        sl_str = f"{open_trade['stop_loss']:.4f}"
-        curr   = float(latest["close"])
-        ep     = open_trade["entry_price"]
-        lev    = open_trade["leverage"]
-        d      = open_trade["direction"]
-        raw    = (curr - ep) / ep * (1 if d == "Long" else -1)
-        unreal = raw * lev * 100
-        colour = "green" if unreal >= 0 else "red"
-        st.markdown(
-            f'<div style="border:1px solid #2a2d3e;border-radius:8px;padding:10px 16px;">'
-            f'<b>Open Trade:</b> {d} {cfg["symbol"]} · '
-            f'Entry: <code>{ep:.4f}</code> · '
-            f'SL: <code>{sl_str}</code> · TP: <code>{tp_str}</code> · '
-            f'Unrealised: <span style="color:{colour};font-weight:bold">'
-            f'{unreal:+.2f}%</span>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+    # ── Per-symbol refresh ────────────────────────────────────────────────────
+    if refresh_all or (auto):
+        for symbol, run in runs.items():
+            if run.get("active"):
+                _run_tick(symbol, run, closed_this_session)
+        st.rerun() if not auto else None
 
     st.divider()
 
-    # Summary metrics
-    closed = [t for t in st.session_state[_KEY_TRADES]
-              if t.get("leveraged_return_%") is not None]
-    if closed:
-        total_pnl  = sum(t["pnl"] for t in closed)
-        wins       = [t for t in closed if t.get("leveraged_return_%", 0) > 0]
-        win_rate   = len(wins) / len(closed) * 100
-        avg_ret    = sum(t["leveraged_return_%"] for t in closed) / len(closed)
-        render_metrics_row({
-            "Closed Trades": len(closed),
-            "Win Rate":      f"{win_rate:.1f}%",
-            "Total P&L":     f"${total_pnl:+,.2f}",
-            "Avg Return":    f"{avg_ret:+.2f}%",
+    # ── Summary table across all symbols ─────────────────────────────────────
+    st.subheader("📊 Active Symbols")
+    summary_rows = []
+    for sym, run in runs.items():
+        open_t   = st.session_state[_OPEN].get(sym)
+        prices   = st.session_state[_CACHE].get(sym)
+        last_px  = float(prices.iloc[-1]["close"]) if prices is not None else None
+        sym_closed = [t for t in closed_this_session if t.get("symbol") == sym]
+        total_pnl  = sum(t.get("pnl", 0) for t in sym_closed if t.get("pnl"))
+        trades_cnt = len([t for t in sym_closed if t.get("pnl") is not None])
+        wins       = len([t for t in sym_closed if (t.get("pnl") or 0) > 0])
+        summary_rows.append({
+            "Symbol":    sym,
+            "Strategy":  run["strategy_id"],
+            "Interval":  run["interval"],
+            "Last Price": f"{last_px:.4f}" if last_px else "—",
+            "Open Position": (f"{open_t['direction']} @ {open_t['entry_price']:.4f}"
+                              if open_t else "None"),
+            "Closed Trades": trades_cnt,
+            "Win Rate":  f"{wins/trades_cnt*100:.0f}%" if trades_cnt else "—",
+            "Total P&L": f"${total_pnl:+,.2f}",
+            "Active":    "✅" if run.get("active") else "⏸",
         })
 
-    # Price + signals chart
-    st.markdown("#### 📈 Price")
-    st.altair_chart(
-        _price_chart(prices, st.session_state[_KEY_TRADES],
-                     st.session_state[_KEY_SIGNALS], cfg["symbol"]),
-        use_container_width=True,
-    )
+    if summary_rows:
+        st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
 
-    # RSI chart for RSI-based strategies
-    if cfg.get("strategy_id") in ("rsi_threshold", "atr_rsi",
-                                   "vwap_rsi", "bollinger_rsi",
-                                   "ema_trend_rsi"):
-        p_cfg = cfg.get("params", {})
-        rsi_p = int(p_cfg.get("rsi_period", p_cfg.get("rsi_period", 9)))
-        buys  = p_cfg.get("buy_levels", "30")
-        sells = p_cfg.get("sell_levels", "70")
-        try:
-            buy_lvls  = [float(x) for x in str(buys).replace(";",",").split(",")
-                         if x.strip()] or [30]
-            sell_lvls = [float(x) for x in str(sells).replace(";",",").split(",")
-                         if x.strip()] or [70]
-        except Exception:
-            buy_lvls, sell_lvls = [30], [70]
+    st.divider()
 
-        st.markdown(f"#### 📉 RSI ({rsi_p})")
-        st.altair_chart(
-            rsi_chart(prices, rsi_p, buy_lvls, sell_lvls)
-            .configure_view(strokeOpacity=0)
-            .configure_axis(**_AXIS)
-            .configure_title(**_TITLE),
-            use_container_width=True,
-        )
+    # ── Per-symbol detail tabs ────────────────────────────────────────────────
+    sym_list = list(runs.keys())
 
-    # Equity curve
-    if len(st.session_state[_KEY_EQUITY]) >= 2:
-        st.markdown("#### 💰 Simulated Equity")
-        st.altair_chart(
-            _equity_chart(st.session_state[_KEY_EQUITY],
-                          cfg["capital"], cfg["symbol"]),
-            use_container_width=True,
-        )
+    # Allow jumping to a specific symbol from portfolio
+    jump_sym = st.session_state.pop("ft_jump_symbol", None)
+    default_tab = sym_list.index(jump_sym) if jump_sym and jump_sym in sym_list else 0
 
-    # Signal log
-    with st.expander("📡 Signal Log", expanded=False):
-        if st.session_state[_KEY_SIGNALS]:
-            sig_df = pd.DataFrame(st.session_state[_KEY_SIGNALS])
-            st.dataframe(sig_df.sort_values("date", ascending=False),
-                         use_container_width=True)
-        else:
-            st.info("No signals generated yet.")
+    if sym_list:
+        tabs = st.tabs([f"{'🟢' if runs[s].get('active') else '⏸'} {s}"
+                        for s in sym_list])
 
-    # Trade log
-    with st.expander("📋 Trade Log", expanded=False):
-        if st.session_state[_KEY_TRADES]:
-            tr_df = pd.DataFrame(st.session_state[_KEY_TRADES])
-            show_cols = [c for c in ["symbol","direction","entry_price","exit_price",
-                                      "outcome","leveraged_return_%","pnl",
-                                      "entry_time","exit_time","strategy"]
-                         if c in tr_df.columns]
-            st.dataframe(tr_df[show_cols].sort_values("entry_time",
-                                                        ascending=False),
-                         use_container_width=True)
-        else:
-            st.info("No closed trades yet.")
+        for i, (tab, symbol) in enumerate(zip(tabs, sym_list)):
+            with tab:
+                run    = runs[symbol]
+                prices = st.session_state[_CACHE].get(symbol)
+                open_t = st.session_state[_OPEN].get(symbol)
+
+                # Per-symbol controls
+                c1, c2, c3, c4 = st.columns(4)
+                if c1.button(f"🔄 Refresh {symbol}", key=f"ft_ref_{symbol}"):
+                    _run_tick(symbol, run, closed_this_session)
+                    st.rerun()
+                if c2.button(f"{'⏸ Pause' if run.get('active') else '▶ Resume'}",
+                              key=f"ft_toggle_{symbol}"):
+                    st.session_state[_RUNS][symbol]["active"] = not run.get("active", True)
+                    st.rerun()
+                if c3.button(f"❌ Close Open Trade",
+                              key=f"ft_close_{symbol}",
+                              disabled=open_t is None):
+                    if prices is not None and open_t:
+                        xp  = float(prices.iloc[-1]["close"])
+                        ep  = open_t["entry_price"]
+                        d   = open_t["direction"]
+                        lev = open_t["leverage"]
+                        raw = (xp - ep) / ep * (1 if d == "Long" else -1)
+                        ret = raw * lev * 100
+                        pnl = open_t["capital"] * ret / 100
+                        open_t.update({
+                            "outcome": "Manual close", "exit_price": xp,
+                            "exit_time": prices.iloc[-1]["date"],
+                            "leveraged_return_%": round(ret, 3),
+                            "pnl": round(pnl, 2),
+                        })
+                        closed_this_session.append(open_t)
+                        _save_trade_to_db(open_t, symbol, run["strategy_id"])
+                        st.session_state[_OPEN][symbol] = None
+                        st.rerun()
+                if c4.button(f"🗑️ Remove {symbol}", key=f"ft_remove_{symbol}"):
+                    del st.session_state[_RUNS][symbol]
+                    st.session_state[_OPEN].pop(symbol, None)
+                    st.session_state[_CACHE].pop(symbol, None)
+                    st.session_state[_EQUITY].pop(symbol, None)
+                    st.rerun()
+
+                if prices is None:
+                    st.info(f"Click **🔄 Refresh {symbol}** to fetch first bar.")
+                    continue
+
+                latest = prices.iloc[-1]
+
+                # Status
+                if open_t:
+                    curr   = float(latest["close"])
+                    ep     = open_t["entry_price"]
+                    lev    = open_t["leverage"]
+                    d      = open_t["direction"]
+                    unreal = (curr - ep) / ep * (1 if d == "Long" else -1) * lev * 100
+                    col    = "green" if unreal >= 0 else "red"
+                    tp_str = f"{open_t['take_profit']:.4f}" if open_t.get("take_profit") else "—"
+                    st.markdown(
+                        f'<div style="border:1px solid #2a2d3e;border-radius:8px;'
+                        f'padding:8px 14px;">'
+                        f'<b>Open:</b> {d} @ <code>{ep:.4f}</code> · '
+                        f'SL <code>{open_t["stop_loss"]:.4f}</code> · '
+                        f'TP <code>{tp_str}</code> · '
+                        f'Unrealised: <span style="color:{col};font-weight:bold">'
+                        f'{unreal:+.2f}%</span></div>',
+                        unsafe_allow_html=True,
+                    )
+
+                # Metrics
+                sym_closed_list = [t for t in closed_this_session
+                                   if t.get("symbol") == symbol and t.get("pnl") is not None]
+                if sym_closed_list:
+                    wins_sym = len([t for t in sym_closed_list if (t.get("pnl",0) > 0)])
+                    render_metrics_row({
+                        "Closed": len(sym_closed_list),
+                        "Win Rate": f"{wins_sym/len(sym_closed_list)*100:.0f}%",
+                        "Total P&L": f"${sum(t.get('pnl',0) for t in sym_closed_list):+,.2f}",
+                    })
+
+                # Price chart
+                st.altair_chart(_price_chart(prices, closed_this_session,
+                                             open_t, st.session_state[_SIGNALS], symbol),
+                                use_container_width=True)
+
+                # RSI chart
+                if run["strategy_id"] in ("rsi_threshold", "atr_rsi",
+                                           "vwap_rsi", "bollinger_rsi", "ema_trend_rsi"):
+                    p_cfg     = run.get("params", {})
+                    rsi_p     = int(p_cfg.get("rsi_period", 9))
+                    try:
+                        buy_lvls  = [float(x) for x in
+                                     str(p_cfg.get("buy_levels","30")).replace(";",",").split(",")
+                                     if x.strip()] or [30]
+                        sell_lvls = [float(x) for x in
+                                     str(p_cfg.get("sell_levels","70")).replace(";",",").split(",")
+                                     if x.strip()] or [70]
+                    except Exception:
+                        buy_lvls, sell_lvls = [30], [70]
+                    st.altair_chart(
+                        rsi_chart(prices, rsi_p, buy_lvls, sell_lvls)
+                        .configure_view(strokeOpacity=0)
+                        .configure_axis(**_AXIS)
+                        .configure_title(**_TITLE),
+                        use_container_width=True,
+                    )
+
+                # Equity curve
+                eq_hist = st.session_state[_EQUITY].get(symbol, [])
+                if len(eq_hist) >= 2:
+                    st.altair_chart(_equity_chart(eq_hist, run["capital"], symbol),
+                                    use_container_width=True)
+
+                # Signal log
+                with st.expander("📡 Signals", expanded=False):
+                    sym_sigs = [s for s in st.session_state[_SIGNALS]
+                                if s.get("symbol") == symbol]
+                    if sym_sigs:
+                        st.dataframe(pd.DataFrame(sym_sigs)
+                                     .sort_values("date", ascending=False),
+                                     use_container_width=True)
+                    else:
+                        st.info("No signals yet.")
+
+                # Trade log
+                with st.expander("📋 Trades", expanded=False):
+                    if sym_closed_list:
+                        st.dataframe(pd.DataFrame(sym_closed_list),
+                                     use_container_width=True)
+                    else:
+                        st.info("No closed trades yet.")
 
     # Auto-refresh mechanism
-    if auto_refresh and st.session_state[_KEY_RUNNING]:
+    if auto and any(r.get("active") for r in runs.values()):
         import time
-        interval_secs = int(_interval_to_timedelta(cfg["interval"]).total_seconds())
-        refresh_every = max(interval_secs, 60)  # minimum 60s to avoid API rate limits
-        time.sleep(refresh_every)
+        min_interval = min(
+            int(_interval_td(r["interval"]).total_seconds())
+            for r in runs.values() if r.get("active")
+        )
+        time.sleep(max(min_interval, 60))
         st.rerun()
