@@ -165,3 +165,52 @@ class ATRRSIStrategy(BaseStrategy):
                 "implied_rr":      round(tp_mult / sl_mult, 2) if not tp_disabled else "TP off",
             },
         )
+    def generate_signals_bulk(self, data: pd.DataFrame, symbol: str):
+        """Vectorised bulk — computes ATR + RSI once over full dataset."""
+        p           = {**self.default_params(), **self.params}
+        rsi_period  = int(p["rsi_period"])
+        buy_levels  = _parse_levels(p["buy_levels"])
+        sell_levels = _parse_levels(p["sell_levels"])
+        atr_period  = int(p["atr_period"])
+        sl_mult     = float(p["atr_sl_mult"])
+        tp_mult     = float(p["atr_tp_mult"])
+        tp_disabled = bool(p["tp_disabled"])
+
+        close    = data["close"].astype(float)
+        rsi      = _calc_rsi(close, rsi_period)
+        atr      = _calc_atr(data, atr_period)
+        prev_rsi = rsi.shift(1)
+        n        = len(data)
+        actions  = [SignalAction.HOLD] * n
+        metas    = [{"suggested_tp": None, "suggested_sl": None, "metadata": {}}] * n
+
+        buy_mask  = pd.Series(False, index=data.index)
+        sell_mask = pd.Series(False, index=data.index)
+
+        for lvl in sorted(buy_levels, reverse=True):
+            buy_mask  = buy_mask  | ((prev_rsi >= lvl) & (rsi < lvl))
+        for lvl in sorted(sell_levels):
+            sell_mask = sell_mask | ((prev_rsi <= lvl) & (rsi >= lvl))
+        sell_mask = sell_mask & ~buy_mask
+
+        for i in data.index[buy_mask & rsi.notna()]:
+            pos = data.index.get_loc(i)
+            px  = float(close.iloc[pos])
+            a   = float(atr.iloc[pos])
+            sl  = px - sl_mult * a
+            tp  = None if tp_disabled else px + tp_mult * a
+            actions[pos] = SignalAction.BUY
+            metas[pos]   = {"suggested_tp": tp, "suggested_sl": sl,
+                             "metadata": {"rsi": round(float(rsi.iloc[pos]), 2), "atr": round(a, 4)}}
+
+        for i in data.index[sell_mask & rsi.notna()]:
+            pos = data.index.get_loc(i)
+            px  = float(close.iloc[pos])
+            a   = float(atr.iloc[pos])
+            sl  = px + sl_mult * a
+            tp  = None if tp_disabled else px - tp_mult * a
+            actions[pos] = SignalAction.SELL
+            metas[pos]   = {"suggested_tp": tp, "suggested_sl": sl,
+                             "metadata": {"rsi": round(float(rsi.iloc[pos]), 2), "atr": round(a, 4)}}
+
+        return actions, metas

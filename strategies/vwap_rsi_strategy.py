@@ -194,3 +194,53 @@ class VWAPRSIStrategy(BaseStrategy):
                 "implied_rr":    round(tp_mult / sl_mult, 2),
             },
         )
+    def generate_signals_bulk(self, data: pd.DataFrame, symbol: str):
+        """Vectorised bulk — computes VWAP + RSI + ATR once over full dataset."""
+        p          = {**self.default_params(), **self.params}
+        rsi_period = int(p["rsi_period"])
+        oversold   = float(p["rsi_oversold"])
+        overbought = float(p["rsi_overbought"])
+        atr_period = int(p["atr_period"])
+        sl_mult    = float(p["atr_sl_mult"])
+        tp_mult    = float(p["atr_tp_mult"])
+
+        close      = data["close"].astype(float)
+        rsi        = _calc_rsi(close, rsi_period)
+        vwap       = _calc_vwap(data)
+        atr        = _calc_atr(data, atr_period)
+        prev_close = close.shift(1)
+        prev_vwap  = vwap.shift(1)
+        prev_rsi   = rsi.shift(1)
+
+        price_above = close > vwap
+        cross_up    = (prev_close <= prev_vwap) & (close > vwap)
+        cross_down  = (prev_close >= prev_vwap) & (close < vwap)
+        rsi_os_cross = (prev_rsi >= oversold) & (rsi < oversold)
+        rsi_ob_cross = (prev_rsi <= overbought) & (rsi >= overbought)
+
+        long_signal  = (cross_up & (rsi < overbought)) | (price_above & rsi_os_cross)
+        short_signal = ((cross_down & (rsi > oversold)) | (~price_above & rsi_ob_cross)) & ~long_signal
+
+        n       = len(data)
+        actions = [SignalAction.HOLD] * n
+        metas   = [{"suggested_tp": None, "suggested_sl": None, "metadata": {}}] * n
+
+        for i in data.index[long_signal & rsi.notna() & atr.notna()]:
+            pos = data.index.get_loc(i)
+            px  = float(close.iloc[pos])
+            a   = float(atr.iloc[pos])
+            actions[pos] = SignalAction.BUY
+            metas[pos]   = {"suggested_tp": px + tp_mult * a,
+                             "suggested_sl": px - sl_mult * a,
+                             "metadata": {"rsi": round(float(rsi.iloc[pos]), 2)}}
+
+        for i in data.index[short_signal & rsi.notna() & atr.notna()]:
+            pos = data.index.get_loc(i)
+            px  = float(close.iloc[pos])
+            a   = float(atr.iloc[pos])
+            actions[pos] = SignalAction.SELL
+            metas[pos]   = {"suggested_tp": px - tp_mult * a,
+                             "suggested_sl": px + sl_mult * a,
+                             "metadata": {"rsi": round(float(rsi.iloc[pos]), 2)}}
+
+        return actions, metas

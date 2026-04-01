@@ -77,6 +77,24 @@ class BaseStrategy(ABC):
             Signal dataclass with action BUY / SELL / HOLD
         """
 
+    def generate_signals_bulk(
+        self,
+        data:   "pd.DataFrame",
+        symbol: str,
+    ) -> tuple[list, list]:
+        """
+        Pre-compute signals for ALL bars in one pass — used by BacktestEngine
+        for a 50-100× speedup on large datasets.
+
+        Returns (actions_list, meta_list) where each list is parallel to data rows.
+        meta_list[i] = {"suggested_tp": float|None, "suggested_sl": float|None,
+                         "metadata": dict}
+
+        Default: raises NotImplementedError → engine falls back to bar-by-bar.
+        Override in strategies that vectorise their indicators.
+        """
+        raise NotImplementedError
+
     def default_params(self) -> dict[str, Any]:
         """Return {param_name: default_value} for UI form generation."""
         return {}

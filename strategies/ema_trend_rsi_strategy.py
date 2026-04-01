@@ -222,3 +222,64 @@ class EMATrendRSIStrategy(BaseStrategy):
                 "atr_min_filter":atr_min_filter,
             },
         )
+    def generate_signals_bulk(self, data: pd.DataFrame, symbol: str):
+        """Vectorised bulk — computes EMA + RSI + ATR once over full dataset."""
+        p              = {**self.default_params(), **self.params}
+        fast_period    = int(p["fast_ema"])
+        slow_period    = int(p["slow_ema"])
+        trend_period   = int(p["trend_ema"])
+        rsi_period     = int(p["rsi_period"])
+        rsi_gate       = float(p["rsi_gate"])
+        atr_period     = int(p["atr_period"])
+        sl_mult        = float(p["atr_sl_mult"])
+        tp_mult        = float(p["atr_tp_mult"])
+        atr_min_filter = float(p["atr_min_filter"])
+        use_trend      = trend_period > 0
+
+        close     = data["close"].astype(float)
+        fast      = _calc_ema(close, fast_period)
+        slow      = _calc_ema(close, slow_period)
+        rsi       = _calc_rsi(close, rsi_period)
+        atr       = _calc_atr(data, atr_period)
+        prev_fast = fast.shift(1)
+        prev_slow = slow.shift(1)
+
+        bull_cross = (prev_fast <= prev_slow) & (fast > slow)
+        bear_cross = (prev_fast >= prev_slow) & (fast < slow)
+
+        if use_trend:
+            trend         = _calc_ema(close, trend_period)
+            trend_bullish = close > trend
+            trend_bearish = close < trend
+        else:
+            trend_bullish = pd.Series(True,  index=data.index)
+            trend_bearish = pd.Series(True,  index=data.index)
+
+        atr_ok = (atr >= atr_min_filter) if atr_min_filter > 0 else pd.Series(True, index=data.index)
+
+        long_signal  = bull_cross & (rsi > rsi_gate)  & trend_bullish & atr_ok
+        short_signal = bear_cross & (rsi < rsi_gate)  & trend_bearish & atr_ok & ~long_signal
+
+        n       = len(data)
+        actions = [SignalAction.HOLD] * n
+        metas   = [{"suggested_tp": None, "suggested_sl": None, "metadata": {}}] * n
+
+        for i in data.index[long_signal & rsi.notna() & atr.notna()]:
+            pos = data.index.get_loc(i)
+            px  = float(close.iloc[pos])
+            a   = float(atr.iloc[pos])
+            actions[pos] = SignalAction.BUY
+            metas[pos]   = {"suggested_tp": px + tp_mult * a,
+                             "suggested_sl": px - sl_mult * a,
+                             "metadata": {"rsi": round(float(rsi.iloc[pos]), 2), "atr": round(a, 4)}}
+
+        for i in data.index[short_signal & rsi.notna() & atr.notna()]:
+            pos = data.index.get_loc(i)
+            px  = float(close.iloc[pos])
+            a   = float(atr.iloc[pos])
+            actions[pos] = SignalAction.SELL
+            metas[pos]   = {"suggested_tp": px - tp_mult * a,
+                             "suggested_sl": px + sl_mult * a,
+                             "metadata": {"rsi": round(float(rsi.iloc[pos]), 2), "atr": round(a, 4)}}
+
+        return actions, metas
