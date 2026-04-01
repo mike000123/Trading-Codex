@@ -33,7 +33,7 @@ def render_mode_banner() -> None:
 
 def render_data_source_selector() -> Optional[pd.DataFrame]:
     st.sidebar.subheader("📡 Data Source")
-    source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], key="data_source")
+    source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], key="data_source", index=2)
     data: Optional[pd.DataFrame] = None
 
     if source == "Yahoo Finance":
@@ -234,9 +234,9 @@ _PARAM_META: dict[str, dict] = {
     # Dynamic post-spike exit params
     "dyn_use_regime_exit": {"label": "Dyn exit: regime flip", "help": "✅ Close post-spike short when post_spike regime turns False (price recovered vs rolling high/EMA). Usually the most reliable signal. Default on."},
     "dyn_rsi_rev_floor":   {"label": "Dyn exit: RSI floor",   "help": "RSI reversal exit (signal B): RSI trough must reach ≤ this value before a rebound counts. Default 35. Lower = requires deeper flush before exiting."},
-    "dyn_rsi_rev_rise":    {"label": "Dyn exit: RSI rise pts", "help": "RSI reversal exit (signal B): RSI must rise this many points from the trough to trigger exit. Default 12. Higher = more confirmation needed."},
-    "dyn_ema_fast":        {"label": "Dyn exit: EMA fast",    "help": "EMA cross exit (signal C): fast EMA span (bars). Exit when fast EMA crosses above slow EMA while in post-spike short. Default 5."},
-    "dyn_ema_slow":        {"label": "Dyn exit: EMA slow",    "help": "EMA cross exit (signal C): slow EMA span (bars). Default 13. Larger gap = fewer false exits."},
+    "dyn_rsi_rev_rise":    {"label": "Dyn exit: RSI rise pts", "help": "RSI reversal exit (signal B): RSI must rise this many points from the trough to trigger exit. Set to 0 to disable (default OFF). Use ≥20 on 5-min UVXY to avoid noise."},
+    "dyn_ema_fast":        {"label": "Dyn exit: EMA fast",    "help": "EMA cross exit (signal C): fast EMA span (bars). Set to 0 to disable (default OFF). On 5-min UVXY data spans of 5/13 fire every ~26 bars — far too noisy. Use ≥50/130 if enabling."},
+    "dyn_ema_slow":        {"label": "Dyn exit: EMA slow",    "help": "EMA cross exit (signal C): slow EMA span (bars). Only used when dyn_ema_fast > 0. Default 130 (~10hrs on 5-min bars)."},
     "dyn_atr_collapse":    {"label": "Dyn exit: ATR collapse", "help": "ATR collapse exit (signal D): exit when current ATR drops below this fraction of ATR-at-entry. 0.55 = 55%. Set to 0 to disable. Catches moves that have exhausted volatility."},
     "fast_ema":            {"label": "Fast EMA",       "help": "Fast EMA period (default 9). Golden cross above slow EMA = buy signal."},
     "slow_ema":    {"label": "Slow EMA",       "help": "Slow EMA period (default 21). Death cross below fast EMA = sell signal."},
