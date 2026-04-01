@@ -19,8 +19,10 @@ POST-SPIKE EXIT LOGIC (dynamic):
                      relative to the rolling high / long EMA anchor).
   B) RSI REVERSAL  — RSI rises ≥ rsi_rev_rise pts from a trough that was
                      ≤ rsi_rev_floor (momentum exhaustion confirmed).
-  C) EMA CROSS     — fast EMA crosses above slow EMA inside the short
-                     (mini trend-flip: decline has flattened / reversed).
+                     Set dyn_rsi_rev_rise=0 to disable (default).
+  C) EMA CROSS     — fast EMA crosses above slow EMA inside the short.
+                     Set dyn_ema_fast=0 to disable (default).
+                     WARNING: on 5-min data spans < 50/130 fire every ~26 bars.
   D) ATR COLLAPSE  — ATR drops below atr_collapse_pct × ATR-at-entry
                      (volatility compression = move is done).
 
@@ -100,14 +102,18 @@ class BollingerRSIStrategy(BaseStrategy):
             # ── Dynamic exit parameters ──────────────────────────────────────
             # A) Regime exit: fires automatically when post_spike turns False
             "dyn_use_regime_exit": True,
-            # B) RSI reversal: RSI rises this many points from a sub-floor trough
-            "dyn_rsi_rev_floor":   35,     # trough must be ≤ this value
-            "dyn_rsi_rev_rise":    12,     # rise in RSI points needed to trigger
-            # C) EMA cross: fast EMA crosses above slow EMA while in short
-            "dyn_ema_fast":        5,      # bars
-            "dyn_ema_slow":        13,     # bars
+            # B) RSI reversal: set dyn_rsi_rev_rise=0 to disable (default OFF).
+            #    On 5-min UVXY the floor must be deep (≤25) and rise large (≥20)
+            #    to avoid hair-triggers.
+            "dyn_rsi_rev_floor":   25,     # trough must be ≤ this value
+            "dyn_rsi_rev_rise":    0,      # 0 = disabled; set e.g. 20 to enable
+            # C) EMA cross: set dyn_ema_fast=0 to disable (default OFF).
+            #    On 5-min data EMA(5/13) crosses every ~26 bars — far too noisy.
+            #    Use spans ≥ 50/130 if enabling (e.g. 1hr / 2.5hr equivalent).
+            "dyn_ema_fast":        0,      # 0 = disabled
+            "dyn_ema_slow":        130,    # only used when dyn_ema_fast > 0
             # D) ATR collapse: ATR falls to this fraction of ATR at entry
-            "dyn_atr_collapse":    0.55,   # 0 = disabled; 0.55 = 55% of entry ATR
+            "dyn_atr_collapse":    0.45,   # 0 = disabled; 0.45 = 45% of entry ATR
         }
 
     def validate_params(self) -> list[str]:
@@ -151,40 +157,31 @@ class BollingerRSIStrategy(BaseStrategy):
         """Return a boolean Series that is True on bars where an open
         post-spike short should be closed dynamically (before the hard TP).
 
-        The caller should OR this with the regime-exit flag and TP/SL hits.
-        All four signals are computed up-front (vectorised) for speed; the
-        backtest loop then checks the relevant bar index.
+        Signals B and C only — signal A (regime flip) and D (ATR collapse)
+        are handled inline in the loop because they need per-trade context.
 
-        Signals:
-          B) RSI reversal  — RSI trough ≤ rsi_rev_floor then rises ≥ rsi_rev_rise
-          C) EMA cross     — fast EMA crosses above slow EMA
-          D) ATR collapse  — ATR < atr_collapse × entry_atr  (per-trade, set in bulk loop)
-        Note: signal A (regime exit) is post_spike flip, handled inline.
+        B) RSI reversal  — disabled when dyn_rsi_rev_rise=0
+        C) EMA cross     — disabled when dyn_ema_fast=0
         """
-        n = len(close)
         exit_sig = pd.Series(False, index=close.index)
 
-        # B) RSI reversal
-        floor  = float(p.get("dyn_rsi_rev_floor", 35))
-        rise   = float(p.get("dyn_rsi_rev_rise",  12))
+        # B) RSI reversal — disabled by default (rise=0)
+        floor = float(p.get("dyn_rsi_rev_floor", 25))
+        rise  = float(p.get("dyn_rsi_rev_rise",  0))
         if rise > 0:
-            rsi_trough   = rsi.rolling(3, min_periods=1).min().shift(1)
-            rsi_was_low  = rsi_trough <= floor
+            rsi_trough    = rsi.rolling(3, min_periods=1).min().shift(1)
+            rsi_was_low   = rsi_trough <= floor
             rsi_rebounded = (rsi - rsi.shift(3).fillna(rsi)) >= rise
             exit_sig = exit_sig | (rsi_was_low & rsi_rebounded)
 
-        # C) EMA cross (fast crosses above slow)
-        fast_span = int(p.get("dyn_ema_fast", 5))
-        slow_span = int(p.get("dyn_ema_slow", 13))
-        ema_fast  = close.ewm(span=fast_span, adjust=False).mean()
-        ema_slow  = close.ewm(span=slow_span, adjust=False).mean()
-        cross_up  = (ema_fast.shift(1) <= ema_slow.shift(1)) & (ema_fast > ema_slow)
-        exit_sig  = exit_sig | cross_up
-
-        # D) ATR collapse — entry_atr is injected per-trade in the bulk loop;
-        #    here we pre-compute the ATR series so the loop can compare.
-        # (The actual threshold check is done in the loop because it needs
-        #  the entry-bar ATR.)
+        # C) EMA cross — disabled by default (fast_span=0)
+        fast_span = int(p.get("dyn_ema_fast", 0))
+        slow_span = int(p.get("dyn_ema_slow", 130))
+        if fast_span > 0 and slow_span > fast_span:
+            ema_fast = close.ewm(span=fast_span, adjust=False).mean()
+            ema_slow = close.ewm(span=slow_span, adjust=False).mean()
+            cross_up = (ema_fast.shift(1) <= ema_slow.shift(1)) & (ema_fast > ema_slow)
+            exit_sig = exit_sig | cross_up
 
         return exit_sig
 
@@ -210,10 +207,9 @@ class BollingerRSIStrategy(BaseStrategy):
         action: SignalAction           = SignalAction.HOLD
         suggested_tp: Optional[float] = None
         suggested_sl: Optional[float] = None
-        # ── Dynamic exit check (for live/forward use when caller signals open short) ─
+        # ── Dynamic exit check for live/forward use ───────────────────────────
         # Callers signal an open post-spike short by passing
-        #   params={"open_rev_entry_atr": <atr_at_entry>}   (non-zero activates checks)
-        # This lets the forward test / paper trading engine ask "should I close now?"
+        #   params={"open_rev_entry_atr": <atr_at_entry>}  (non-zero activates checks)
         open_entry_atr = float(self.params.get("open_rev_entry_atr", 0.0))
         if open_entry_atr > 0:
             # A) Regime exit: post_spike has flipped off
@@ -232,7 +228,7 @@ class BollingerRSIStrategy(BaseStrategy):
                               metadata={"rsi": round(rsi_v, 2), "regime": "post_spike_exit",
                                         "exit_reason": "momentum_exit"})
             # D) ATR collapse
-            atr_collapse = float(p.get("dyn_atr_collapse", 0.55))
+            atr_collapse = float(p.get("dyn_atr_collapse", 0.45))
             curr_atr = float(atr_s.iloc[-1]) if not pd.isna(atr_s.iloc[-1]) else 0.0
             if atr_collapse > 0 and curr_atr < atr_collapse * open_entry_atr:
                 return Signal(strategy_id=self.strategy_id, symbol=symbol,
@@ -277,14 +273,14 @@ class BollingerRSIStrategy(BaseStrategy):
         rev_tp_pct    = float(p["reversion_tp_pct"]); rev_sl_pct = float(p["reversion_sl_pct"])
         rev_rsi_min   = float(p["reversion_rsi_min"])
         use_regime_exit = bool(p.get("dyn_use_regime_exit", True))
-        atr_collapse    = float(p.get("dyn_atr_collapse", 0.55))
+        atr_collapse    = float(p.get("dyn_atr_collapse", 0.45))
         close              = data["close"].astype(float)
         upper, sma, lower, _ = _calc_bollinger(close, bb_period, bb_std)
         rsi                = _calc_rsi(close, rsi_period)
         band_width         = upper - lower
         bw_pct             = band_width / close.replace(0, np.nan) * 100
         in_spike, post_spike, is_drift, atr_s = self._compute_regimes_bulk(close, data, p)
-        # Pre-compute dynamic exit signals (signals B and C vectorised)
+        # Pre-compute dynamic exit signals B and C (vectorised)
         dyn_exit_sig = self._compute_dynamic_exit_series(close, rsi, atr_s, post_spike, p)
         prev_close = close.shift(1); prev_upper = upper.shift(1); prev_lower = lower.shift(1)
         if require_cross:
@@ -325,13 +321,13 @@ class BollingerRSIStrategy(BaseStrategy):
             if not currently_post and was_in_post_spike:
                 rev_entries_count = 0
             was_in_post_spike = currently_post
-            # ── Dynamic exit: check if an open post-spike short should close ─
+            # ── Dynamic exit: check if an open post-spike short should close ──
             if open_rev_entry_bar is not None:
                 exit_reason: Optional[str] = None
                 # A) Regime exit: post_spike flipped off
                 if use_regime_exit and not currently_post:
                     exit_reason = "regime_exit"
-                # B/C) RSI reversal or EMA cross (pre-computed)
+                # B/C) RSI reversal or EMA cross (pre-computed, off by default)
                 elif bool(dyn_exit_sig.iloc[pos]):
                     exit_reason = "momentum_exit"
                 # D) ATR collapse below fraction of entry ATR
@@ -379,7 +375,7 @@ class BollingerRSIStrategy(BaseStrategy):
                 metas[pos]   = {"suggested_tp": tp, "suggested_sl": sl,
                                  "metadata": {"rsi": round(rsi_val, 2), "regime": "normal"}}
                 last_signal_bar    = pos
-                open_rev_entry_bar = None   # normal long closes any tracked rev short
+                open_rev_entry_bar = None   # normal long cancels any tracked rev short
             elif is_short and not pd.isna(rsi.iloc[pos]):
                 tp = float(sma.iloc[pos]); sl = float(short_sl.iloc[pos])
                 actions[pos] = SignalAction.SELL
