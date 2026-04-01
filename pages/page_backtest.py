@@ -2,9 +2,11 @@
 pages/page_backtest.py
 Walk-forward backtester.
 
-Results stored in st.session_state so checkbox/toggle interactions
-do NOT re-run the backtest — only the Run button does.
-All Altair, zero Plotly.
+Rendering pattern:
+  1. Run button sets session_state["bt_result"] + sets bt_ran=True
+  2. st.rerun() triggers a clean re-render
+  3. On re-render: prices auto-loaded from session_state["loaded_data"]
+  4. Results rendered from session_state — always visible, survives checkbox clicks
 """
 from __future__ import annotations
 
@@ -32,8 +34,6 @@ _AXIS   = dict(gridColor="#2a2d3e", labelColor="#d0d4f0", titleColor="#d0d4f0",
                labelFontSize=12, titleFontSize=13)
 _TITLE  = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
 
-
-# ─── Outcome colour map ───────────────────────────────────────────────────────
 _OUTCOME_COLOR = {
     "TP hit":               _GREEN,
     "SL hit":               _RED,
@@ -44,44 +44,51 @@ _OUTCOME_COLOR = {
     "Open":                 _BLUE,
 }
 
-
-def _ocol(outcome: str) -> str:
-    return _OUTCOME_COLOR.get(outcome, _GREY)
+_MAX_CHART_PTS = 5_000   # max points sent to Altair for price / RSI charts
 
 
-# ─── Helpers ─────────────────────────────────────────────────────────────────
+def _downsample(df: pd.DataFrame, max_pts: int = _MAX_CHART_PTS) -> pd.DataFrame:
+    if len(df) <= max_pts:
+        return df
+    step = max(1, len(df) // max_pts)
+    return df.iloc[::step].reset_index(drop=True)
+
+
+def _is_signal_exit(outcome: str) -> bool:
+    return any(k in outcome for k in ("overbought", "oversold", "Counter"))
+
 
 def _calc_rsi(series: pd.Series, period: int) -> pd.Series:
-    delta    = series.diff()
-    gain     = delta.clip(lower=0)
-    loss     = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1/period, adjust=False, min_periods=period).mean()
-    avg_loss = loss.ewm(alpha=1/period, adjust=False, min_periods=period).mean()
-    rs       = avg_gain / avg_loss.replace(0, float("nan"))
-    return 100 - (100 / (1 + rs))
+    d  = series.diff()
+    g  = d.clip(lower=0)
+    l  = (-d).clip(lower=0)
+    ag = g.ewm(alpha=1/period, adjust=False, min_periods=period).mean()
+    al = l.ewm(alpha=1/period, adjust=False, min_periods=period).mean()
+    return 100 - (100 / (1 + ag / al.replace(0, float("nan"))))
 
 
 def _parse_levels(raw) -> list[float]:
-    if isinstance(raw, (int, float)):
-        return [float(raw)]
-    if isinstance(raw, (list, tuple)):
-        return sorted(float(v) for v in raw)
-    parts = str(raw).replace(";", ",").split(",")
-    return sorted(float(p.strip()) for p in parts if p.strip())
+    if isinstance(raw, (int, float)): return [float(raw)]
+    s = str(raw).strip().lower()
+    if s in ("", "none", "off", "-"): return []
+    try:
+        return sorted(float(p.strip()) for p in s.replace(";",",").split(",") if p.strip())
+    except ValueError:
+        return []
 
 
 def _bar_label(prices: pd.DataFrame) -> str:
     if len(prices) < 2: return "bars"
     delta = (prices["date"].iloc[1] - prices["date"].iloc[0]).total_seconds()
     return {60:"1-min",300:"5-min",900:"15-min",1800:"30-min",
-            3600:"1-hour",86400:"1-day",604800:"1-week"}.get(int(delta), f"{int(delta//60)}-min")
+            3600:"1-hour",86400:"1-day"}.get(int(delta), f"{int(delta//60)}-min")
 
 
 def _trade_events(trades) -> tuple[pd.DataFrame, pd.DataFrame]:
     entries, exits = [], []
     for i, t in enumerate(trades):
-        direction = t.direction.value if hasattr(t.direction, "value") else str(t.direction)
-        outcome   = t.outcome.value   if hasattr(t.outcome,   "value") else str(t.outcome)
+        direction = t.direction.value if hasattr(t.direction,"value") else str(t.direction)
+        outcome   = t.outcome.value   if hasattr(t.outcome,  "value") else str(t.outcome)
         ret       = t.leveraged_return_pct
         label     = f"T{i+1}"
         entries.append({"date": pd.Timestamp(t.entry_time), "price": t.entry_price,
@@ -95,32 +102,25 @@ def _trade_events(trades) -> tuple[pd.DataFrame, pd.DataFrame]:
     return pd.DataFrame(entries), pd.DataFrame(exits)
 
 
-def _is_signal_exit(outcome: str) -> bool:
-    return any(k in outcome for k in ("overbought", "oversold", "Counter"))
+# ─── Charts ───────────────────────────────────────────────────────────────────
 
-
-# ─── Price chart ─────────────────────────────────────────────────────────────
-
-def _price_chart(
-    prices, trades, symbol,
-    show_long, show_short, show_tp_exits, show_sl_exits, show_signal_exits,
-) -> alt.LayerChart:
-    base = (alt.Chart(prices).mark_line(color=_BLUE, strokeWidth=1.4)
+def _price_chart(prices, trades, symbol,
+                 show_long, show_short, show_tp, show_sl, show_sig):
+    base = (alt.Chart(prices).mark_line(color=_BLUE, strokeWidth=1.2)
             .encode(x=alt.X("date:T", title="Date / Time", axis=alt.Axis(**_AXIS)),
                     y=alt.Y("close:Q", title="Price", scale=alt.Scale(zero=False),
                             axis=alt.Axis(**_AXIS)),
                     tooltip=["date:T", alt.Tooltip("close:Q", format=".4f")]))
     layers = [base]
-
     if not trades:
         return (alt.layer(*layers)
-                .properties(title=alt.TitleParams(f"{symbol} – Price", **_TITLE), height=340)
+                .properties(title=alt.TitleParams(f"{symbol} – Price", **_TITLE), height=320)
                 .configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE))
 
     entry_df, exit_df = _trade_events(trades)
     tt_e = ["date:T","trade_n:N","direction:N",
-            alt.Tooltip("price:Q", format=".4f", title="Entry"),
-            "outcome:N", alt.Tooltip("return_pct:Q", format=".2f", title="Return %")]
+            alt.Tooltip("price:Q",format=".4f",title="Entry"),"outcome:N",
+            alt.Tooltip("return_pct:Q",format=".2f",title="Return %")]
 
     if not entry_df.empty:
         long_e  = entry_df[entry_df["direction"]=="Long"].copy()
@@ -128,91 +128,83 @@ def _price_chart(
         if show_long and not long_e.empty:
             long_e["y"] = long_e["price"] * 0.997
             layers.append(alt.Chart(long_e)
-                          .mark_point(shape="triangle-up", size=120, filled=True, color=_GREEN)
-                          .encode(x="date:T", y="y:Q", tooltip=tt_e))
+                .mark_point(shape="triangle-up",size=120,filled=True,color=_GREEN)
+                .encode(x="date:T",y="y:Q",tooltip=tt_e))
         if show_short and not short_e.empty:
             short_e["y"] = short_e["price"] * 1.003
             layers.append(alt.Chart(short_e)
-                          .mark_point(shape="triangle-down", size=120, filled=True, color=_RED)
-                          .encode(x="date:T", y="y:Q", tooltip=tt_e))
+                .mark_point(shape="triangle-down",size=120,filled=True,color=_RED)
+                .encode(x="date:T",y="y:Q",tooltip=tt_e))
 
     if not exit_df.empty:
         tt_x = ["date:T","trade_n:N","direction:N",
-                alt.Tooltip("price:Q", format=".4f", title="Exit"),
-                "outcome:N", alt.Tooltip("return_pct:Q", format=".2f", title="Return %")]
-        tp_ex  = exit_df[exit_df["outcome"] == "TP hit"]
-        sl_ex  = exit_df[exit_df["outcome"] == "SL hit"]
+                alt.Tooltip("price:Q",format=".4f",title="Exit"),"outcome:N",
+                alt.Tooltip("return_pct:Q",format=".2f",title="Return %")]
+        tp_ex  = exit_df[exit_df["outcome"]=="TP hit"]
+        sl_ex  = exit_df[exit_df["outcome"]=="SL hit"]
         sig_ex = exit_df[exit_df["outcome"].apply(_is_signal_exit)]
-
-        if show_tp_exits and not tp_ex.empty:
+        if show_tp  and not tp_ex.empty:
             layers.append(alt.Chart(tp_ex)
-                          .mark_point(shape="cross", size=110, strokeWidth=2.5, color=_GREEN)
-                          .encode(x="date:T", y="price:Q", tooltip=tt_x))
-        if show_sl_exits and not sl_ex.empty:
+                .mark_point(shape="cross",size=110,strokeWidth=2.5,color=_GREEN)
+                .encode(x="date:T",y="price:Q",tooltip=tt_x))
+        if show_sl  and not sl_ex.empty:
             layers.append(alt.Chart(sl_ex)
-                          .mark_point(shape="cross", size=110, strokeWidth=2.5, color=_RED)
-                          .encode(x="date:T", y="price:Q", tooltip=tt_x))
-        if show_signal_exits and not sig_ex.empty:
+                .mark_point(shape="cross",size=110,strokeWidth=2.5,color=_RED)
+                .encode(x="date:T",y="price:Q",tooltip=tt_x))
+        if show_sig and not sig_ex.empty:
             layers.append(alt.Chart(sig_ex)
-                          .mark_point(shape="cross", size=110, strokeWidth=2.5, color=_ORANGE)
-                          .encode(x="date:T", y="price:Q", tooltip=tt_x))
+                .mark_point(shape="cross",size=110,strokeWidth=2.5,color=_ORANGE)
+                .encode(x="date:T",y="price:Q",tooltip=tt_x))
 
     return (alt.layer(*layers)
             .properties(title=alt.TitleParams(
-                f"{symbol} – Price  ·  ▲ Long  ▼ Short  ✕ Exit", **_TITLE), height=340)
+                f"{symbol} – Price  ▲ Long  ▼ Short  ✕ Exit", **_TITLE), height=320)
             .configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
-# ─── RSI chart ───────────────────────────────────────────────────────────────
-
-def _rsi_chart(
-    prices, trades, period, buy_levels, sell_levels, bar_label, symbol,
-    show_long, show_short, show_tp_exits, show_sl_exits, show_signal_exits,
-) -> alt.LayerChart:
+def _rsi_chart(prices, trades, period, buy_levels, sell_levels, bar_label, symbol,
+               show_long, show_short, show_tp, show_sl, show_sig):
     rsi_s = _calc_rsi(prices["close"], period).rename("rsi")
     df    = pd.concat([prices[["date"]], rsi_s], axis=1).dropna()
 
-    rsi_line = (alt.Chart(df).mark_line(color=_GOLD, strokeWidth=2.0)
-                .encode(x=alt.X("date:T", title="Date / Time", axis=alt.Axis(**_AXIS)),
-                        y=alt.Y("rsi:Q", title="RSI", scale=alt.Scale(domain=[0,100]),
+    rsi_line = (alt.Chart(df).mark_line(color=_GOLD, strokeWidth=1.8)
+                .encode(x=alt.X("date:T",title="Date / Time",axis=alt.Axis(**_AXIS)),
+                        y=alt.Y("rsi:Q",title="RSI",scale=alt.Scale(domain=[0,100]),
                                 axis=alt.Axis(**_AXIS)),
-                        tooltip=["date:T", alt.Tooltip("rsi:Q", format=".2f")]))
+                        tooltip=["date:T",alt.Tooltip("rsi:Q",format=".2f")]))
     layers = [rsi_line]
 
     for lvl in buy_levels:
         ldf = pd.DataFrame({"y":[lvl],"label":[f"OS {lvl:.0f}"]})
         layers += [
-            alt.Chart(ldf).mark_rule(color=_GREEN, strokeDash=[5,3], strokeWidth=1.5).encode(y="y:Q"),
-            alt.Chart(ldf).mark_text(align="left", dx=4, dy=-7, fontSize=12,
-                                     color=_GREEN, fontWeight="bold")
-                .encode(y="y:Q", x=alt.value(4), text="label:N"),
+            alt.Chart(ldf).mark_rule(color=_GREEN,strokeDash=[5,3],strokeWidth=1.5).encode(y="y:Q"),
+            alt.Chart(ldf).mark_text(align="left",dx=4,dy=-7,fontSize=12,color=_GREEN,fontWeight="bold")
+                .encode(y="y:Q",x=alt.value(4),text="label:N"),
         ]
     for lvl in sell_levels:
         ldf = pd.DataFrame({"y":[lvl],"label":[f"OB {lvl:.0f}"]})
         layers += [
-            alt.Chart(ldf).mark_rule(color=_RED, strokeDash=[5,3], strokeWidth=1.5).encode(y="y:Q"),
-            alt.Chart(ldf).mark_text(align="left", dx=4, dy=-7, fontSize=12,
-                                     color=_RED, fontWeight="bold")
-                .encode(y="y:Q", x=alt.value(4), text="label:N"),
+            alt.Chart(ldf).mark_rule(color=_RED,strokeDash=[5,3],strokeWidth=1.5).encode(y="y:Q"),
+            alt.Chart(ldf).mark_text(align="left",dx=4,dy=-7,fontSize=12,color=_RED,fontWeight="bold")
+                .encode(y="y:Q",x=alt.value(4),text="label:N"),
         ]
     if buy_levels:
         layers.append(alt.Chart(pd.DataFrame({"y1":[0],"y2":[min(buy_levels)]}))
-                      .mark_rect(color=_GREEN, opacity=0.07).encode(y="y1:Q", y2="y2:Q"))
+                      .mark_rect(color=_GREEN,opacity=0.07).encode(y="y1:Q",y2="y2:Q"))
     if sell_levels:
         layers.append(alt.Chart(pd.DataFrame({"y1":[max(sell_levels)],"y2":[100]}))
-                      .mark_rect(color=_RED, opacity=0.07).encode(y="y1:Q", y2="y2:Q"))
+                      .mark_rect(color=_RED,opacity=0.07).encode(y="y1:Q",y2="y2:Q"))
+
+    def _snap(ts):
+        idx = min(df["date"].searchsorted(pd.Timestamp(ts)), len(df)-1)
+        row = df.iloc[idx]
+        return (float(row["rsi"]) if not pd.isna(row["rsi"]) else 50.0), row["date"]
 
     if trades:
         entry_df, exit_df = _trade_events(trades)
-
-        def _snap(ts):
-            idx = min(df["date"].searchsorted(pd.Timestamp(ts)), len(df)-1)
-            row = df.iloc[idx]
-            return (float(row["rsi"]) if not pd.isna(row["rsi"]) else 50.0), row["date"]
-
         tt = ["date:T","trade_n:N","direction:N",
-              alt.Tooltip("rsi_val:Q", format=".1f", title="RSI"),
-              "outcome:N", alt.Tooltip("return_pct:Q", format=".2f", title="Return %")]
+              alt.Tooltip("rsi_val:Q",format=".1f",title="RSI"),"outcome:N",
+              alt.Tooltip("return_pct:Q",format=".2f",title="Return %")]
 
         if not entry_df.empty:
             entry_df[["rsi_val","date"]] = pd.DataFrame(
@@ -222,44 +214,41 @@ def _rsi_chart(
             if show_long and not long_e.empty:
                 long_e["y"] = long_e["rsi_val"] - 5
                 layers.append(alt.Chart(long_e)
-                              .mark_point(shape="triangle-up", size=90, filled=True, color=_GREEN)
-                              .encode(x="date:T", y="y:Q", tooltip=tt))
+                    .mark_point(shape="triangle-up",size=90,filled=True,color=_GREEN)
+                    .encode(x="date:T",y="y:Q",tooltip=tt))
             if show_short and not short_e.empty:
                 short_e["y"] = short_e["rsi_val"] + 5
                 layers.append(alt.Chart(short_e)
-                              .mark_point(shape="triangle-down", size=90, filled=True, color=_RED)
-                              .encode(x="date:T", y="y:Q", tooltip=tt))
+                    .mark_point(shape="triangle-down",size=90,filled=True,color=_RED)
+                    .encode(x="date:T",y="y:Q",tooltip=tt))
 
         if not exit_df.empty:
             exit_df[["rsi_val","date"]] = pd.DataFrame(
                 [_snap(r) for r in exit_df["date"]], columns=["rsi_val","date"])
-            tp_ex  = exit_df[exit_df["outcome"] == "TP hit"]
-            sl_ex  = exit_df[exit_df["outcome"] == "SL hit"]
+            tp_ex  = exit_df[exit_df["outcome"]=="TP hit"]
+            sl_ex  = exit_df[exit_df["outcome"]=="SL hit"]
             sig_ex = exit_df[exit_df["outcome"].apply(_is_signal_exit)]
-
-            if show_tp_exits and not tp_ex.empty:
+            if show_tp  and not tp_ex.empty:
                 layers.append(alt.Chart(tp_ex)
-                              .mark_point(shape="cross", size=90, strokeWidth=2.5, color=_GREEN)
-                              .encode(x="date:T", y="rsi_val:Q", tooltip=tt))
-            if show_sl_exits and not sl_ex.empty:
+                    .mark_point(shape="cross",size=90,strokeWidth=2.5,color=_GREEN)
+                    .encode(x="date:T",y="rsi_val:Q",tooltip=tt))
+            if show_sl  and not sl_ex.empty:
                 layers.append(alt.Chart(sl_ex)
-                              .mark_point(shape="cross", size=90, strokeWidth=2.5, color=_RED)
-                              .encode(x="date:T", y="rsi_val:Q", tooltip=tt))
-            if show_signal_exits and not sig_ex.empty:
+                    .mark_point(shape="cross",size=90,strokeWidth=2.5,color=_RED)
+                    .encode(x="date:T",y="rsi_val:Q",tooltip=tt))
+            if show_sig and not sig_ex.empty:
                 layers.append(alt.Chart(sig_ex)
-                              .mark_point(shape="cross", size=90, strokeWidth=2.5, color=_ORANGE)
-                              .encode(x="date:T", y="rsi_val:Q", tooltip=tt))
+                    .mark_point(shape="cross",size=90,strokeWidth=2.5,color=_ORANGE)
+                    .encode(x="date:T",y="rsi_val:Q",tooltip=tt))
 
     return (alt.layer(*layers)
             .properties(title=alt.TitleParams(
-                f"{symbol} – RSI ({period})  bar={bar_label}  "
-                f"Buy≤{buy_levels}  Sell≥{sell_levels}", **_TITLE), height=320)
+                f"{symbol} – RSI ({period})  Buy≤{buy_levels}  Sell≥{sell_levels}", **_TITLE),
+                height=300)
             .configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
-# ─── Equity curve ─────────────────────────────────────────────────────────────
-
-def _equity_chart(trades, starting_equity, symbol) -> alt.LayerChart:
+def _equity_chart(trades, starting_equity, symbol):
     closed = [t for t in trades if t.pnl is not None and t.exit_time is not None]
     if not closed:
         return alt.Chart(pd.DataFrame()).mark_line()
@@ -275,30 +264,29 @@ def _equity_chart(trades, starting_equity, symbol) -> alt.LayerChart:
                      "ret_pct": round(t.leveraged_return_pct or 0, 3),
                      "outcome": outcome})
 
-    eq_df    = pd.DataFrame(rows)
-    tt_eq    = ["date:T","trade_n:N",
-                alt.Tooltip("equity:Q",  format="$,.2f",  title="Equity"),
-                alt.Tooltip("pnl:Q",     format="+$,.2f", title="PnL ($)"),
-                alt.Tooltip("ret_pct:Q", format=".2f",    title="Return %"),
-                "outcome:N"]
-    area     = (alt.Chart(eq_df)
-                .mark_area(line={"color":_BLUE,"strokeWidth":2},
-                           color=alt.Gradient(gradient="linear",
-                               stops=[alt.GradientStop(color="rgba(74,158,255,0.25)",offset=0),
-                                      alt.GradientStop(color="rgba(74,158,255,0.0)", offset=1)],
-                               x1=1,x2=1,y1=1,y2=0))
-                .encode(x=alt.X("date:T",title="Date / Time",axis=alt.Axis(**_AXIS)),
-                        y=alt.Y("equity:Q",title="Equity ($)",scale=alt.Scale(zero=False),
-                                axis=alt.Axis(**_AXIS)), tooltip=tt_eq))
+    eq_df = pd.DataFrame(rows)
+    tt_eq = ["date:T","trade_n:N",
+             alt.Tooltip("equity:Q",format="$,.2f",title="Equity"),
+             alt.Tooltip("pnl:Q",format="+$,.2f",title="PnL ($)"),
+             alt.Tooltip("ret_pct:Q",format=".2f",title="Return %"),
+             "outcome:N"]
+    area = (alt.Chart(eq_df)
+            .mark_area(line={"color":_BLUE,"strokeWidth":2},
+                       color=alt.Gradient(gradient="linear",
+                           stops=[alt.GradientStop(color="rgba(74,158,255,0.25)",offset=0),
+                                  alt.GradientStop(color="rgba(74,158,255,0.0)", offset=1)],
+                           x1=1,x2=1,y1=1,y2=0))
+            .encode(x=alt.X("date:T",title="Date / Time",axis=alt.Axis(**_AXIS)),
+                    y=alt.Y("equity:Q",title="Equity ($)",scale=alt.Scale(zero=False),
+                            axis=alt.Axis(**_AXIS)), tooltip=tt_eq))
     baseline = (alt.Chart(pd.DataFrame({"y":[starting_equity]}))
-                .mark_rule(color=_GREY, strokeDash=[4,4], strokeWidth=1.2).encode(y="y:Q"))
-    dots     = (alt.Chart(eq_df.iloc[1:]).mark_point(size=65, filled=True)
-                .encode(x="date:T", y="equity:Q",
-                        color=alt.condition(alt.datum.pnl > 0,
-                                            alt.value(_GREEN), alt.value(_RED)),
-                        tooltip=tt_eq))
-    return (alt.layer(baseline, area, dots)
-            .properties(title=alt.TitleParams(f"{symbol} – Equity (per closed trade)", **_TITLE), height=300)
+                .mark_rule(color=_GREY,strokeDash=[4,4],strokeWidth=1.2).encode(y="y:Q"))
+    dots = (alt.Chart(eq_df.iloc[1:]).mark_point(size=65,filled=True)
+            .encode(x="date:T",y="equity:Q",
+                    color=alt.condition(alt.datum.pnl > 0,alt.value(_GREEN),alt.value(_RED)),
+                    tooltip=tt_eq))
+    return (alt.layer(baseline,area,dots)
+            .properties(title=alt.TitleParams(f"{symbol} – Equity (per closed trade)",**_TITLE),height=300)
             .configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
@@ -308,20 +296,31 @@ def render() -> None:
     render_mode_banner()
     st.title("⏪ Backtester")
 
+    # ── Load data ─────────────────────────────────────────────────────────────
     prices = render_data_source_selector()
+
+    # Ensure loaded_data is always in session_state if prices came back
+    if prices is not None:
+        st.session_state["bt_prices_live"] = prices
+        st.session_state["bt_symbol_live"] = st.session_state.get("loaded_symbol","DATA")
+
+    # Use live prices if available, otherwise nothing to configure
+    prices = st.session_state.get("bt_prices_live")
+
     if prices is None:
         st.info("← Select a data source in the sidebar to begin.")
+        # Still show any previous results
+        if "bt_result" in st.session_state:
+            st.divider()
+            _show_results()
         return
 
-    symbol    = st.session_state.get("loaded_symbol", "DATA")
+    symbol    = st.session_state.get("bt_symbol_live", "DATA")
     bar_label = _bar_label(prices)
-    st.success(f"**{symbol}** — {len(prices)} bars · bar size: **{bar_label}**")
-    st.caption(
-        f"ℹ️ RSI period = number of **{bar_label}** bars. "
-        "Default **9** (responsive intraday). Longer = smoother, fewer signals."
-    )
+    st.success(f"**{symbol}** — {len(prices):,} bars · bar size: **{bar_label}**")
     st.divider()
 
+    # ── Config form ───────────────────────────────────────────────────────────
     strategies  = list_strategies()
     strat_names = {s["name"]: s["id"] for s in strategies}
 
@@ -333,7 +332,6 @@ def render() -> None:
         capital_per_trade = st.number_input("Capital per trade ($)", 100.0, value=1000.0, key="bt_cap")
         starting_equity   = st.number_input("Starting equity ($)", 1000.0, value=10_000.0, key="bt_equity")
         direction_filter  = st.selectbox("Direction filter", ["Both","Long only","Short only"], key="bt_dir")
-
     with col_risk:
         st.markdown("**Risk Controls**")
         use_risk = st.checkbox("Apply risk manager", value=True, key="bt_risk")
@@ -341,18 +339,45 @@ def render() -> None:
         st.markdown("---")
         counter_signal_exit = st.checkbox(
             "Counter-signal exit", value=True, key="bt_counter",
-            help="When ON: opposing RSI signal closes the current trade and opens the reverse.")
+            help="When ON: opposing RSI signal closes the current trade and opens reverse.")
+        st.markdown("---")
+        st.markdown("**Transaction Costs**")
+        st.caption(
+            "UVXY realistic costs: spread ~0.06%, slippage ~0.02%.  \n"
+            "Leave at 0 for gross return (no costs), set realistic values "
+            "to see net return.  \n"
+            "⚠️ At 50k trades/year, even 0.06% spread = strategy killer."
+        )
+        spread_pct   = st.number_input("Spread % (round-trip)", 0.0, 2.0, 0.06,
+                                        step=0.01, format="%.2f", key="bt_spread",
+                                        help="Bid-ask spread cost, round trip. UVXY ≈ 0.06%")
+        slippage_pct = st.number_input("Slippage % (round-trip)", 0.0, 2.0, 0.02,
+                                        step=0.01, format="%.2f", key="bt_slip",
+                                        help="Execution slippage. UVXY 1-min ≈ 0.02%")
+        commission   = st.number_input("Commission per trade ($)", 0.0, 10.0, 0.0,
+                                        step=0.10, format="%.2f", key="bt_comm",
+                                        help="Flat $ per trade. Alpaca is free but spread/slippage apply.")
 
     st.divider()
-    params = render_strategy_params(selected_id, leverage=leverage, max_capital_loss_pct=float(max_loss))
+    params = render_strategy_params(selected_id, leverage=leverage,
+                                    max_capital_loss_pct=float(max_loss))
 
-    # ── Run button — stores result in session_state ───────────────────────────
-    if st.button("▶ Run Backtest", type="primary", key="bt_run"):
+    # ── Run button ────────────────────────────────────────────────────────────
+    run_clicked = st.button("▶ Run Backtest", type="primary", key="bt_run")
+
+    # ── Show any existing results BEFORE potentially running again ────────────
+    if "bt_result" in st.session_state:
+        st.divider()
+        _show_results()
+
+    # ── Execute run if button was clicked ─────────────────────────────────────
+    if run_clicked:
         cls      = get_strategy(selected_id)
         strategy = cls(params=params)
         errors   = strategy.validate_params()
         if errors:
-            for e in errors: st.error(e)
+            for e in errors:
+                st.error(e)
             return
 
         from config.settings import RiskConfig
@@ -367,53 +392,70 @@ def render() -> None:
         if direction_filter == "Long only":  dir_filter = Dir.LONG
         if direction_filter == "Short only": dir_filter = Dir.SHORT
 
-        engine = BacktestEngine(strategy, risk_manager=rm, direction_filter=dir_filter,
-                                counter_signal_exit=counter_signal_exit)
-        with st.spinner("Running backtest…"):
+        engine = BacktestEngine(strategy, risk_manager=rm,
+                                direction_filter=dir_filter,
+                                counter_signal_exit=counter_signal_exit,
+                                spread_pct=float(spread_pct),
+                                slippage_pct=float(slippage_pct),
+                                commission_per_trade=float(commission))
+        n_bars     = len(prices)
+        speed_note = "a few seconds" if n_bars < 200_000 else "~30-60 seconds"
+
+        with st.spinner(f"Running backtest on {n_bars:,} bars — {speed_note}…"):
             result = engine.run(data=prices, symbol=symbol, leverage=leverage,
                                 capital_per_trade=capital_per_trade,
                                 starting_equity=starting_equity)
 
-        # Store everything needed to render in session_state
-        st.session_state["bt_result"]           = result
-        st.session_state["bt_prices"]           = prices
-        st.session_state["bt_symbol"]           = symbol
-        st.session_state["bt_bar_label"]        = bar_label
-        st.session_state["bt_selected_id"]      = selected_id
-        st.session_state["bt_params"]           = dict(params)
-        st.session_state["bt_starting_equity"]  = float(starting_equity)
+        # Persist result and all rendering context
+        st.session_state["bt_result"]          = result
+        st.session_state["bt_symbol"]          = symbol
+        st.session_state["bt_bar_label"]       = bar_label
+        st.session_state["bt_selected_id"]     = selected_id
+        st.session_state["bt_params"]          = dict(params)
+        st.session_state["bt_starting_equity"] = float(starting_equity)
 
-        # Save to DB
         try:
             from db.database import Database
             db = Database(settings.db_path)
-            for t in result.trades: db.save_trade(t)
-            st.session_state["bt_db_msg"] = f"✓ {len(result.trades)} trades saved to database."
+            for t in result.trades:
+                db.save_trade(t)
+            st.session_state["bt_db_msg"] = f"✓ {len(result.trades)} trades saved."
         except Exception as e:
             st.session_state["bt_db_msg"] = f"DB save skipped: {e}"
 
-    # ── Render results (from session_state — survives checkbox clicks) ─────────
+        # Trigger a clean re-render — this time prices will load from
+        # session_state["bt_prices_live"] so the page won't return early
+        st.rerun()
+
+
+def _show_results() -> None:
+    """Render backtest results from session_state."""
     if "bt_result" not in st.session_state:
         return
 
-    result          = st.session_state["bt_result"]
-    prices_r        = st.session_state["bt_prices"]
-    symbol_r        = st.session_state["bt_symbol"]
-    bar_label_r     = st.session_state["bt_bar_label"]
-    selected_id_r   = st.session_state["bt_selected_id"]
-    params_r        = st.session_state["bt_params"]
-    start_eq        = st.session_state["bt_starting_equity"]
+    result        = st.session_state["bt_result"]
+    symbol_r      = st.session_state.get("bt_symbol", "DATA")
+    bar_label_r   = st.session_state.get("bt_bar_label", "bars")
+    selected_id_r = st.session_state.get("bt_selected_id", "")
+    params_r      = st.session_state.get("bt_params", {})
+    start_eq      = st.session_state.get("bt_starting_equity", 10_000.0)
+    prices_r      = st.session_state.get("bt_prices_live")
 
     closed = [t for t in result.trades if t.leveraged_return_pct is not None]
 
+    # ── Summary metrics ───────────────────────────────────────────────────────
     st.subheader("📊 Results")
     s = result.summary()
-    render_metrics_row({"Total Trades":s["Total Trades"],"Win Rate":s["Win Rate"],
-                        "Total Return":s["Total Return"],"Max Drawdown":s["Max Drawdown"],
-                        "Sharpe Ratio":s["Sharpe Ratio"],"Avg Win":s["Avg Win"],
-                        "Avg Loss":s["Avg Loss"]})
+    render_metrics_row({
+        "Total Trades":   s["Total Trades"],
+        "Win Rate":       s["Win Rate"],
+        "Total Return":   s["Total Return"],
+        "Max Drawdown":   s["Max Drawdown"],
+        "Sharpe Ratio":   s["Sharpe Ratio"],
+        "Avg Win":        s["Avg Win"],
+        "Avg Loss":       s["Avg Loss"],
+    })
 
-    # Outcome breakdown
     if closed:
         from collections import Counter
         outcome_counts = Counter(
@@ -426,71 +468,75 @@ def render() -> None:
             col.metric(label, cnt)
 
     st.caption(
-        "📖 **PnL ($)** = dollar profit/loss on the trade capital.  "
-        "**Return %** = leveraged return on invested capital (PnL ÷ capital × 100).  "
-        "Exit types: **TP hit** = price reached take-profit · "
-        "**SL hit** = price hit stop-loss · "
-        "**RSI overbought exit** = RSI crossed above sell threshold (Long closed) · "
-        "**RSI oversold exit** = RSI crossed below buy threshold (Short closed)."
+        "📖 **PnL ($)** = dollar profit/loss · **Return %** = leveraged return on capital · "
+        "**TP hit** = price target reached · **SL hit** = stop hit · "
+        "**RSI exits** = RSI threshold crossed"
     )
     st.divider()
 
-    # ── Layer visibility toggles ──────────────────────────────────────────────
-    st.markdown("#### 🎛️ Chart Layers  *(toggles do not re-run the backtest)*")
+    # ── Layer toggles ─────────────────────────────────────────────────────────
+    st.markdown("#### 🎛️ Chart Layers")
     c1,c2,c3,c4,c5 = st.columns(5)
-    show_long    = c1.checkbox("▲ Long entries",  value=True, key="show_long")
-    show_short   = c2.checkbox("▼ Short entries", value=True, key="show_short")
-    show_tp_x    = c3.checkbox("✕ TP exits",      value=True, key="show_tp_x",
-                                help="Green ✕ — trade closed at take-profit price")
-    show_sl_x    = c4.checkbox("✕ SL exits",      value=True, key="show_sl_x",
-                                help="Red ✕ — trade closed at stop-loss price")
-    show_sig_x   = c5.checkbox("✕ Signal exits",  value=True, key="show_sig_x",
-                                help="Orange ✕ — RSI overbought/oversold exit (counter-signal)")
+    show_long  = c1.checkbox("▲ Long entries",  value=True, key="show_long")
+    show_short = c2.checkbox("▼ Short entries", value=True, key="show_short")
+    show_tp    = c3.checkbox("✕ TP exits",      value=True, key="show_tp_x")
+    show_sl    = c4.checkbox("✕ SL exits",      value=True, key="show_sl_x")
+    show_sig   = c5.checkbox("✕ Signal exits",  value=True, key="show_sig_x")
 
     # ── Price chart ───────────────────────────────────────────────────────────
-    st.markdown("#### 📈 Price")
-    st.altair_chart(
-        _price_chart(prices_r, result.trades, symbol_r,
-                     show_long, show_short, show_tp_x, show_sl_x, show_sig_x),
-        use_container_width=True,
-    )
-
-    # ── RSI chart ─────────────────────────────────────────────────────────────
-    if selected_id_r in ("rsi_threshold", "atr_rsi", "vwap_rsi", "bollinger_rsi"):
-        period        = int(params_r.get("rsi_period", 9))
-        buy_levels    = _parse_levels(params_r.get("buy_levels",  "30"))
-        sell_levels   = _parse_levels(params_r.get("sell_levels", "70"))
-        tp_disabled   = float(params_r.get("tp_pct", 3.0)) == 0
-        buy_disabled  = not buy_levels
-        sell_disabled = not sell_levels
-
-        mode_notes = []
-        if buy_disabled:  mode_notes.append("🚫 No Long entries (buy_levels blank)")
-        if sell_disabled: mode_notes.append("🚫 No Short entries (sell_levels blank)")
-        if tp_disabled:   mode_notes.append("⚠️ TP=0 — exits via RSI signal or SL only")
-        note_str = ("  ·  " + "  ·  ".join(mode_notes)) if mode_notes else ""
-
-        st.markdown(f"#### 📉 RSI ({period}){note_str}")
+    if prices_r is not None:
+        prices_plot = _downsample(prices_r)
+        n_bars      = len(prices_r)
+        label_extra = (f"  ·  *{len(prices_plot):,} of {n_bars:,} bars shown*"
+                       if len(prices_plot) < n_bars else "")
+        st.markdown(f"#### 📈 Price{label_extra}")
         st.altair_chart(
-            _rsi_chart(prices_r, result.trades, period, buy_levels, sell_levels,
-                       bar_label_r, symbol_r,
-                       show_long, show_short, show_tp_x, show_sl_x, show_sig_x),
+            _price_chart(prices_plot, result.trades, symbol_r,
+                         show_long, show_short, show_tp, show_sl, show_sig),
             use_container_width=True,
         )
 
+        # ── RSI chart ─────────────────────────────────────────────────────────
+        rsi_strategies = ("rsi_threshold","atr_rsi","vwap_rsi",
+                          "bollinger_rsi","ema_trend_rsi")
+        if selected_id_r in rsi_strategies:
+            period      = int(params_r.get("rsi_period", 9))
+            buy_levels  = _parse_levels(params_r.get("buy_levels",  "30"))
+            sell_levels = _parse_levels(params_r.get("sell_levels", "70"))
+            tp_disabled = float(params_r.get("tp_pct", 3.0)) == 0
+            notes = []
+            if not buy_levels:  notes.append("🚫 No Long entries")
+            if not sell_levels: notes.append("🚫 No Short entries")
+            if tp_disabled:     notes.append("⚠️ TP=0")
+            note_str = ("  ·  " + "  ·  ".join(notes)) if notes else ""
+            st.markdown(f"#### 📉 RSI ({period}){note_str}")
+            st.altair_chart(
+                _rsi_chart(prices_plot, result.trades, period, buy_levels, sell_levels,
+                           bar_label_r, symbol_r,
+                           show_long, show_short, show_tp, show_sl, show_sig),
+                use_container_width=True,
+            )
+    else:
+        st.info("ℹ️ Price chart not available — reload data to see charts.")
+
     # ── Equity curve ──────────────────────────────────────────────────────────
     if closed:
-        st.markdown("#### 💰 Equity Curve — one dot per closed trade  *(hover for details)*")
-        st.altair_chart(_equity_chart(result.trades, start_eq, symbol_r), use_container_width=True)
+        st.markdown("#### 💰 Equity Curve")
+        st.altair_chart(_equity_chart(result.trades, start_eq, symbol_r),
+                        use_container_width=True)
 
-    # ── Per-trade bars ────────────────────────────────────────────────────────
+    # ── Per-trade distribution ────────────────────────────────────────────────
     if closed:
         trades_df = pd.DataFrame([{
-            "symbol": t.symbol, "direction": t.direction.value,
-            "entry_price": t.entry_price, "exit_price": t.exit_price,
-            "outcome": t.outcome.value if t.outcome else None,
+            "symbol":              t.symbol,
+            "direction":          t.direction.value,
+            "entry_price":        t.entry_price,
+            "exit_price":         t.exit_price,
+            "outcome":            t.outcome.value if t.outcome else None,
             "leveraged_return_pct": t.leveraged_return_pct,
-            "pnl": t.pnl, "entry_time": t.entry_time, "exit_time": t.exit_time,
+            "pnl":                t.pnl,
+            "entry_time":         t.entry_time,
+            "exit_time":          t.exit_time,
         } for t in closed])
 
         st.markdown("#### 📊 Per-Trade Return")
