@@ -246,6 +246,25 @@ _PARAM_META: dict[str, dict] = {
     # Fixed level
     "direction":        {"label": "Direction",          "help": "Long or Short"},
     "signal_frequency": {"label": "Signal Frequency",   "help": "first_bar = one trade then hold; every_bar = re-signal each bar"},
+    # Trend Decay
+    "decay_ema_period":      {"label": "Decay EMA period",      "help": "EMA used to measure the downtrend slope. 780 bars = ~2 trading days on 5-min data. Longer = smoother, less reactive."},
+    "slope_lookback":        {"label": "Slope lookback bars",   "help": "Compare EMA now vs this many bars ago to measure slope. 390 = 1 trading day. Must be < decay_ema_period."},
+    "slope_min_pct":         {"label": "Min slope % drop",      "help": "EMA must have fallen at least this % over the lookback window to qualify as a downtrend. Default 0.5%."},
+    "floor_price":           {"label": "Floor price ($)",        "help": "Structural equilibrium target for UVXY (~$40). The TP for each decay short. Update if UVXY does a reverse split."},
+    "floor_buffer_pct":      {"label": "Floor buffer %",        "help": "Don't enter if price is within X% above the floor. Prevents entries too close to the target. Default 10%."},
+    "rsi_os_gate":           {"label": "RSI oversold gate",     "help": "Skip entry if RSI is already below this (already oversold — wait for bounce). Default 35."},
+    "max_entries_per_decay": {"label": "Max entries per decay", "help": "Maximum number of short entries during a single continuous decay period. Default 6."},
+    "decay_sl_pct":          {"label": "Hard SL %",             "help": "Insurance stop-loss: entry × (1 + X%). ATR trailing SL should close trades first; this is the backstop. Default 6%."},
+    "atr_trail_mult":        {"label": "ATR trail multiplier",  "help": "Trailing SL distance = X × ATR above the lowest low reached. Tightens as price falls and ATR compresses. Default 2.5."},
+    # Spike Long
+    "atr_ma_period":         {"label": "ATR MA period",         "help": "Baseline ATR moving average period. ATR is compared vs this MA to detect spikes. Default 20 bars."},
+    "atr_exit_mult":         {"label": "ATR exit threshold",    "help": "Exit long when ATR drops below X × ATR_MA — spike is unwinding. Must be < spike_atr_mult. Default 1.3."},
+    "momentum_bars":         {"label": "Momentum lookback",     "help": "Price must be ≥ momentum_pct% above price N bars ago. Confirms price is actually rising during the ATR spike. Default 12 bars."},
+    "momentum_pct":          {"label": "Momentum % threshold",  "help": "Minimum price rise % over momentum_bars to qualify as upward momentum. Default 1.5%."},
+    "rsi_ob_gate":           {"label": "RSI overbought gate",   "help": "Skip spike long entry if RSI already above this (spike already overbought). Default 75."},
+    "max_entries_per_spike": {"label": "Max entries per spike", "help": "Maximum long entries during a single spike event. Default 2 to avoid over-pyramiding."},
+    "spike_sl_pct":          {"label": "Spike SL %",            "help": "Hard stop-loss below entry: entry × (1 - X%). Keep tight — spikes reverse violently. Default 5%."},
+    "spike_tp_pct":          {"label": "Spike TP % (0=off)",    "help": "Hard take-profit above entry. Set to 0 to rely on ATR trailing stop only (recommended). Default 0."},
 }
 
 
@@ -310,7 +329,33 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
             "🎯 Key params: `peak_drop_pct=8` (entry trigger) · `reversion_tp_pct=15` (cap) · "
             "`dyn_rsi_rev_floor=35` / `dyn_rsi_rev_rise=12` (momentum exit sensitivity)"
         )
-    elif strategy_id == "ema_trend_rsi":
+    elif strategy_id == "trend_decay":
+        st.info(
+            "📉 **UVXY Trend Decay** — Shorts the prolonged post-spike contango decay "
+            "toward structural equilibrium (~$40).  \n"
+            "**When it activates:** medium EMA declining ≥ 0.5% per day AND price below EMA "
+            "AND not in a spike AND price still > 10% above floor.  \n"
+            "**Exit:** ATR trailing SL trails price down (locks in profit as decay continues) "
+            "+ hard floor TP at $40 + regime exit when EMA flattens.  \n"
+            "**Pairs with:** Bollinger+RSI (handles the first few days post-spike); "
+            "this strategy takes over for the weeks/months of sustained decay that follow.  \n"
+            "🎯 Key params: `floor_price=40` (update after reverse splits) · "
+            "`decay_ema_period=780` (2-day EMA) · `atr_trail_mult=2.5`"
+        )
+    elif strategy_id == "spike_long":
+        st.info(
+            "📈 **UVXY Spike Long** — Rides the violent upward leg of VIX spikes.  \n"
+            "**Entry:** ATR expands above `spike_atr_mult × ATR_MA` (spike confirmed) "
+            "AND price is ≥ 1.5% above its level 12 bars ago (momentum confirmed) "
+            "AND RSI < 75 (not already overbought).  \n"
+            "**Exit:** ATR trailing stop (SL = peak_high - 1.5×ATR) tightens as spike "
+            "matures; also exits when ATR contracts back below `atr_exit_mult × ATR_MA` "
+            "(spike is unwinding).  \n"
+            "⚠️ **Risk:** UVXY spikes reverse violently — keep `spike_sl_pct` ≤ 5% "
+            "and `max_entries_per_spike` ≤ 2.  \n"
+            "🎯 Key params: `spike_atr_mult=2.0` · `atr_exit_mult=1.3` · "
+            "`atr_trail_mult=1.5` · `spike_sl_pct=5`"
+        )
         st.info(
             "📈 **EMA Crossover + RSI + Trend Filter** — Purpose-built for GC=F 1-min/5-min.  \n"
             "**Entry:** 9/21 EMA golden/death cross · **RSI gate:** > 50 confirms direction · "
