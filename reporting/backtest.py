@@ -112,9 +112,11 @@ class BacktestEngine:
         equity       = starting_equity
         equity_curve: list[dict]       = []
         open_trade:  Optional[TradeRecord] = None
-        # Trailing stop tracking — maps trade_id → current trailing SL price
-        # Used for post-spike shorts where we trail the SL down instead of fixed TP
-
+        # Trailing stop state — set when a trade has trailing_atr_mult in metadata
+        trail_atr_mult:  Optional[float] = None   # X in: SL = peak ± X×ATR
+        trail_atr_period: int            = 14
+        trail_peak:      Optional[float] = None   # highest high (long) / lowest low (short)
+        trail_direction: str             = "short" # "long" or "short"
 
         for i in range(1, n):
             bar          = data.iloc[i]
@@ -124,6 +126,26 @@ class BacktestEngine:
             new_direction = self._signal_to_direction(action)
 
             # 1. Update trailing stop if active, then check SL / TP
+            if open_trade is not None and trail_atr_mult is not None:
+                bar_high = float(bar["high"])
+                bar_low  = float(bar["low"])
+                # Compute current ATR from the pre-built atr series if available,
+                # otherwise fall back to a rolling estimate on close prices
+                curr_atr = self._bar_atr(data, i, trail_atr_period)
+                if trail_direction == "long":
+                    # Trail up: SL = highest_high_since_entry - mult × ATR
+                    if trail_peak is None or bar_high > trail_peak:
+                        trail_peak = bar_high
+                    new_trail_sl = trail_peak - trail_atr_mult * curr_atr
+                    if open_trade.stop_loss is None or new_trail_sl > open_trade.stop_loss:
+                        open_trade.stop_loss = new_trail_sl
+                else:
+                    # Trail down: SL = lowest_low_since_entry + mult × ATR
+                    if trail_peak is None or bar_low < trail_peak:
+                        trail_peak = bar_low
+                    new_trail_sl = trail_peak + trail_atr_mult * curr_atr
+                    if open_trade.stop_loss is None or new_trail_sl < open_trade.stop_loss:
+                        open_trade.stop_loss = new_trail_sl
 
             if open_trade is not None:
                 open_trade = self._check_exit(open_trade, bar)
@@ -136,6 +158,9 @@ class BacktestEngine:
                         open_trade.pnl = trade_pnl
                     trades.append(open_trade)
                     open_trade = None
+                    # Clear trailing stop state
+                    trail_atr_mult   = None
+                    trail_peak       = None
 
             # 2. Counter-signal exit
             if (self.counter_signal_exit
@@ -166,6 +191,9 @@ class BacktestEngine:
                     open_trade.pnl = trade_pnl
                     trades.append(open_trade)
                     open_trade = None
+                    # Clear trailing stop state
+                    trail_atr_mult   = None
+                    trail_peak       = None
 
             # 3. Queue new trade — will open on NEXT bar's open price
             # This prevents lookahead bias: signal fires at bar[i] close,
@@ -229,9 +257,19 @@ class BacktestEngine:
                             f"Entry: {prev_dir.value} @ {entry_px:.4f} (next-bar open) | "
                             f"SL={effective_sl:.4f} | "
                             + (f'TP={adj_tp:.4f}' if adj_tp is not None else 'TP=none')
-
                         ),
                     )
+                    # Initialise trailing stop state if strategy requested it
+                    prev_inner = prev_meta.get("metadata", {})
+                    if "trailing_atr_mult" in prev_inner:
+                        trail_atr_mult   = float(prev_inner["trailing_atr_mult"])
+                        trail_atr_period = int(prev_inner.get("atr_period", 14))
+                        trail_direction  = prev_inner.get("trail_direction",
+                                           "long" if prev_dir == Direction.LONG else "short")
+                        trail_peak       = None   # will be set on first bar
+                    else:
+                        trail_atr_mult   = None
+                        trail_peak       = None
 
 
             equity_curve.append({"date": current_date, "equity": equity})
@@ -251,6 +289,20 @@ class BacktestEngine:
     def _trade_cost(self, capital: float) -> float:
         """Round-trip cost: spread + slippage (% of capital) + flat commission."""
         return capital * (self.spread_pct + self.slippage_pct) / 100.0 + self.commission_per_trade
+
+    @staticmethod
+    def _bar_atr(data: pd.DataFrame, i: int, period: int) -> float:
+        """Fast single-value ATR estimate at bar i using a rolling window."""
+        start = max(0, i - period * 3)   # enough bars for EWM to stabilise
+        sl    = data.iloc[start:i+1]
+        hi    = sl["high"].astype(float)
+        lo    = sl["low"].astype(float)
+        cl    = sl["close"].astype(float)
+        prev  = cl.shift(1)
+        tr    = pd.concat([hi-lo, (hi-prev).abs(), (lo-prev).abs()], axis=1).max(axis=1)
+        atr   = tr.ewm(alpha=1/period, adjust=False, min_periods=1).mean()
+        v     = float(atr.iloc[-1])
+        return v if not np.isnan(v) else float((hi - lo).mean())
 
     @staticmethod
     def _counter_signal_outcome(
