@@ -323,14 +323,17 @@ def render() -> None:
     # ── Config form ───────────────────────────────────────────────────────────
     strategies  = list_strategies()
     strat_names = {s["name"]: s["id"] for s in strategies}
+    strat_list  = list(strat_names.keys())
+    _bollinger_name = next((n for n in strat_list if "Bollinger" in n), strat_list[0])
+    _default_strat_idx = strat_list.index(_bollinger_name)
 
     col_cfg, col_risk = st.columns(2)
     with col_cfg:
-        selected_name     = st.selectbox("Strategy", list(strat_names.keys()), key="bt_strategy")
+        selected_name     = st.selectbox("Strategy", strat_list, index=_default_strat_idx, key="bt_strategy")
         selected_id       = strat_names[selected_name]
         leverage          = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="bt_lev")
         capital_per_trade = st.number_input("Capital per trade ($)", 100.0, value=1000.0, key="bt_cap")
-        starting_equity   = st.number_input("Starting equity ($)", 1000.0, value=10_000.0, key="bt_equity")
+        starting_equity   = st.number_input("Starting equity ($)", 100.0, value=1000.0, key="bt_equity")
         direction_filter  = st.selectbox("Direction filter", ["Both","Long only","Short only"], key="bt_dir")
     with col_risk:
         st.markdown("**Risk Controls**")
@@ -439,7 +442,7 @@ def _show_results() -> None:
     bar_label_r   = st.session_state.get("bt_bar_label", "bars")
     selected_id_r = st.session_state.get("bt_selected_id", "")
     params_r      = st.session_state.get("bt_params", {})
-    start_eq      = st.session_state.get("bt_starting_equity", 10_000.0)
+    start_eq      = st.session_state.get("bt_starting_equity", 1000.0)
     prices_r      = st.session_state.get("bt_prices_live")
 
     closed = [t for t in result.trades if t.leveraged_return_pct is not None]
