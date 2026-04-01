@@ -214,25 +214,24 @@ _PARAM_META: dict[str, dict] = {
     # Bollinger
     "bb_period":      {"label": "BB Period",           "help": "Bollinger Bands SMA period. Default 20."},
     "bb_std":         {"label": "BB Std Devs",         "help": "Standard deviations for upper/lower bands. Default 2.0."},
-    "sl_band_mult":        {"label": "SL beyond band",       "help": "SL = outer band ± (this × band width). Default 0.2."},
-    "require_cross":       {"label": "Require band cross",   "help": "Require genuine cross not just touch. Reduces signals ~40%."},
-    "min_band_width_pct":  {"label": "Min band width %",     "help": "Skip if band < this % of price. Filters choppy low-vol periods. Default 2.0%."},
-    "min_rr_ratio":        {"label": "Min R:R ratio",        "help": "Skip if (TP distance)/(SL distance) < this. Default 1.5."},
+    "sl_band_mult":        {"label": "SL beyond band",       "help": "SL = outer band ± (mult × band width). Default 0.2."},
+    "require_cross":       {"label": "Require band cross",   "help": "Price must cross band, not just touch. Reduces signals ~40%."},
+    "min_band_width_pct":  {"label": "Min band width %",     "help": "Skip if band < X% of price. Default 2.0%."},
+    "min_rr_ratio":        {"label": "Min R:R ratio",        "help": "Skip if TP distance / SL distance < X. Default 1.5."},
     "cooldown_bars":       {"label": "Cooldown bars",        "help": "Min bars between entries. Default 5."},
-    # Regime detection params
-    "spike_atr_mult":      {"label": "Spike ATR mult",       "help": "ATR > X × ATR_MA → fast spike detected. Default 2.0."},
-    "spike_price_pct":     {"label": "Spike price %",        "help": "Price moved >X% in spike_lookback bars → fast spike. Default 5%."},
-    "spike_lookback":      {"label": "Spike lookback bars",  "help": "Bars for fast spike momentum check. Default 10."},
-    "trend_lookback":      {"label": "Trend lookback bars",  "help": "Bars for slow/gradual rise check. Default 390 (=1 trading day on 1-min). If price is >trend_rise_pct% higher than N bars ago → suppress shorts."},
-    "trend_rise_pct":      {"label": "Trend rise %",         "help": "If price > X% above N bars ago → rising trend → shorts suppressed. Default 8%. This catches gradual multi-day UVXY spikes that ATR misses."},
-    "peak_window":         {"label": "Peak window bars",     "help": "How many bars back to look for the spike peak. Default 60 (=1hr on 1-min)."},
-    "peak_drop_pct":       {"label": "Peak drop % trigger",  "help": "Price dropped >X% from recent peak → post-spike reversion regime. Default 8%."},
-    "reversion_tp_pct":    {"label": "Reversion TP %",       "help": "Post-spike short TP = entry × (1 - X%). Default 15% (UVXY drops 30-60% after spikes)."},
+    "min_atr_pct":         {"label": "Min ATR % of price",   "help": "Skip ALL signals when ATR < X% of price (too flat to trade profitably). Default 0.3%."},
+    # Spike regime
+    "spike_atr_mult":      {"label": "Spike ATR mult",       "help": "Fast spike: ATR > X × ATR_MA. Default 2.0."},
+    "rise_lookback":       {"label": "Rise lookback bars",   "help": "Gradual rise check window. Default 1170 = 3 trading days. If price > rise_pct% above N-bar low → spike → no shorts."},
+    "rise_pct":            {"label": "Rise % threshold",     "help": "Price > X% above rise_lookback low → rising trend → suppress shorts. Default 5%. Catches gradual multi-day UVXY spikes."},
+    # Post-spike regime
+    "spike_high_window":   {"label": "Spike high window",    "help": "Rolling high window for spike detection. Default 1170 = 3 days."},
+    "spike_ema_mult":      {"label": "Spike EMA mult",       "help": "Spike if 3d-high > X × 5d-EMA. Default 1.5."},
+    "peak_drop_pct":       {"label": "Peak drop % trigger",  "help": "Price dropped X% from 3d-high → post-spike → aggressive shorts. Default 8%."},
+    "reversion_tp_pct":    {"label": "Reversion TP %",       "help": "Post-spike short TP = entry × (1 - X%). Default 15%."},
     "reversion_sl_pct":    {"label": "Reversion SL %",       "help": "Post-spike short SL = entry × (1 + X%). Default 5%."},
-    "min_atr_pct":         {"label": "Min ATR % of price",   "help": "Skip ALL signals when ATR < X% of price. Blocks low-vol periods where expected move is too small to cover costs. Default 0.3%. Try 0.2-0.5%."},
-    "min_tp_atr_ratio":    {"label": "Min TP/ATR ratio",     "help": "Skip if distance to TP < X × ATR. Ensures the expected move is large relative to current volatility. Default 0.5."},
-    # EMA Crossover + RSI + Trend Filter (GC=F)
-    "fast_ema":    {"label": "Fast EMA",       "help": "Fast EMA period (default 9). Golden cross above slow EMA = buy signal."},
+    "reversion_rsi_min":   {"label": "Reversion RSI min",    "help": "Don't short post-spike if RSI < X (already oversold). Default 40."},
+    "fast_ema":            {"label": "Fast EMA",       "help": "Fast EMA period (default 9). Golden cross above slow EMA = buy signal."},
     "slow_ema":    {"label": "Slow EMA",       "help": "Slow EMA period (default 21). Death cross below fast EMA = sell signal."},
     "trend_ema":   {"label": "Trend EMA",      "help": "Long-term trend filter (default 200). Set to 0 to disable. Longs only above, shorts only below."},
     "rsi_gate":       {"label": "RSI Gate",          "help": "RSI must be above this for longs, below for shorts (default 50). Raise to 55 for stricter momentum filter."},
@@ -289,16 +288,13 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
     elif strategy_id == "bollinger_rsi":
         st.info(
             "📉 **Bollinger + RSI (4-Regime)** — Full UVXY spike cycle strategy.  \n"
-            "**Four regimes:**  \n"
+            "**Four regimes (independently detected):**  \n"
             "• 🟢 **Normal** — Bollinger mean reversion, both directions  \n"
-            "• 🟡 **Spike** — VIX rising (fast OR gradual): NO shorts  \n"
-            "• 🔴 **Post-spike** — Peak confirmed, price falling: aggressive SHORTS  \n"
-            "• ⏸️ **Drift** — Slow quiet decline: all trading paused  \n"
-            "⚠️ **Spike filter:** trend_lookback=390 + trend_rise_pct=8 catches "
-            "gradual multi-day rises.  \n"
-            "⚠️ **Drift filter:** min_atr_pct=0.3 blocks low-vol periods directly "
-            "(slope-based filters kill too much on a declining asset).  \n"
-            "🎯 Tune: peak_drop_pct (post-spike entry), reversion_tp_pct (target %)"
+            "• 🟡 **Spike** — Fast (ATR) OR gradual (price > 5% above 3d-low): NO shorts  \n"
+            "• 🔴 **Post-spike** — 3d-high > 1.5× EMA AND dropped 8%: AGGRESSIVE SHORTS  \n"
+            "• ⏸️ **Drift** — ATR < 0.3% of price: all paused  \n"
+            "🎯 Key params: rise_pct=5 (gradual rise sensitivity), "
+            "peak_drop_pct=8 (post-spike entry), reversion_tp_pct=15 (short target)"
         )
     elif strategy_id == "ema_trend_rsi":
         st.info(
