@@ -112,6 +112,9 @@ class BacktestEngine:
         equity       = starting_equity
         equity_curve: list[dict]       = []
         open_trade:  Optional[TradeRecord] = None
+        # Trailing stop tracking — maps trade_id → current trailing SL price
+        # Used for post-spike shorts where we trail the SL down instead of fixed TP
+
 
         for i in range(1, n):
             bar          = data.iloc[i]
@@ -120,7 +123,8 @@ class BacktestEngine:
             meta         = meta_s[i]
             new_direction = self._signal_to_direction(action)
 
-            # 1. SL / TP exit check
+            # 1. Update trailing stop if active, then check SL / TP
+
             if open_trade is not None:
                 open_trade = self._check_exit(open_trade, bar)
                 if open_trade.outcome not in (TradeOutcome.OPEN, TradeOutcome.NO_DATA):
@@ -206,6 +210,7 @@ class BacktestEngine:
                         effective_sl      = adj_sl
                         effective_capital = capital_per_trade
 
+                    prev_regime = prev_meta.get("metadata", {}).get("regime", "normal")
                     open_trade = TradeRecord(
                         id                = str(uuid.uuid4()),
                         symbol            = symbol,
@@ -224,8 +229,10 @@ class BacktestEngine:
                             f"Entry: {prev_dir.value} @ {entry_px:.4f} (next-bar open) | "
                             f"SL={effective_sl:.4f} | "
                             + (f'TP={adj_tp:.4f}' if adj_tp is not None else 'TP=none')
+
                         ),
                     )
+
 
             equity_curve.append({"date": current_date, "equity": equity})
 

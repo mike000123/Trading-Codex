@@ -4,7 +4,14 @@ app.py  ←  streamlit run app.py
 Multi-page Streamlit trading platform.
 Sidebar navigation drives all pages.
 """
+import logging
 import streamlit as st
+
+# Suppress Tornado WebSocket closed errors — these are harmless and appear
+# when long-running backtests cause the browser WebSocket to time out.
+# Results are always computed and stored correctly despite these messages.
+logging.getLogger("tornado.websocket").setLevel(logging.CRITICAL)
+logging.getLogger("tornado.iostream").setLevel(logging.CRITICAL)
 
 st.set_page_config(
     page_title="AlgoTrader Pro",

@@ -228,9 +228,16 @@ _PARAM_META: dict[str, dict] = {
     "spike_high_window":   {"label": "Spike high window",    "help": "Rolling high window for spike detection. Default 1170 = 3 days."},
     "spike_ema_mult":      {"label": "Spike EMA mult",       "help": "Spike if 3d-high > X × 5d-EMA. Default 1.5."},
     "peak_drop_pct":       {"label": "Peak drop % trigger",  "help": "Price dropped X% from 3d-high → post-spike → aggressive shorts. Default 8%."},
-    "reversion_tp_pct":    {"label": "Reversion TP %",       "help": "Post-spike short TP = entry × (1 - X%). Default 15%."},
+    "reversion_tp_pct":    {"label": "Reversion TP %",       "help": "Post-spike short hard-floor TP = entry × (1 - X%). Acts as max-profit cap even with dynamic exits enabled. Default 15%."},
     "reversion_sl_pct":    {"label": "Reversion SL %",       "help": "Post-spike short SL = entry × (1 + X%). Default 5%."},
     "reversion_rsi_min":   {"label": "Reversion RSI min",    "help": "Don't short post-spike if RSI < X (already oversold). Default 40."},
+    # Dynamic post-spike exit params
+    "dyn_use_regime_exit": {"label": "Dyn exit: regime flip", "help": "✅ Close post-spike short when post_spike regime turns False (price recovered vs rolling high/EMA). Usually the most reliable signal. Default on."},
+    "dyn_rsi_rev_floor":   {"label": "Dyn exit: RSI floor",   "help": "RSI reversal exit (signal B): RSI trough must reach ≤ this value before a rebound counts. Default 35. Lower = requires deeper flush before exiting."},
+    "dyn_rsi_rev_rise":    {"label": "Dyn exit: RSI rise pts", "help": "RSI reversal exit (signal B): RSI must rise this many points from the trough to trigger exit. Default 12. Higher = more confirmation needed."},
+    "dyn_ema_fast":        {"label": "Dyn exit: EMA fast",    "help": "EMA cross exit (signal C): fast EMA span (bars). Exit when fast EMA crosses above slow EMA while in post-spike short. Default 5."},
+    "dyn_ema_slow":        {"label": "Dyn exit: EMA slow",    "help": "EMA cross exit (signal C): slow EMA span (bars). Default 13. Larger gap = fewer false exits."},
+    "dyn_atr_collapse":    {"label": "Dyn exit: ATR collapse", "help": "ATR collapse exit (signal D): exit when current ATR drops below this fraction of ATR-at-entry. 0.55 = 55%. Set to 0 to disable. Catches moves that have exhausted volatility."},
     "fast_ema":            {"label": "Fast EMA",       "help": "Fast EMA period (default 9). Golden cross above slow EMA = buy signal."},
     "slow_ema":    {"label": "Slow EMA",       "help": "Slow EMA period (default 21). Death cross below fast EMA = sell signal."},
     "trend_ema":   {"label": "Trend EMA",      "help": "Long-term trend filter (default 200). Set to 0 to disable. Longs only above, shorts only below."},
@@ -292,9 +299,16 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
             "• 🟢 **Normal** — Bollinger mean reversion, both directions  \n"
             "• 🟡 **Spike** — Fast (ATR) OR gradual (price > 5% above 3d-low): NO shorts  \n"
             "• 🔴 **Post-spike** — 3d-high > 1.5× EMA AND dropped 8%: AGGRESSIVE SHORTS  \n"
-            "• ⏸️ **Drift** — ATR < 0.3% of price: all paused  \n"
-            "🎯 Key params: rise_pct=5 (gradual rise sensitivity), "
-            "peak_drop_pct=8 (post-spike entry), reversion_tp_pct=15 (short target)"
+            "• ⏸️ **Drift** — ATR < 0.3% of price: all paused  \n\n"
+            "**🔁 Dynamic post-spike exit** — shorts close when the declining phase ends, "
+            "not just at a fixed TP%.  Four independent signals: "
+            "**(A)** regime flips off · "
+            "**(B)** RSI rebounds from oversold trough · "
+            "**(C)** fast EMA crosses above slow EMA · "
+            "**(D)** ATR collapses to <55% of entry ATR.  \n"
+            "The hard-floor `reversion_tp_pct` still applies as a max-profit cap.  \n"
+            "🎯 Key params: `peak_drop_pct=8` (entry trigger) · `reversion_tp_pct=15` (cap) · "
+            "`dyn_rsi_rev_floor=35` / `dyn_rsi_rev_rise=12` (momentum exit sensitivity)"
         )
     elif strategy_id == "ema_trend_rsi":
         st.info(

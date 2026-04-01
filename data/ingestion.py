@@ -1,8 +1,15 @@
 """
 data/ingestion.py
 ─────────────────
-Unified data loading layer.
-Returns clean pandas DataFrames with columns: date, open, high, low, close, volume.
+Unified data loading layer with local caching.
+
+All loaders return clean DataFrames: date, open, high, low, close, volume.
+
+Cache behaviour:
+  - On first fetch: downloads full range, saves to data_cache/<source>/<symbol>/<tf>.csv
+  - On subsequent fetches: loads cache, checks for gap, fetches only new bars, appends
+  - Cache is persistent on local PC; ephemeral per-session on Streamlit Cloud
+  - Different sources kept in separate folders (different formats, different symbols)
 """
 from __future__ import annotations
 
@@ -13,6 +20,9 @@ import pandas as pd
 import yfinance as yf
 
 from core.logger import log
+from data.cache import DataCache
+
+_cache = DataCache()
 
 
 # ─── Internal helpers ────────────────────────────────────────────────────────
@@ -37,24 +47,24 @@ def _normalize_df(df: pd.DataFrame, col_map: dict[str, str]) -> pd.DataFrame:
     volume_col = col_map.get("volume")
     normalized = pd.DataFrame(
         {
-            "date": pd.to_datetime(df[col_map["date"]], errors="coerce", utc=True).dt.tz_localize(None),
-            "open": _to_numeric(df[col_map["open"]]),
-            "high": _to_numeric(df[col_map["high"]]),
-            "low": _to_numeric(df[col_map["low"]]),
-            "close": _to_numeric(df[col_map["close"]]),
-            "volume": _to_numeric(df[volume_col]) if volume_col else pd.Series(0.0, index=df.index),
+            "date":   pd.to_datetime(df[col_map["date"]], errors="coerce",
+                                     utc=True).dt.tz_localize(None),
+            "open":   _to_numeric(df[col_map["open"]]),
+            "high":   _to_numeric(df[col_map["high"]]),
+            "low":    _to_numeric(df[col_map["low"]]),
+            "close":  _to_numeric(df[col_map["close"]]),
+            "volume": (_to_numeric(df[volume_col]) if volume_col
+                       else pd.Series(0.0, index=df.index)),
         }
     ).dropna(subset=["date", "open", "high", "low", "close"])
 
-    return (
-        normalized
-        .sort_values("date")
-        .drop_duplicates("date")
-        .reset_index(drop=True)
-    )
+    return (normalized
+            .sort_values("date")
+            .drop_duplicates("date")
+            .reset_index(drop=True))
 
 
-# ─── Public API ──────────────────────────────────────────────────────────────
+# ─── CSV upload ──────────────────────────────────────────────────────────────
 
 def load_from_csv(file_buffer) -> pd.DataFrame:
     """Parse an uploaded CSV file into a standard OHLCV DataFrame."""
@@ -66,11 +76,11 @@ def load_from_csv(file_buffer) -> pd.DataFrame:
     canon = {_canonicalize(c): c for c in df.columns}
 
     aliases: dict[str, list[str]] = {
-        "date": ["date", "datetime", "time", "timestamp"],
-        "open": ["open", "openingprice"],
-        "high": ["high", "max"],
-        "low": ["low", "min"],
-        "close": ["close", "closelast", "closeprice", "last"],
+        "date":   ["date", "datetime", "time", "timestamp"],
+        "open":   ["open", "openingprice"],
+        "high":   ["high", "max"],
+        "low":    ["low", "min"],
+        "close":  ["close", "closelast", "closeprice", "last"],
         "volume": ["volume", "vol"],
     }
 
@@ -92,35 +102,69 @@ def load_from_csv(file_buffer) -> pd.DataFrame:
     if result.empty:
         raise ValueError("No valid rows after parsing CSV.")
 
-    log.info(f"CSV loaded: {len(result)} rows {result['date'].min().date()} → {result['date'].max().date()}")
+    log.info(f"CSV: {len(result)} rows "
+             f"{result['date'].min().date()} → {result['date'].max().date()}")
     return result
 
+
+# ─── Yahoo Finance ────────────────────────────────────────────────────────────
 
 def load_from_ticker(
     ticker: str,
     interval: str,
     start_date: pd.Timestamp,
     end_date: pd.Timestamp,
+    use_cache: bool = True,
 ) -> pd.DataFrame:
-    """Fetch OHLCV from Yahoo Finance via yfinance."""
+    """
+    Fetch OHLCV from Yahoo Finance via yfinance.
+    If use_cache=True, only fetches the missing date range and appends to cache.
+
+    Note: yfinance 1-min data is limited to last 7 days.
+    For longer history use Alpaca (load_from_alpaca_history).
+    """
     ticker = ticker.strip().upper()
     if not ticker:
         raise ValueError("Ticker cannot be empty.")
     if end_date < start_date:
         raise ValueError("End date must be on or after start date.")
 
-    log.info(f"Fetching {ticker} {interval} {start_date.date()} → {end_date.date()}")
+    source = "yfinance"
+
+    # ── Cache check ───────────────────────────────────────────────────────────
+    if use_cache:
+        fetch_start, fetch_end = _cache.missing_range(
+            source, ticker, interval, start_date, end_date)
+        if fetch_start is None:
+            # Full range already cached
+            cached = _cache.load(source, ticker, interval)
+            mask   = ((cached["date"] >= start_date) &
+                      (cached["date"] <= end_date))
+            log.info(f"yfinance CACHE HIT: {ticker}/{interval} — "
+                     f"serving from cache, no download needed")
+            return cached[mask].reset_index(drop=True)
+    else:
+        fetch_start, fetch_end = start_date, end_date
+
+    log.info(f"yfinance FETCH: {ticker} {interval} "
+             f"{fetch_start.date()} → {fetch_end.date()}")
 
     data = yf.download(
         ticker,
-        start=start_date.strftime("%Y-%m-%d"),
-        end=(end_date + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
-        interval=interval,
-        auto_adjust=False,
-        progress=False,
+        start     = fetch_start.strftime("%Y-%m-%d"),
+        end       = (fetch_end + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
+        interval  = interval,
+        auto_adjust = False,
+        progress  = False,
     )
 
     if data is None or data.empty:
+        if use_cache:
+            cached = _cache.load(source, ticker, interval)
+            if cached is not None and not cached.empty:
+                log.warning(f"yfinance returned no new data for {ticker}/{interval}. "
+                            f"Serving {len(cached)} cached bars.")
+                return cached
         raise ValueError(f"No data returned for {ticker} / {interval}.")
 
     if isinstance(data.columns, pd.MultiIndex):
@@ -132,19 +176,30 @@ def load_from_ticker(
             raise ValueError(f"Fetched data missing column: {col}")
 
     vol_col = "Volume" if "Volume" in data.columns else None
-    raw = data.copy()
-    raw["_date"] = pd.to_datetime(data.index, errors="coerce", utc=True).tz_localize(None)
-    col_map = {"date": "_date", "open": "Open", "high": "High", "low": "Low", "close": "Close"}
+    raw     = data.copy()
+    raw["_date"] = (pd.to_datetime(data.index, errors="coerce", utc=True)
+                    .tz_localize(None))
+    col_map = {"date": "_date", "open": "Open",
+               "high": "High",  "low": "Low", "close": "Close"}
     if vol_col:
         col_map["volume"] = vol_col
 
-    result = _normalize_df(raw, col_map)
-    if result.empty:
+    new_data = _normalize_df(raw, col_map)
+    if new_data.empty:
         raise ValueError("No valid rows after fetching ticker data.")
 
-    log.info(f"Fetched {ticker}: {len(result)} bars")
-    return result
+    # ── Cache update ──────────────────────────────────────────────────────────
+    if use_cache:
+        merged = _cache.append(source, ticker, interval, new_data)
+        # Return only the requested range
+        mask   = ((merged["date"] >= start_date) &
+                  (merged["date"] <= end_date))
+        return merged[mask].reset_index(drop=True)
 
+    return new_data
+
+
+# ─── Alpaca ───────────────────────────────────────────────────────────────────
 
 def load_from_alpaca_history(
     symbol: str,
@@ -154,10 +209,16 @@ def load_from_alpaca_history(
     api_key: str,
     secret_key: str,
     paper: bool = True,
+    use_cache: bool = True,
 ) -> pd.DataFrame:
     """
-    Fetch historical bars from Alpaca (paper or live endpoint).
-    Requires alpaca-py.
+    Fetch historical bars from Alpaca with local caching.
+
+    First call: downloads full range, saves to data_cache/alpaca/<symbol>/<tf>.csv
+    Subsequent calls: loads cache, fetches only new bars since last cached date.
+
+    Uses SIP feed (full consolidated tape) — not IEX (sparse free feed).
+    SIP is included in all Alpaca accounts at no extra cost.
     """
     try:
         from alpaca.data.historical import StockHistoricalDataClient
@@ -174,60 +235,80 @@ def load_from_alpaca_history(
         "1Hour": TimeFrame(1,  TimeFrameUnit.Hour),
         "1Day":  TimeFrame(1,  TimeFrameUnit.Day),
     }
-    tf = tf_map.get(timeframe, TimeFrame(1, TimeFrameUnit.Day))
+    tf     = tf_map.get(timeframe, TimeFrame(1, TimeFrameUnit.Day))
+    source = "alpaca"
 
-    # Use raw keys — StockHistoricalDataClient without trading credentials
-    # works for data-only access (no paper=True/False distinction for data API)
+    # ── Cache check ───────────────────────────────────────────────────────────
+    if use_cache:
+        fetch_start, fetch_end = _cache.missing_range(
+            source, symbol, timeframe, start, end)
+        if fetch_start is None:
+            cached = _cache.load(source, symbol, timeframe)
+            mask   = ((cached["date"] >= start) & (cached["date"] <= end))
+            log.info(f"Alpaca CACHE HIT: {symbol}/{timeframe} — "
+                     f"serving {mask.sum()} bars from cache, no API call needed")
+            return cached[mask].reset_index(drop=True)
+    else:
+        fetch_start, fetch_end = start, end
+
+    log.info(f"Alpaca FETCH: {symbol} {timeframe} "
+             f"{fetch_start.date()} → {fetch_end.date()}")
+
+    # ── Alpaca API call ───────────────────────────────────────────────────────
     client = StockHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 
     req = StockBarsRequest(
-        symbol_or_symbols  = symbol,
-        timeframe          = tf,
-        start              = start.to_pydatetime(),
-        end                = end.to_pydatetime(),
-        feed               = "sip",   # SIP = full consolidated tape
-                                       # IEX (default) is the free feed and has
-                                       # very sparse coverage, especially for ETFs
-                                       # and high-frequency 1-min bars.
-                                       # SIP is included in ALL Alpaca accounts
-                                       # (paper and live) at no extra cost.
-        adjustment         = "all",   # include split/dividend adjustments
+        symbol_or_symbols = symbol,
+        timeframe         = tf,
+        start             = fetch_start.to_pydatetime(),
+        end               = fetch_end.to_pydatetime(),
+        feed              = "sip",   # SIP = full consolidated tape
+                                     # IEX (default free feed) has very sparse
+                                     # coverage for ETFs on 1-min bars.
+                                     # SIP is free on all Alpaca accounts.
+        adjustment        = "all",   # adjust for splits/dividends
     )
 
     response = client.get_stock_bars(req)
     bars     = response.df
 
     if bars.empty:
+        # If nothing new but we have cache, just return cached range
+        if use_cache:
+            cached = _cache.load(source, symbol, timeframe)
+            if cached is not None and not cached.empty:
+                mask = ((cached["date"] >= start) & (cached["date"] <= end))
+                log.warning(f"Alpaca returned no new bars for {symbol}/{timeframe}. "
+                            f"Returning {mask.sum()} cached bars.")
+                return cached[mask].reset_index(drop=True)
         raise ValueError(
             f"No data returned for {symbol} ({timeframe}) "
-            f"{start.date()} → {end.date()}.\n"
-            f"Check: (1) symbol is correct, (2) date range includes trading days, "
-            f"(3) Alpaca keys are valid paper keys."
+            f"{fetch_start.date()} → {fetch_end.date()}.\n"
+            f"Check: (1) symbol is a US equity/ETF, "
+            f"(2) date range includes NYSE trading days, "
+            f"(3) Alpaca API keys are valid."
         )
 
-    # Flatten multi-level index (symbol, timestamp) → flat DataFrame
-    bars = bars.reset_index()
+    # ── Flatten multi-level index (symbol, timestamp) ─────────────────────────
+    bars  = bars.reset_index()
 
-    # Timestamp column may be named "timestamp" or be the index
     ts_col = None
     for candidate in ["timestamp", "t"]:
         if candidate in bars.columns:
             ts_col = candidate
             break
     if ts_col is None:
-        # Last resort: first datetime-like column
         for col in bars.columns:
             if pd.api.types.is_datetime64_any_dtype(bars[col]):
                 ts_col = col
                 break
-
     if ts_col is None:
-        raise ValueError(f"Cannot find timestamp column in Alpaca response. "
+        raise ValueError(f"Cannot find timestamp in Alpaca response. "
                          f"Columns: {list(bars.columns)}")
 
     bars["date"] = pd.to_datetime(bars[ts_col], utc=True).dt.tz_localize(None)
 
-    result = pd.DataFrame({
+    new_data = pd.DataFrame({
         "date":   bars["date"],
         "open":   bars["open"].astype(float),
         "high":   bars["high"].astype(float),
@@ -236,6 +317,14 @@ def load_from_alpaca_history(
         "volume": bars["volume"].astype(float),
     }).dropna().sort_values("date").reset_index(drop=True)
 
-    log.info(f"Alpaca: {symbol} {timeframe} → {len(result)} bars "
-             f"({result['date'].iloc[0].date()} to {result['date'].iloc[-1].date()})")
-    return result
+    log.info(f"Alpaca API: {symbol} {timeframe} → {len(new_data)} new bars "
+             f"({new_data['date'].iloc[0].date()} → "
+             f"{new_data['date'].iloc[-1].date()})")
+
+    # ── Cache update ──────────────────────────────────────────────────────────
+    if use_cache:
+        merged = _cache.append(source, symbol, timeframe, new_data)
+        mask   = ((merged["date"] >= start) & (merged["date"] <= end))
+        return merged[mask].reset_index(drop=True)
+
+    return new_data

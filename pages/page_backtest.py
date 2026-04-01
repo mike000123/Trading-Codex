@@ -358,6 +358,7 @@ def render() -> None:
                                         step=0.10, format="%.2f", key="bt_comm",
                                         help="Flat $ per trade. Alpaca is free but spread/slippage apply.")
 
+
     st.divider()
     params = render_strategy_params(selected_id, leverage=leverage,
                                     max_capital_loss_pct=float(max_loss))
