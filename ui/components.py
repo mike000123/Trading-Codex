@@ -37,20 +37,43 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
     data: Optional[pd.DataFrame] = None
 
     if source == "Yahoo Finance":
+        from data.cache import DataCache
+        _yc = DataCache()
+
         ticker   = st.sidebar.text_input("Ticker", value="UVXY", key="yf_ticker")
         interval = st.sidebar.selectbox("Interval",
-            ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"], index=0, key="yf_interval")  # default 1m
+            ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"], index=0, key="yf_interval")
         col1, col2 = st.sidebar.columns(2)
         start = col1.date_input("Start", value=pd.Timestamp("2026-03-23").date(), key="yf_start")
         end   = col2.date_input("End",   value=pd.Timestamp.today().date(), key="yf_end")
-        if st.sidebar.button("Fetch Data", type="primary", key="yf_fetch"):
+
+        start_ts = pd.Timestamp(start)
+        end_ts   = pd.Timestamp(end)
+
+        # Auto-load from cache if available
+        _yf_key = f"yf_loaded_{ticker}_{interval}_{start}_{end}"
+        if _yf_key not in st.session_state:
+            cached_df = _yc.load("yfinance", ticker.upper(), interval)
+            if cached_df is not None and not cached_df.empty:
+                mask = ((cached_df["date"] >= start_ts) & (cached_df["date"] <= end_ts))
+                in_range = cached_df[mask]
+                if not in_range.empty:
+                    st.session_state["loaded_data"]   = in_range.reset_index(drop=True)
+                    st.session_state["loaded_symbol"] = ticker.upper()
+                    st.session_state[_yf_key]         = True
+                    st.sidebar.success(f"✓ {len(in_range):,} bars from cache")
+
+        if st.sidebar.button("🔄 Fetch / Update", type="primary", key="yf_fetch"):
             from data.ingestion import load_from_ticker
             with st.spinner("Fetching…"):
                 try:
-                    data = load_from_ticker(ticker, interval, pd.Timestamp(start), pd.Timestamp(end))
+                    data = load_from_ticker(ticker, interval, start_ts, end_ts)
                     st.session_state["loaded_data"]   = data
                     st.session_state["loaded_symbol"] = ticker.upper()
-                    st.sidebar.success(f"✓ {len(data)} bars")
+                    for k in list(st.session_state.keys()):
+                        if k.startswith(f"yf_loaded_{ticker}_{interval}"):
+                            del st.session_state[k]
+                    st.sidebar.success(f"✓ {len(data):,} bars")
                 except Exception as e:
                     st.sidebar.error(str(e))
 
@@ -69,37 +92,97 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
         if not settings.alpaca.has_paper_credentials():
             st.sidebar.warning("No Alpaca credentials. Add to .env")
         else:
+            from data.cache import DataCache
+            _ac = DataCache()
+
             symbol = st.sidebar.text_input("Symbol", value="UVXY", key="alp_symbol")
             tf     = st.sidebar.selectbox("Timeframe",
                          ["1Min","5Min","15Min","30Min","1Hour","1Day"],
                          index=0, key="alp_tf")
             col1, col2 = st.sidebar.columns(2)
-            # Alpaca has ~5 years of 1-min data — default start 2 years back
             start = col1.date_input("Start",
                 value=(pd.Timestamp.today()-pd.Timedelta(days=730)).date(),
                 key="alp_start")
             end   = col2.date_input("End", value=pd.Timestamp.today().date(), key="alp_end")
-            st.sidebar.caption(
-                "💡 **Alpaca data ranges** (SIP feed, free):  \n"
-                "**1Min** → ~5 years back · **5Min+** → ~5 years back  \n"
-                "For UVXY: use **1Min**, start **2020-01-01** to get ~6 years.  \n"
-                "⚠️ Keep date ranges under 3 months at a time for 1Min "
-                "to avoid very large downloads. Load multiple batches.")
-            if st.sidebar.button("Fetch from Alpaca", key="alp_fetch"):
+
+            start_ts = pd.Timestamp(start)
+            end_ts   = pd.Timestamp(end)
+
+            # ── Auto-load from cache if available ─────────────────────────────
+            # Build a cache-state key so we only re-load when symbol/tf/dates change
+            _cache_key = f"alp_loaded_{symbol}_{tf}_{start}_{end}"
+            if _cache_key not in st.session_state:
+                cached_df = _ac.load("alpaca", symbol, tf)
+                if cached_df is not None and not cached_df.empty:
+                    # Filter to requested range
+                    mask = ((cached_df["date"] >= start_ts) &
+                            (cached_df["date"] <= end_ts))
+                    in_range = cached_df[mask]
+                    if not in_range.empty:
+                        st.session_state["loaded_data"]   = in_range.reset_index(drop=True)
+                        st.session_state["loaded_symbol"] = symbol.upper()
+                        st.session_state[_cache_key]      = True
+                        st.sidebar.success(
+                            f"✓ Loaded {len(in_range):,} bars from local cache  \n"
+                            f"({in_range['date'].iloc[0].date()} → "
+                            f"{in_range['date'].iloc[-1].date()})"
+                        )
+
+            # Show cache status for this symbol/tf
+            existing = _ac.load("alpaca", symbol, tf)
+            if existing is not None and not existing.empty:
+                last_cached = existing["date"].max()
+                st.sidebar.caption(
+                    f"💾 Cache: **{symbol} {tf}** · {len(existing):,} bars  \n"
+                    f"{existing['date'].min().date()} → {last_cached.date()}  \n"
+                    f"Press **Fetch** to append new bars since {last_cached.date()}"
+                )
+            else:
+                st.sidebar.caption(
+                    "💡 **Alpaca SIP feed** — free, ~5 years of 1-min history.  \n"
+                    "For UVXY: start **2020-01-01** to get ~6 years.")
+
+            if st.sidebar.button("🔄 Fetch / Update from Alpaca", key="alp_fetch"):
                 from data.ingestion import load_from_alpaca_history
                 creds = settings.alpaca
-                key   = creds.paper_api_key    if not settings.is_live() else creds.live_api_key
-                sec   = creds.paper_secret_key if not settings.is_live() else creds.live_secret_key
-                with st.spinner("Fetching…"):
+                key_  = creds.paper_api_key    if not settings.is_live() else creds.live_api_key
+                sec_  = creds.paper_secret_key if not settings.is_live() else creds.live_secret_key
+                with st.spinner("Checking for new bars…"):
                     try:
                         data = load_from_alpaca_history(symbol, tf,
-                            pd.Timestamp(start), pd.Timestamp(end),
-                            key, sec, paper=not settings.is_live())
+                            start_ts, end_ts, key_, sec_,
+                            paper=not settings.is_live())
                         st.session_state["loaded_data"]   = data
                         st.session_state["loaded_symbol"] = symbol.upper()
-                        st.sidebar.success(f"✓ {len(data)} bars from Alpaca")
+                        # Invalidate cache-state key so next load re-checks
+                        for k in list(st.session_state.keys()):
+                            if k.startswith(f"alp_loaded_{symbol}_{tf}"):
+                                del st.session_state[k]
+                        st.sidebar.success(
+                            f"✓ {len(data):,} bars  \n"
+                            f"({data['date'].iloc[0].date()} → "
+                            f"{data['date'].iloc[-1].date()})"
+                        )
                     except Exception as e:
                         st.sidebar.error(str(e))
+
+    # ── Cache status panel ─────────────────────────────────────────────────
+    from data.cache import DataCache
+    cache = DataCache()
+    cached_list = cache.list_cached()
+    if cached_list:
+        with st.sidebar.expander(f"💾 Local Cache ({len(cached_list)} datasets)", expanded=False):
+            for entry in cached_list:
+                col_a, col_b = st.columns([0.8, 0.2])
+                col_a.caption(
+                    f"**{entry['symbol']}** · {entry['source']} · {entry['timeframe']}  \n"
+                    f"{entry['from']} → {entry['to']} · "
+                    f"{entry['bars']:,} bars · {entry['size_kb']} KB"
+                )
+                if col_b.button("🗑", key=f"del_{entry['source']}_{entry['symbol']}_{entry['timeframe']}",
+                                help="Delete this cache entry"):
+                    cache.delete(entry['source'], entry['symbol'].replace('=','_'), entry['timeframe'])
+                    st.rerun()
 
     return st.session_state.get("loaded_data")
 
@@ -131,8 +214,23 @@ _PARAM_META: dict[str, dict] = {
     # Bollinger
     "bb_period":      {"label": "BB Period",           "help": "Bollinger Bands SMA period. Default 20."},
     "bb_std":         {"label": "BB Std Devs",         "help": "Standard deviations for upper/lower bands. Default 2.0."},
-    "sl_band_mult":   {"label": "SL beyond band",      "help": "SL = outer band ± (this × band width). Default 0.2."},
-    "require_cross":  {"label": "Require band cross",  "help": "If checked, price must break through the band, not just touch it."},
+    "sl_band_mult":        {"label": "SL beyond band",       "help": "SL = outer band ± (this × band width). Default 0.2."},
+    "require_cross":       {"label": "Require band cross",   "help": "Require genuine cross not just touch. Reduces signals ~40%."},
+    "min_band_width_pct":  {"label": "Min band width %",     "help": "Skip if band < this % of price. Filters choppy low-vol periods. Default 2.0%."},
+    "min_rr_ratio":        {"label": "Min R:R ratio",        "help": "Skip if (TP distance)/(SL distance) < this. Default 1.5."},
+    "cooldown_bars":       {"label": "Cooldown bars",        "help": "Min bars between entries. Default 5."},
+    # Regime detection params
+    "spike_atr_mult":      {"label": "Spike ATR mult",       "help": "ATR > X × ATR_MA → fast spike detected. Default 2.0."},
+    "spike_price_pct":     {"label": "Spike price %",        "help": "Price moved >X% in spike_lookback bars → fast spike. Default 5%."},
+    "spike_lookback":      {"label": "Spike lookback bars",  "help": "Bars for fast spike momentum check. Default 10."},
+    "trend_lookback":      {"label": "Trend lookback bars",  "help": "Bars for slow/gradual rise check. Default 390 (=1 trading day on 1-min). If price is >trend_rise_pct% higher than N bars ago → suppress shorts."},
+    "trend_rise_pct":      {"label": "Trend rise %",         "help": "If price > X% above N bars ago → rising trend → shorts suppressed. Default 8%. This catches gradual multi-day UVXY spikes that ATR misses."},
+    "peak_window":         {"label": "Peak window bars",     "help": "How many bars back to look for the spike peak. Default 60 (=1hr on 1-min)."},
+    "peak_drop_pct":       {"label": "Peak drop % trigger",  "help": "Price dropped >X% from recent peak → post-spike reversion regime. Default 8%."},
+    "reversion_tp_pct":    {"label": "Reversion TP %",       "help": "Post-spike short TP = entry × (1 - X%). Default 15% (UVXY drops 30-60% after spikes)."},
+    "reversion_sl_pct":    {"label": "Reversion SL %",       "help": "Post-spike short SL = entry × (1 + X%). Default 5%."},
+    "min_atr_pct":         {"label": "Min ATR % of price",   "help": "Skip ALL signals when ATR < X% of price. Blocks low-vol periods where expected move is too small to cover costs. Default 0.3%. Try 0.2-0.5%."},
+    "min_tp_atr_ratio":    {"label": "Min TP/ATR ratio",     "help": "Skip if distance to TP < X × ATR. Ensures the expected move is large relative to current volatility. Default 0.5."},
     # EMA Crossover + RSI + Trend Filter (GC=F)
     "fast_ema":    {"label": "Fast EMA",       "help": "Fast EMA period (default 9). Golden cross above slow EMA = buy signal."},
     "slow_ema":    {"label": "Slow EMA",       "help": "Slow EMA period (default 21). Death cross below fast EMA = sell signal."},
@@ -190,11 +288,17 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
         )
     elif strategy_id == "bollinger_rsi":
         st.info(
-            "📉 **Bollinger + RSI** — Best for UVXY after VIX spikes (mean reversion).  \n"
-            "Short when price hits upper Bollinger Band **and** RSI is overbought.  \n"
-            "Target = middle band (mean reversion). Keep hold time < 2 days on UVXY.  \n"
-            "🎯 Recommended thresholds: **UVXY** → oversold 20 / overbought 80 · "
-            "**GC=F** → oversold 30 / overbought 70"
+            "📉 **Bollinger + RSI (4-Regime)** — Full UVXY spike cycle strategy.  \n"
+            "**Four regimes:**  \n"
+            "• 🟢 **Normal** — Bollinger mean reversion, both directions  \n"
+            "• 🟡 **Spike** — VIX rising (fast OR gradual): NO shorts  \n"
+            "• 🔴 **Post-spike** — Peak confirmed, price falling: aggressive SHORTS  \n"
+            "• ⏸️ **Drift** — Slow quiet decline: all trading paused  \n"
+            "⚠️ **Spike filter:** trend_lookback=390 + trend_rise_pct=8 catches "
+            "gradual multi-day rises.  \n"
+            "⚠️ **Drift filter:** min_atr_pct=0.3 blocks low-vol periods directly "
+            "(slope-based filters kill too much on a declining asset).  \n"
+            "🎯 Tune: peak_drop_pct (post-spike entry), reversion_tp_pct (target %)"
         )
     elif strategy_id == "ema_trend_rsi":
         st.info(
