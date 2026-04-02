@@ -13,7 +13,5 @@ from . import vwap_rsi_strategy      # noqa: F401  — GC=F intraday
 from . import bollinger_rsi_strategy # noqa: F401  — UVXY mean reversion
 from . import atr_rsi_strategy       # noqa: F401  — adaptive, both instruments
 from . import ema_trend_rsi_strategy # noqa: F401  — GC=F trend-following
-from . import trend_decay_strategy   # noqa: F401  — UVXY sustained decay shorts
-from . import spike_long_strategy    # noqa: F401  — UVXY spike long
 
 __all__ = ["BaseStrategy", "register_strategy", "get_strategy", "list_strategies"]
