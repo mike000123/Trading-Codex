@@ -274,6 +274,7 @@ _PARAM_META: dict[str, dict] = {
     "decay_atr_trail":       {"label": "Decay ATR trail mult",   "help": "Wide trailing SL for slow grind = lowest_low + X×ATR. Default 4.5."},
     "decay_cooldown":        {"label": "Decay cooldown bars",    "help": "Min bars between decay short entries. Default 780 (~2 days)."},
     "decay_max_entries":     {"label": "Max decay entries",      "help": "Max short entries per continuous decay period. Default 12."},
+    "decay_confirm_bars":    {"label": "Decay confirm bars",     "help": "Decay regime must be active for this many consecutive bars before entries are allowed. Prevents entering during choppy post-spike consolidation. Default 1950 (~5 days). Set lower to enter sooner, higher to require stronger confirmation."},
     "bb_sl_mult":            {"label": "BB SL beyond band",      "help": "Normal regime SL = outer band ± (mult × band width). Default 0.2."},
     "bb_min_width_pct":      {"label": "BB min width %",         "help": "Skip normal signal if band < X% of price. Default 2%."},
     "bb_min_rr":             {"label": "BB min R:R",             "help": "Skip normal signal if TP/SL distance ratio < this. Default 1.5."},
@@ -354,8 +355,9 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
             "• 🟢 **Normal** — Bollinger mean reversion, both directions  \n\n"
             "**Full UVXY cycle:** Quiet → Spike UP (long) → Post-spike (short) → Weeks of decay (short) → Quiet  \n\n"
             "🎯 Key params: `decay_floor=40` (update after reverse splits) · "
-            "`spike_sl_pct=5` (keep tight) · `decay_atr_trail=4.5` (wide for slow grind) · "
-            "`reversion_tp_pct=15` (post-spike cap)"
+            "`decay_confirm_bars=1950` (5 days confirmation before decay entries) · "
+            "`spike_sl_pct=8` (wide enough for spike volatility) · "
+            "`decay_atr_trail=4.5` + `decay_atr_trail_min_pct=3` (trail floor at low prices)"
         )
     elif strategy_id == "uvxy_auto":
         st.info(
