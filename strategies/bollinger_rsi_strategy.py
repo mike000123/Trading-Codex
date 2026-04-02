@@ -66,11 +66,11 @@ class BollingerRSIStrategy(BaseStrategy):
             "spike_atr_exit_mult":  1.3,
             "spike_momentum_bars":  12,
             "spike_momentum_pct":   1.5,
-            "spike_rsi_ob":         75,
-            "spike_sl_pct":         5.0,
-            "spike_atr_trail":      1.5,
-            "spike_cooldown":       78,
-            "spike_max_entries":    2,
+            "spike_rsi_ob":         80,    # raised: spikes can push RSI very high
+            "spike_sl_pct":         8.0,   # wider: UVXY spikes have 5-10% intraday swings
+            "spike_atr_trail":      3.0,   # wider trail: gives room during volatile spike
+            "spike_cooldown":       195,   # ~4 hrs between entries on same spike
+            "spike_max_entries":    4,     # more entries: spikes can last 1-3 days
             # GRADUAL RISE — short suppression only, never triggers longs
             "rise_lookback":        1170,
             "rise_pct":             5.0,
@@ -97,10 +97,11 @@ class BollingerRSIStrategy(BaseStrategy):
             "decay_floor":          40.0,
             "decay_floor_buf":      8.0,
             "decay_rsi_os":         32,
-            "decay_sl_pct":         12.0,
-            "decay_atr_trail":      4.5,
-            "decay_cooldown":       780,
-            "decay_max_entries":    12,
+            "decay_sl_pct":         15.0,  # wider hard SL — trail closes first
+            "decay_atr_trail":      5.5,   # wider: at low prices ATR is tiny, need room
+            "decay_atr_trail_min_pct": 3.0, # floor: trail SL always ≥ X% from low
+            "decay_cooldown":       390,   # ~1 day between entries (was 2 days)
+            "decay_max_entries":    16,    # more entries across multi-month decay
             # REGIME 5: NORMAL
             "bb_period":            20,
             "bb_std":               2.0,
@@ -276,6 +277,7 @@ class BollingerRSIStrategy(BaseStrategy):
                                      "suggested_sl": sl,
                                      "metadata": {"regime": "decay", "rsi": round(rsi_v, 2),
                                                    "trailing_atr_mult": float(p["decay_atr_trail"]),
+                                                   "trailing_atr_min_pct": float(p.get("decay_atr_trail_min_pct", 3.0)),
                                                    "atr_period": 14, "trail_direction": "short",
                                                    "entry_n": decay_entries + 1}}
                     decay_entries += 1; decay_last = pos
