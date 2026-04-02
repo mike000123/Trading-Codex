@@ -115,6 +115,7 @@ class BacktestEngine:
         # Trailing stop state — set when a trade has trailing_atr_mult in metadata
         trail_atr_mult:  Optional[float] = None   # X in: SL = peak ± X×ATR
         trail_atr_period: int            = 14
+        trail_atr_min_pct: float         = 0.0    # minimum % distance for short trail
         trail_peak:      Optional[float] = None   # highest high (long) / lowest low (short)
         trail_direction: str             = "short" # "long" or "short"
 
@@ -129,8 +130,6 @@ class BacktestEngine:
             if open_trade is not None and trail_atr_mult is not None:
                 bar_high = float(bar["high"])
                 bar_low  = float(bar["low"])
-                # Compute current ATR from the pre-built atr series if available,
-                # otherwise fall back to a rolling estimate on close prices
                 curr_atr = self._bar_atr(data, i, trail_atr_period)
                 if trail_direction == "long":
                     # Trail up: SL = highest_high_since_entry - mult × ATR
@@ -141,9 +140,15 @@ class BacktestEngine:
                         open_trade.stop_loss = new_trail_sl
                 else:
                     # Trail down: SL = lowest_low_since_entry + mult × ATR
+                    # Also enforce a minimum % distance so the trail doesn't
+                    # become too tight when ATR compresses at low prices
                     if trail_peak is None or bar_low < trail_peak:
                         trail_peak = bar_low
-                    new_trail_sl = trail_peak + trail_atr_mult * curr_atr
+                    atr_based_sl  = trail_peak + trail_atr_mult * curr_atr
+                    # Minimum trail = trail_atr_min_pct% above the current low
+                    min_pct       = trail_atr_min_pct / 100.0
+                    min_based_sl  = bar_low * (1.0 + min_pct)
+                    new_trail_sl  = max(atr_based_sl, min_based_sl)
                     if open_trade.stop_loss is None or new_trail_sl < open_trade.stop_loss:
                         open_trade.stop_loss = new_trail_sl
 
@@ -159,8 +164,9 @@ class BacktestEngine:
                     trades.append(open_trade)
                     open_trade = None
                     # Clear trailing stop state
-                    trail_atr_mult   = None
-                    trail_peak       = None
+                    trail_atr_mult    = None
+                    trail_atr_min_pct = 0.0
+                    trail_peak        = None
 
             # 2. Counter-signal exit
             if (self.counter_signal_exit
@@ -192,8 +198,9 @@ class BacktestEngine:
                     trades.append(open_trade)
                     open_trade = None
                     # Clear trailing stop state
-                    trail_atr_mult   = None
-                    trail_peak       = None
+                    trail_atr_mult    = None
+                    trail_atr_min_pct = 0.0
+                    trail_peak        = None
 
             # 3. Queue new trade — will open on NEXT bar's open price
             # This prevents lookahead bias: signal fires at bar[i] close,
@@ -262,11 +269,12 @@ class BacktestEngine:
                     # Initialise trailing stop state if strategy requested it
                     prev_inner = prev_meta.get("metadata", {})
                     if "trailing_atr_mult" in prev_inner:
-                        trail_atr_mult   = float(prev_inner["trailing_atr_mult"])
-                        trail_atr_period = int(prev_inner.get("atr_period", 14))
-                        trail_direction  = prev_inner.get("trail_direction",
+                        trail_atr_mult    = float(prev_inner["trailing_atr_mult"])
+                        trail_atr_period  = int(prev_inner.get("atr_period", 14))
+                        trail_direction   = prev_inner.get("trail_direction",
                                            "long" if prev_dir == Direction.LONG else "short")
-                        trail_peak       = None   # will be set on first bar
+                        trail_atr_min_pct = float(prev_inner.get("trailing_atr_min_pct", 0.0))
+                        trail_peak        = None   # will be set on first bar
                     else:
                         trail_atr_mult   = None
                         trail_peak       = None
