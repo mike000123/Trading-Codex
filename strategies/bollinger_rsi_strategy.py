@@ -97,11 +97,16 @@ class BollingerRSIStrategy(BaseStrategy):
             "decay_floor":          40.0,
             "decay_floor_buf":      8.0,
             "decay_rsi_os":         32,
-            "decay_sl_pct":         15.0,  # wider hard SL — trail closes first
-            "decay_atr_trail":      5.5,   # wider: at low prices ATR is tiny, need room
-            "decay_atr_trail_min_pct": 3.0, # floor: trail SL always ≥ X% from low
-            "decay_cooldown":       390,   # ~1 day between entries (was 2 days)
-            "decay_max_entries":    16,    # more entries across multi-month decay
+            "decay_sl_pct":         12.0,
+            "decay_atr_trail":      4.5,
+            "decay_atr_trail_min_pct": 3.0,
+            "decay_cooldown":       780,    # ~2 days between entries
+            "decay_max_entries":    12,
+            # Trend confirmation: decay regime must be active for this many
+            # consecutive bars before any entry is allowed. Prevents entering
+            # during choppy post-spike consolidation before trend is confirmed.
+            # 1950 bars = ~5 trading days — one full week of sustained decline.
+            "decay_confirm_bars":   1950,
             # REGIME 5: NORMAL
             "bb_period":            20,
             "bb_std":               2.0,
@@ -146,7 +151,13 @@ class BollingerRSIStrategy(BaseStrategy):
         ema_prev = d_ema.shift(int(p["decay_slope_lb"]))
         ema_dec  = ((ema_prev - d_ema) / ema_prev.replace(0, np.nan)) >= float(p["decay_slope_min_pct"]) / 100.0
         floor    = float(p["decay_floor"]); buf = float(p["decay_floor_buf"]) / 100.0
-        in_decay = ema_dec & (close < d_ema) & (close > floor * (1.0 + buf)) & ~in_spike_atr & ~post_spike & ~is_drift
+        in_decay_raw = ema_dec & (close < d_ema) & (close > floor * (1.0 + buf)) & ~in_spike_atr & ~post_spike & ~is_drift
+        # Confirmation: require decay to have been active for N consecutive bars
+        # before allowing entries. Prevents shorting into choppy consolidation.
+        confirm_bars = int(p.get("decay_confirm_bars", 1950))
+        decay_streak = in_decay_raw.astype(int)
+        # Rolling sum — if sum over last N bars == N, regime has been on that whole time
+        in_decay = in_decay_raw & (decay_streak.rolling(confirm_bars, min_periods=confirm_bars).sum() >= confirm_bars)
         return is_drift, in_spike_atr, atr_unwind, suppress_shorts, post_spike, in_decay, atr_s, atr_ma
 
     def _compute_dynamic_exit_series(self, close, rsi, atr_s, post_spike, p):
