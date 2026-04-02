@@ -33,7 +33,7 @@ def render_mode_banner() -> None:
 
 def render_data_source_selector() -> Optional[pd.DataFrame]:
     st.sidebar.subheader("📡 Data Source")
-    source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], key="data_source", index=2)
+    source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], key="data_source")
     data: Optional[pd.DataFrame] = None
 
     if source == "Yahoo Finance":
@@ -228,16 +228,9 @@ _PARAM_META: dict[str, dict] = {
     "spike_high_window":   {"label": "Spike high window",    "help": "Rolling high window for spike detection. Default 1170 = 3 days."},
     "spike_ema_mult":      {"label": "Spike EMA mult",       "help": "Spike if 3d-high > X × 5d-EMA. Default 1.5."},
     "peak_drop_pct":       {"label": "Peak drop % trigger",  "help": "Price dropped X% from 3d-high → post-spike → aggressive shorts. Default 8%."},
-    "reversion_tp_pct":    {"label": "Reversion TP %",       "help": "Post-spike short hard-floor TP = entry × (1 - X%). Acts as max-profit cap even with dynamic exits enabled. Default 15%."},
+    "reversion_tp_pct":    {"label": "Reversion TP %",       "help": "Post-spike short TP = entry × (1 - X%). Default 15%."},
     "reversion_sl_pct":    {"label": "Reversion SL %",       "help": "Post-spike short SL = entry × (1 + X%). Default 5%."},
     "reversion_rsi_min":   {"label": "Reversion RSI min",    "help": "Don't short post-spike if RSI < X (already oversold). Default 40."},
-    # Dynamic post-spike exit params
-    "dyn_use_regime_exit": {"label": "Dyn exit: regime flip", "help": "✅ Close post-spike short when post_spike regime turns False (price recovered vs rolling high/EMA). Usually the most reliable signal. Default on."},
-    "dyn_rsi_rev_floor":   {"label": "Dyn exit: RSI floor",   "help": "RSI reversal exit (signal B): RSI trough must reach ≤ this value before a rebound counts. Default 35. Lower = requires deeper flush before exiting."},
-    "dyn_rsi_rev_rise":    {"label": "Dyn exit: RSI rise pts", "help": "RSI reversal exit (signal B): RSI must rise this many points from the trough to trigger exit. Set to 0 to disable (default OFF). Use ≥20 on 5-min UVXY to avoid noise."},
-    "dyn_ema_fast":        {"label": "Dyn exit: EMA fast",    "help": "EMA cross exit (signal C): fast EMA span (bars). Set to 0 to disable (default OFF). On 5-min UVXY data spans of 5/13 fire every ~26 bars — far too noisy. Use ≥50/130 if enabling."},
-    "dyn_ema_slow":        {"label": "Dyn exit: EMA slow",    "help": "EMA cross exit (signal C): slow EMA span (bars). Only used when dyn_ema_fast > 0. Default 130 (~10hrs on 5-min bars)."},
-    "dyn_atr_collapse":    {"label": "Dyn exit: ATR collapse", "help": "ATR collapse exit (signal D): exit when current ATR drops below this fraction of ATR-at-entry. 0.55 = 55%. Set to 0 to disable. Catches moves that have exhausted volatility."},
     "fast_ema":            {"label": "Fast EMA",       "help": "Fast EMA period (default 9). Golden cross above slow EMA = buy signal."},
     "slow_ema":    {"label": "Slow EMA",       "help": "Slow EMA period (default 21). Death cross below fast EMA = sell signal."},
     "trend_ema":   {"label": "Trend EMA",      "help": "Long-term trend filter (default 200). Set to 0 to disable. Longs only above, shorts only below."},
@@ -246,57 +239,6 @@ _PARAM_META: dict[str, dict] = {
     # Fixed level
     "direction":        {"label": "Direction",          "help": "Long or Short"},
     "signal_frequency": {"label": "Signal Frequency",   "help": "first_bar = one trade then hold; every_bar = re-signal each bar"},
-    # UVXY Auto — shared
-    "spike_momentum_bars":   {"label": "Spike momentum bars",    "help": "Bars to look back for price momentum confirmation on spike entries. Default 12 (~1 hour)."},
-    "spike_momentum_pct":    {"label": "Spike momentum %",       "help": "Price must be ≥ X% above N bars ago to confirm upward momentum. Default 1.5%."},
-    "spike_rsi_ob":          {"label": "Spike RSI OB gate",      "help": "Don't enter spike long if RSI already above this. Default 75."},
-    "spike_sl_pct":          {"label": "Spike SL %",             "help": "Hard stop below spike long entry. Keep tight — spikes reverse fast. Default 5%."},
-    "spike_atr_trail":       {"label": "Spike ATR trail mult",   "help": "Trailing SL for spike longs = peak_high - X×ATR. Tighter than decay. Default 1.5."},
-    "spike_atr_exit_mult":   {"label": "Spike ATR exit thresh",  "help": "Exit long when ATR drops below X × ATR_MA (spike unwinding). Default 1.3."},
-    "spike_cooldown":        {"label": "Spike cooldown bars",    "help": "Min bars between spike long entries. Default 78 (~2 hours on 5-min)."},
-    "spike_max_entries":     {"label": "Max spike entries",      "help": "Max long entries per spike event. Default 2."},
-    "ps_high_window":        {"label": "Post-spike high window", "help": "Rolling high window for post-spike detection. Default 1170 (~3 days)."},
-    "ps_ema_span":           {"label": "Post-spike EMA span",    "help": "Long EMA anchor for spike detection. Default 1950 (~5 days)."},
-    "ps_ema_mult":           {"label": "Post-spike EMA mult",    "help": "Spike if rolling high > EMA × mult. Default 1.5."},
-    "ps_drop_pct":           {"label": "Post-spike drop %",      "help": "Enter short after price drops X% from spike high. Default 8%."},
-    "ps_rsi_min":            {"label": "Post-spike RSI min",     "help": "Skip post-spike short if RSI < this (already oversold). Default 40."},
-    "ps_tp_pct":             {"label": "Post-spike TP %",        "help": "Post-spike short TP = entry × (1 - X%). Default 15%."},
-    "ps_sl_pct":             {"label": "Post-spike SL %",        "help": "Post-spike short SL = entry × (1 + X%). Default 5%."},
-    "ps_max_entries":        {"label": "Max post-spike entries", "help": "Max short entries per post-spike event. Default 2."},
-    "ps_cooldown_mult":      {"label": "Post-spike cooldown ×",  "help": "Cooldown = rsi_period × this value. Default 10."},
-    "decay_ema_period":      {"label": "Decay EMA period",       "help": "EMA for slope detection. Default 1950 (~5 days on 5-min data)."},
-    "decay_slope_lb":        {"label": "Decay slope lookback",   "help": "Compare EMA now vs this many bars ago. Default 780 (~2 days)."},
-    "decay_slope_min_pct":   {"label": "Decay min slope %",      "help": "EMA must fall ≥ X% over lookback to qualify as downtrend. Default 0.3%."},
-    "decay_floor":           {"label": "Decay floor price ($)",  "help": "Structural UVXY equilibrium TP target. Default $40. Update after reverse splits."},
-    "decay_floor_buf":       {"label": "Decay floor buffer %",   "help": "Don't enter if price < floor × (1 + X%). Default 8%."},
-    "decay_rsi_os":          {"label": "Decay RSI OS gate",      "help": "Skip decay short if RSI already oversold (< this). Default 32."},
-    "decay_sl_pct":          {"label": "Decay hard SL %",        "help": "Insurance SL above entry. Wide — ATR trail should close first. Default 12%."},
-    "decay_atr_trail":       {"label": "Decay ATR trail mult",   "help": "Wide trailing SL for slow grind = lowest_low + X×ATR. Default 4.5."},
-    "decay_cooldown":        {"label": "Decay cooldown bars",    "help": "Min bars between decay short entries. Default 780 (~2 days)."},
-    "decay_max_entries":     {"label": "Max decay entries",      "help": "Max short entries per continuous decay period. Default 12."},
-    "decay_confirm_bars":    {"label": "Decay confirm bars",     "help": "Decay regime must be active for this many consecutive bars before entries are allowed. Prevents entering during choppy post-spike consolidation. Default 1950 (~5 days). Set lower to enter sooner, higher to require stronger confirmation."},
-    "bb_sl_mult":            {"label": "BB SL beyond band",      "help": "Normal regime SL = outer band ± (mult × band width). Default 0.2."},
-    "bb_min_width_pct":      {"label": "BB min width %",         "help": "Skip normal signal if band < X% of price. Default 2%."},
-    "bb_min_rr":             {"label": "BB min R:R",             "help": "Skip normal signal if TP/SL distance ratio < this. Default 1.5."},
-    "bb_require_cross":      {"label": "BB require cross",       "help": "Price must cross band (not just touch) for normal regime entry."},
-    "bb_cooldown":           {"label": "BB cooldown bars",       "help": "Min bars between normal regime entries. Default 5."},
-    "slope_lookback":        {"label": "Slope lookback bars",   "help": "Compare EMA now vs this many bars ago to measure slope. 390 = 1 trading day. Must be < decay_ema_period."},
-    "slope_min_pct":         {"label": "Min slope % drop",      "help": "EMA must have fallen at least this % over the lookback window to qualify as a downtrend. Default 0.5%."},
-    "floor_price":           {"label": "Floor price ($)",        "help": "Structural equilibrium target for UVXY (~$40). The TP for each decay short. Update if UVXY does a reverse split."},
-    "floor_buffer_pct":      {"label": "Floor buffer %",        "help": "Don't enter if price is within X% above the floor. Prevents entries too close to the target. Default 10%."},
-    "rsi_os_gate":           {"label": "RSI oversold gate",     "help": "Skip entry if RSI is already below this (already oversold — wait for bounce). Default 35."},
-    "max_entries_per_decay": {"label": "Max entries per decay", "help": "Maximum number of short entries during a single continuous decay period. Default 6."},
-    "decay_sl_pct":          {"label": "Hard SL %",             "help": "Insurance stop-loss: entry × (1 + X%). ATR trailing SL should close trades first; this is the backstop. Default 6%."},
-    "atr_trail_mult":        {"label": "ATR trail multiplier",  "help": "Trailing SL distance = X × ATR above the lowest low reached. Tightens as price falls and ATR compresses. Default 2.5."},
-    # Spike Long
-    "atr_ma_period":         {"label": "ATR MA period",         "help": "Baseline ATR moving average period. ATR is compared vs this MA to detect spikes. Default 20 bars."},
-    "atr_exit_mult":         {"label": "ATR exit threshold",    "help": "Exit long when ATR drops below X × ATR_MA — spike is unwinding. Must be < spike_atr_mult. Default 1.3."},
-    "momentum_bars":         {"label": "Momentum lookback",     "help": "Price must be ≥ momentum_pct% above price N bars ago. Confirms price is actually rising during the ATR spike. Default 12 bars."},
-    "momentum_pct":          {"label": "Momentum % threshold",  "help": "Minimum price rise % over momentum_bars to qualify as upward momentum. Default 1.5%."},
-    "rsi_ob_gate":           {"label": "RSI overbought gate",   "help": "Skip spike long entry if RSI already above this (spike already overbought). Default 75."},
-    "max_entries_per_spike": {"label": "Max entries per spike", "help": "Maximum long entries during a single spike event. Default 2 to avoid over-pyramiding."},
-    "spike_sl_pct":          {"label": "Spike SL %",            "help": "Hard stop-loss below entry: entry × (1 - X%). Keep tight — spikes reverse violently. Default 5%."},
-    "spike_tp_pct":          {"label": "Spike TP % (0=off)",    "help": "Hard take-profit above entry. Set to 0 to rely on ATR trailing stop only (recommended). Default 0."},
 }
 
 
@@ -345,63 +287,16 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0,
         )
     elif strategy_id == "bollinger_rsi":
         st.info(
-            "🔄 **Bollinger + RSI (Full Cycle)** — One strategy, full UVXY lifecycle.  \n"
-            "Automatically detects the current regime every bar — no manual switching needed.  \n\n"
-            "**Six regimes (priority order):**  \n"
-            "• ⏸️ **Drift** — ATR too low: all signals paused  \n"
-            "• 📈 **Spike** — ATR expanding + upward momentum → **LONG** with ATR trailing stop  \n"
-            "• 🔴 **Post-spike** — dropped 8% from high >> EMA → **SHORT** (aggressive, 15% TP)  \n"
-            "• 📉 **Decay** — EMA declining + price below EMA → **SHORT** toward $40 floor with wide ATR trail  \n"
-            "• 🟢 **Normal** — Bollinger mean reversion, both directions  \n\n"
-            "**Full UVXY cycle:** Quiet → Spike UP (long) → Post-spike (short) → Weeks of decay (short) → Quiet  \n\n"
-            "🎯 Key params: `decay_floor=40` (update after reverse splits) · "
-            "`decay_confirm_bars=1950` (5 days confirmation before decay entries) · "
-            "`spike_sl_pct=8` (wide enough for spike volatility) · "
-            "`decay_atr_trail=4.5` + `decay_atr_trail_min_pct=3` (trail floor at low prices)"
+            "📉 **Bollinger + RSI (4-Regime)** — Full UVXY spike cycle strategy.  \n"
+            "**Four regimes (independently detected):**  \n"
+            "• 🟢 **Normal** — Bollinger mean reversion, both directions  \n"
+            "• 🟡 **Spike** — Fast (ATR) OR gradual (price > 5% above 3d-low): NO shorts  \n"
+            "• 🔴 **Post-spike** — 3d-high > 1.5× EMA AND dropped 8%: AGGRESSIVE SHORTS  \n"
+            "• ⏸️ **Drift** — ATR < 0.3% of price: all paused  \n"
+            "🎯 Key params: rise_pct=5 (gradual rise sensitivity), "
+            "peak_drop_pct=8 (post-spike entry), reversion_tp_pct=15 (short target)"
         )
-    elif strategy_id == "uvxy_auto":
-        st.info(
-            "🤖 **UVXY Auto (Full Cycle)** — One strategy, all regimes. "
-            "Automatically detects the current market phase every bar and trades accordingly — "
-            "no manual strategy switching needed.  \n\n"
-            "**Regime hierarchy (auto-detected):**  \n"
-            "• ⏸️ **Drift** — ATR too low, all signals paused  \n"
-            "• 📈 **Spike** — ATR expanding + upward momentum → **LONG** with ATR trailing stop  \n"
-            "• 🔴 **Post-spike** — dropped 8% from high >> long EMA → **SHORT** (aggressive, 15% TP)  \n"
-            "• 📉 **Decay** — EMA declining + price below EMA → **SHORT** toward $40 floor with wide ATR trail  \n"
-            "• 🟢 **Normal** — Bollinger mean reversion, both directions  \n\n"
-            "**Full UVXY cycle coverage:**  \n"
-            "Grind → Spike UP (long) → Post-spike (short) → Weeks of decay (short) → Grind  \n\n"
-            "🎯 Key params to tune: `decay_floor=40` (update after reverse splits) · "
-            "`spike_sl_pct=5` (keep tight) · `decay_atr_trail=4.5` (wide for slow grind)"
-        )
-    elif strategy_id == "trend_decay":
-        st.info(
-            "📉 **UVXY Trend Decay** — Shorts the prolonged post-spike contango decay "
-            "toward structural equilibrium (~$40).  \n"
-            "**When it activates:** medium EMA declining ≥ 0.5% per day AND price below EMA "
-            "AND not in a spike AND price still > 10% above floor.  \n"
-            "**Exit:** ATR trailing SL trails price down (locks in profit as decay continues) "
-            "+ hard floor TP at $40 + regime exit when EMA flattens.  \n"
-            "**Pairs with:** Bollinger+RSI (handles the first few days post-spike); "
-            "this strategy takes over for the weeks/months of sustained decay that follow.  \n"
-            "🎯 Key params: `floor_price=40` (update after reverse splits) · "
-            "`decay_ema_period=780` (2-day EMA) · `atr_trail_mult=2.5`"
-        )
-    elif strategy_id == "spike_long":
-        st.info(
-            "📈 **UVXY Spike Long** — Rides the violent upward leg of VIX spikes.  \n"
-            "**Entry:** ATR expands above `spike_atr_mult × ATR_MA` (spike confirmed) "
-            "AND price is ≥ 1.5% above its level 12 bars ago (momentum confirmed) "
-            "AND RSI < 75 (not already overbought).  \n"
-            "**Exit:** ATR trailing stop (SL = peak_high - 1.5×ATR) tightens as spike "
-            "matures; also exits when ATR contracts back below `atr_exit_mult × ATR_MA` "
-            "(spike is unwinding).  \n"
-            "⚠️ **Risk:** UVXY spikes reverse violently — keep `spike_sl_pct` ≤ 5% "
-            "and `max_entries_per_spike` ≤ 2.  \n"
-            "🎯 Key params: `spike_atr_mult=2.0` · `atr_exit_mult=1.3` · "
-            "`atr_trail_mult=1.5` · `spike_sl_pct=5`"
-        )
+    elif strategy_id == "ema_trend_rsi":
         st.info(
             "📈 **EMA Crossover + RSI + Trend Filter** — Purpose-built for GC=F 1-min/5-min.  \n"
             "**Entry:** 9/21 EMA golden/death cross · **RSI gate:** > 50 confirms direction · "
