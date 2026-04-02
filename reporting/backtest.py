@@ -8,6 +8,27 @@ Key optimisation vs original:
   AFTER:  strategy pre-computes all indicator series once → O(n) total
 
 Speedup on 100k bars (UVXY 1-min / 1 year): ~50-100×
+
+ATR Trailing Stop (added for Decay / Spike regimes):
+  Signals can set  metadata["trailing_atr_mult"] = <float>  to request a
+  trailing stop instead of (or in addition to) a fixed TP.
+
+  Mechanics for SHORT:
+    trail_best  = running low since entry (moves down as price falls)
+    trailing_sl = trail_best + mult × ATR[i]
+    stop_loss is tightened each bar (never widened)
+
+  Mechanics for LONG:
+    trail_best  = running high since entry
+    trailing_sl = trail_best - mult × ATR[i]
+    stop_loss tightened each bar.
+
+  A fixed SL from the signal acts as a hard-cap floor/ceiling —
+  whichever is *tighter* at each bar wins.
+
+  IMPORTANT: trail_best starts at entry_price on bar 0 and is updated live
+  each bar. Do NOT initialise trail_peak = entry_px and then never update it —
+  that caused bad interactions with spike longs in a previous session.
 """
 from __future__ import annotations
 
@@ -51,11 +72,32 @@ class BacktestResult:
         }
 
 
+# ─── ATR helper (14-period Wilder EWM) ───────────────────────────────────────
+
+def _calc_atr_series(data: pd.DataFrame, period: int = 14) -> np.ndarray:
+    hi   = data["high"].to_numpy(dtype=float)
+    lo   = data["low"].to_numpy(dtype=float)
+    cl   = data["close"].to_numpy(dtype=float)
+    n    = len(cl)
+    tr   = np.empty(n)
+    tr[0] = hi[0] - lo[0]
+    for i in range(1, n):
+        tr[i] = max(hi[i] - lo[i],
+                    abs(hi[i] - cl[i-1]),
+                    abs(lo[i] - cl[i-1]))
+    alpha  = 1.0 / period
+    atr    = np.empty(n)
+    atr[0] = tr[0]
+    for i in range(1, n):
+        atr[i] = alpha * tr[i] + (1.0 - alpha) * atr[i-1]
+    return atr
+
+
 class BacktestEngine:
     def __init__(
         self,
         strategy: BaseStrategy,
-        risk_manager:        Optional[RiskManager] = None,
+        risk_manager:         Optional[RiskManager] = None,
         direction_filter:     Optional[Direction]   = None,
         counter_signal_exit:  bool                  = True,
         spread_pct:           float                 = 0.0,
@@ -84,16 +126,10 @@ class BacktestEngine:
                  f"{n:,} bars | lev={leverage}x | capital/trade={capital_per_trade}")
 
         # ── Pre-compute all indicator signals on the full dataset ─────────────
-        # This replaces the O(n²) data.iloc[:i+1].copy() loop.
-        # strategy.generate_signals_bulk() returns two parallel Series:
-        #   actions[i]  – SignalAction for each bar
-        #   metadata[i] – dict with tp/sl/rsi/etc for each bar
-        # Falls back to bar-by-bar if strategy doesn't implement bulk.
         try:
             actions_s, meta_s = self.strategy.generate_signals_bulk(data, symbol)
             log.info(f"Bulk signal generation complete: {n:,} bars")
         except NotImplementedError:
-            # Fallback: bar-by-bar (slower but always works)
             log.warning(f"{self.strategy.strategy_id} has no bulk mode — "
                         f"falling back to bar-by-bar (slow on large datasets)")
             actions_s = []
@@ -107,50 +143,66 @@ class BacktestEngine:
                     "metadata":     sig.metadata,
                 })
 
+        # Pre-compute ATR for trailing-stop updates (cheap; always computed)
+        atr_arr  = _calc_atr_series(data, period=14)
+        high_arr = data["high"].to_numpy(dtype=float)
+        low_arr  = data["low"].to_numpy(dtype=float)
+        dates    = data["date"].to_numpy()
+
         # ── Main loop — O(n), no copies ──────────────────────────────────────
         trades:      list[TradeRecord] = []
         equity       = starting_equity
-        equity_curve: list[dict]       = []
-        open_trade:  Optional[TradeRecord] = None
-        # Trailing stop state — set when a trade has trailing_atr_mult in metadata
-        trail_atr_mult:  Optional[float] = None   # X in: SL = peak ± X×ATR
-        trail_atr_period: int            = 14
-        trail_atr_min_pct: float         = 0.0    # minimum % distance for short trail
-        trail_peak:      Optional[float] = None   # highest high (long) / lowest low (short)
-        trail_direction: str             = "short" # "long" or "short"
+        equity_curve: list[dict]      = []
+        open_trade:   Optional[TradeRecord] = None
+
+        # Trailing stop state — reset each time a trade closes
+        trail_best:    Optional[float] = None  # running best price since entry
+        trail_mult:    Optional[float] = None  # ATR multiplier (trailing_atr_mult)
+        trail_pct:     Optional[float] = None  # percentage trail (pct_trail)
+        trail_hard_sl: Optional[float] = None  # original fixed SL — immovable cap
+        trail_grace:   int             = 0     # bars before trail activates
+        trail_bars:    int             = 0     # bars elapsed since trade opened
+
+        def _reset_trail():
+            nonlocal trail_best, trail_mult, trail_pct, trail_hard_sl, trail_grace, trail_bars
+            trail_best    = None
+            trail_mult    = None
+            trail_pct     = None
+            trail_hard_sl = None
+            trail_grace   = 0
+            trail_bars    = 0
 
         for i in range(1, n):
             bar          = data.iloc[i]
-            current_date = bar["date"]
+            current_date = dates[i]
             action       = actions_s[i]
             meta         = meta_s[i]
             new_direction = self._signal_to_direction(action)
 
-            # 1. Update trailing stop if active, then check SL / TP
-            if open_trade is not None and trail_atr_mult is not None:
-                bar_high = float(bar["high"])
-                bar_low  = float(bar["low"])
-                curr_atr = self._bar_atr(data, i, trail_atr_period)
-                if trail_direction == "long":
-                    # Trail up: SL = highest_high_since_entry - mult × ATR
-                    if trail_peak is None or bar_high > trail_peak:
-                        trail_peak = bar_high
-                    new_trail_sl = trail_peak - trail_atr_mult * curr_atr
-                    if open_trade.stop_loss is None or new_trail_sl > open_trade.stop_loss:
-                        open_trade.stop_loss = new_trail_sl
-                else:
-                    # Trail down: SL = lowest_low_since_entry + mult × ATR
-                    # Also enforce a minimum % distance so the trail doesn't
-                    # become too tight when ATR compresses at low prices
-                    if trail_peak is None or bar_low < trail_peak:
-                        trail_peak = bar_low
-                    atr_based_sl  = trail_peak + trail_atr_mult * curr_atr
-                    # Minimum trail = trail_atr_min_pct% above the current low
-                    min_pct       = trail_atr_min_pct / 100.0
-                    min_based_sl  = bar_low * (1.0 + min_pct)
-                    new_trail_sl  = max(atr_based_sl, min_based_sl)
-                    if open_trade.stop_loss is None or new_trail_sl < open_trade.stop_loss:
-                        open_trade.stop_loss = new_trail_sl
+            # ── 1. Trailing-stop update (ATR or pct) then SL/TP check ────────
+            if open_trade is not None and (trail_mult is not None or trail_pct is not None):
+                trail_bars += 1
+                if trail_bars > trail_grace:  # respect grace period (skip bar 0 for spikes)
+                    if open_trade.direction == Direction.SHORT:
+                        trail_best = min(trail_best, low_arr[i])
+                        if trail_mult is not None:
+                            candidate_sl = trail_best + trail_mult * atr_arr[i]
+                        else:
+                            candidate_sl = trail_best * (1 + trail_pct / 100)
+                        if trail_hard_sl is not None:
+                            open_trade.stop_loss = min(candidate_sl, trail_hard_sl)
+                        else:
+                            open_trade.stop_loss = candidate_sl
+                    else:  # LONG
+                        trail_best = max(trail_best, high_arr[i])
+                        if trail_mult is not None:
+                            candidate_sl = trail_best - trail_mult * atr_arr[i]
+                        else:
+                            candidate_sl = trail_best * (1 - trail_pct / 100)
+                        if trail_hard_sl is not None:
+                            open_trade.stop_loss = max(candidate_sl, trail_hard_sl)
+                        else:
+                            open_trade.stop_loss = candidate_sl
 
             if open_trade is not None:
                 open_trade = self._check_exit(open_trade, bar)
@@ -163,12 +215,9 @@ class BacktestEngine:
                         open_trade.pnl = trade_pnl
                     trades.append(open_trade)
                     open_trade = None
-                    # Clear trailing stop state
-                    trail_atr_mult    = None
-                    trail_atr_min_pct = 0.0
-                    trail_peak        = None
+                    _reset_trail()
 
-            # 2. Counter-signal exit
+            # ── 2. Counter-signal exit ────────────────────────────────────────
             if (self.counter_signal_exit
                     and open_trade is not None
                     and new_direction is not None):
@@ -185,44 +234,32 @@ class BacktestEngine:
                     open_trade.leveraged_return_pct = pct * open_trade.leverage * 100
                     open_trade.exit_price = exit_px
                     open_trade.exit_time  = (current_date if isinstance(current_date, datetime)
-                                             else current_date.to_pydatetime())
+                                             else pd.Timestamp(current_date).to_pydatetime())
                     open_trade.outcome = self._counter_signal_outcome(
                         open_trade.direction, action,
                         self.strategy.strategy_id, meta.get("metadata", {}))
                     trade_pnl      = (open_trade.capital_allocated
                                       * open_trade.leveraged_return_pct / 100)
-                    cost           = self._trade_cost(open_trade.capital_allocated)
-                    trade_pnl     -= cost
+                    trade_pnl     -= self._trade_cost(open_trade.capital_allocated)
                     equity        += trade_pnl
                     open_trade.pnl = trade_pnl
                     trades.append(open_trade)
                     open_trade = None
-                    # Clear trailing stop state
-                    trail_atr_mult    = None
-                    trail_atr_min_pct = 0.0
-                    trail_peak        = None
+                    _reset_trail()
 
-            # 3. Queue new trade — will open on NEXT bar's open price
-            # This prevents lookahead bias: signal fires at bar[i] close,
-            # but we can only act at bar[i+1] open (realistic execution).
-            suggested_sl = meta.get("suggested_sl")
-            suggested_tp = meta.get("suggested_tp")
-
-            # Execute any pending trade from the PREVIOUS bar's signal
-            # (open at current bar's open price — one bar after signal)
+            # ── 3. Execute pending trade from PREVIOUS bar's signal ──────────
+            # Signal fires at close[i-1] → fill at open[i].  No look-ahead.
             if i > 1:
-                prev_action   = actions_s[i - 1]
-                prev_meta     = meta_s[i - 1]
-                prev_dir      = self._signal_to_direction(prev_action)
-                prev_sl       = prev_meta.get("suggested_sl")
-                prev_tp       = prev_meta.get("suggested_tp")
+                prev_action = actions_s[i - 1]
+                prev_meta   = meta_s[i - 1]
+                prev_dir    = self._signal_to_direction(prev_action)
+                prev_sl     = prev_meta.get("suggested_sl")
+                prev_tp     = prev_meta.get("suggested_tp")
 
-                if (open_trade is None and prev_dir is not None and prev_sl is not None):
-                    # Adjust SL/TP: they were computed relative to yesterday's close.
-                    # Scale them to today's open maintaining the same distance ratio.
-                    entry_px        = float(bar["open"])
-                    signal_close    = float(data.iloc[i-1]["close"])
-                    scale           = entry_px / signal_close if signal_close != 0 else 1.0
+                if open_trade is None and prev_dir is not None and prev_sl is not None:
+                    entry_px     = float(bar["open"])
+                    signal_close = float(data.iloc[i-1]["close"])
+                    scale        = entry_px / signal_close if signal_close != 0 else 1.0
 
                     adj_sl = prev_sl * scale
                     adj_tp = prev_tp * scale if prev_tp is not None else None
@@ -245,7 +282,9 @@ class BacktestEngine:
                         effective_sl      = adj_sl
                         effective_capital = capital_per_trade
 
-                    prev_regime = prev_meta.get("metadata", {}).get("regime", "normal")
+                    prev_sig_meta = prev_meta.get("metadata", {})
+                    prev_regime   = prev_sig_meta.get("regime", "normal")
+
                     open_trade = TradeRecord(
                         id                = str(uuid.uuid4()),
                         symbol            = symbol,
@@ -256,33 +295,37 @@ class BacktestEngine:
                         leverage          = leverage,
                         capital_allocated = effective_capital,
                         entry_time        = (current_date if isinstance(current_date, datetime)
-                                             else current_date.to_pydatetime()),
+                                             else pd.Timestamp(current_date).to_pydatetime()),
                         mode              = "backtest",
                         strategy_id       = self.strategy.strategy_id,
                         outcome           = TradeOutcome.OPEN,
                         notes             = (
                             f"Entry: {prev_dir.value} @ {entry_px:.4f} (next-bar open) | "
+                            f"regime={prev_regime} | "
                             f"SL={effective_sl:.4f} | "
-                            + (f'TP={adj_tp:.4f}' if adj_tp is not None else 'TP=none')
+                            + (f"TP={adj_tp:.4f}" if adj_tp is not None else "TP=none")
                         ),
                     )
-                    # Initialise trailing stop state if strategy requested it
-                    prev_inner = prev_meta.get("metadata", {})
-                    if "trailing_atr_mult" in prev_inner:
-                        trail_atr_mult    = float(prev_inner["trailing_atr_mult"])
-                        trail_atr_period  = int(prev_inner.get("atr_period", 14))
-                        trail_direction   = prev_inner.get("trail_direction",
-                                           "long" if prev_dir == Direction.LONG else "short")
-                        trail_atr_min_pct = float(prev_inner.get("trailing_atr_min_pct", 0.0))
-                        # Start trail_peak at entry price (not first bar's high/low).
-                        # This means the initial trail SL = entry ± mult×ATR,
-                        # which is wide enough to survive first-bar volatility.
-                        # The trail only tightens as price moves in our favour.
-                        trail_peak = entry_px
-                    else:
-                        trail_atr_mult   = None
-                        trail_peak       = None
 
+                    # Initialise trailing stop — ATR-based or percentage-based
+                    req_atr = prev_sig_meta.get("trailing_atr_mult")
+                    req_pct = prev_sig_meta.get("pct_trail")
+                    if req_atr is not None:
+                        trail_mult    = float(req_atr)
+                        trail_pct     = None
+                        trail_best    = entry_px
+                        trail_hard_sl = effective_sl
+                        trail_grace   = 0  # ATR trail starts immediately
+                        trail_bars    = 0
+                    elif req_pct is not None:
+                        trail_mult    = None
+                        trail_pct     = float(req_pct)
+                        trail_best    = entry_px
+                        trail_hard_sl = effective_sl
+                        trail_grace   = 1  # skip bar 0 — spike bar range is huge
+                        trail_bars    = 0
+                    else:
+                        _reset_trail()
 
             equity_curve.append({"date": current_date, "equity": equity})
 
@@ -301,20 +344,6 @@ class BacktestEngine:
     def _trade_cost(self, capital: float) -> float:
         """Round-trip cost: spread + slippage (% of capital) + flat commission."""
         return capital * (self.spread_pct + self.slippage_pct) / 100.0 + self.commission_per_trade
-
-    @staticmethod
-    def _bar_atr(data: pd.DataFrame, i: int, period: int) -> float:
-        """Fast single-value ATR estimate at bar i using a rolling window."""
-        start = max(0, i - period * 3)   # enough bars for EWM to stabilise
-        sl    = data.iloc[start:i+1]
-        hi    = sl["high"].astype(float)
-        lo    = sl["low"].astype(float)
-        cl    = sl["close"].astype(float)
-        prev  = cl.shift(1)
-        tr    = pd.concat([hi-lo, (hi-prev).abs(), (lo-prev).abs()], axis=1).max(axis=1)
-        atr   = tr.ewm(alpha=1/period, adjust=False, min_periods=1).mean()
-        v     = float(atr.iloc[-1])
-        return v if not np.isnan(v) else float((hi - lo).mean())
 
     @staticmethod
     def _counter_signal_outcome(
@@ -381,16 +410,16 @@ class BacktestEngine:
         wins   = [t for t in closed if (t.leveraged_return_pct or 0) > 0]
         losses = [t for t in closed if (t.leveraged_return_pct or 0) <= 0]
 
-        eq_df    = pd.DataFrame(equity_curve)
-        # Downsample equity curve to max 2000 points for memory/render efficiency.
-        # One point per ~500 bars on a 1M-bar backtest — smooth enough for display.
+        eq_df = pd.DataFrame(equity_curve)
+        # Downsample to max 2000 points for memory/render efficiency
         if len(eq_df) > 2000:
             step  = len(eq_df) // 2000
             eq_df = pd.concat([
                 eq_df.iloc[::step],
-                eq_df.iloc[[-1]]   # always keep the last point
+                eq_df.iloc[[-1]]
             ]).drop_duplicates("date").sort_values("date").reset_index(drop=True)
-        final_eq = float(eq_df["equity"].iloc[-1]) if not eq_df.empty else starting_equity
+
+        final_eq  = float(eq_df["equity"].iloc[-1]) if not eq_df.empty else starting_equity
         total_ret = ((final_eq - starting_equity) / starting_equity * 100
                      if starting_equity else 0)
 
