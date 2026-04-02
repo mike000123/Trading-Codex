@@ -274,7 +274,11 @@ class BacktestEngine:
                         trail_direction   = prev_inner.get("trail_direction",
                                            "long" if prev_dir == Direction.LONG else "short")
                         trail_atr_min_pct = float(prev_inner.get("trailing_atr_min_pct", 0.0))
-                        trail_peak        = None   # will be set on first bar
+                        # Start trail_peak at entry price (not first bar's high/low).
+                        # This means the initial trail SL = entry ± mult×ATR,
+                        # which is wide enough to survive first-bar volatility.
+                        # The trail only tightens as price moves in our favour.
+                        trail_peak = entry_px
                     else:
                         trail_atr_mult   = None
                         trail_peak       = None
