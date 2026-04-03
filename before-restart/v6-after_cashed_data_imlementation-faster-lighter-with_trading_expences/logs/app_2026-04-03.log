@@ -1,0 +1,9 @@
+2026-04-03T16:43:27.746+03:00 | DEBUG | data.cache:90 | Cache HIT: alpaca/UVXY/1Min — 1151289 bars (2020-01-01 → 2026-03-30)
+2026-04-03T16:43:29.212+03:00 | DEBUG | data.cache:90 | Cache HIT: alpaca/UVXY/1Min — 1151289 bars (2020-01-01 → 2026-03-30)
+2026-04-03T16:43:34.949+03:00 | DEBUG | data.cache:90 | Cache HIT: alpaca/UVXY/1Min — 1151289 bars (2020-01-01 → 2026-03-30)
+2026-04-03T16:43:43.104+03:00 | DEBUG | data.cache:90 | Cache HIT: alpaca/UVXY/1Min — 1151289 bars (2020-01-01 → 2026-03-30)
+2026-04-03T16:43:43.206+03:00 | DEBUG | data.cache:90 | Cache HIT: alpaca/UVXY/1Min — 1151289 bars (2020-01-01 → 2026-03-30)
+2026-04-03T16:43:44.607+03:00 | INFO | reporting.backtest:83 | Backtest START: UVXY | bollinger_rsi | 339,954 bars | lev=1.0x | capital/trade=1000.0
+2026-04-03T16:43:50.037+03:00 | INFO | reporting.backtest:94 | Bulk signal generation complete: 339,954 bars
+2026-04-03T16:44:09.735+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-03T16:44:14.546+03:00 | DEBUG | data.cache:90 | Cache HIT: alpaca/UVXY/1Min — 1151289 bars (2020-01-01 → 2026-03-30)
