@@ -1,0 +1,1337 @@
+2026-04-05T10:00:49.906+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T10:00:50.379+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T10:01:02.001+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T10:01:02.460+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T10:01:10.504+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T10:01:37.024+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T10:01:42.307+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T10:01:45.202+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T10:01:56.443+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T10:02:22.983+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T10:02:32.921+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:07:26.173+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:07:27.258+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:07:34.680+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:07:35.685+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T11:07:48.398+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T11:08:12.478+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T11:08:22.542+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:36:20.504+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:36:20.785+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:36:27.419+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:36:28.997+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T11:37:00.192+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T11:38:04.200+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T11:38:20.919+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T11:56:27.341+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T11:56:37.893+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T11:57:09.098+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T11:57:19.532+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:08:09.276+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:08:12.626+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:13:14.474+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T12:13:14.772+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T12:13:22.639+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T12:13:24.278+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:13:55.451+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T12:14:58.583+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T12:15:02.060+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T12:15:06.758+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:15:41.669+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T12:16:46.824+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T12:17:03.402+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T12:19:49.343+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:19:52.725+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:20:19.049+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:20:22.396+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:20:28.103+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:20:31.359+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:20:37.055+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:20:40.386+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:20:46.207+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:21:11.342+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:21:33.873+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:21:37.156+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:31:07.144+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:31:10.492+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:54:28.590+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:54:31.439+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:58:28.623+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:59:21.539+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:59:24.964+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T12:59:30.489+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T12:59:33.839+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:01:17.599+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:01:19.280+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:02:39.583+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:02:41.198+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:03:11.829+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:04:14.038+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:04:17.483+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:04:21.238+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:04:55.110+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:06:00.784+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:06:14.904+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:08:36.330+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:08:53.383+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:08:59.022+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:09:03.222+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:09:19.113+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:09:31.553+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:09:46.722+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:09:47.000+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:09:56.569+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:10:00.633+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:10:05.789+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:10:07.302+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:10:38.272+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:11:42.547+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:11:53.396+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:11:57.928+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:12:30.055+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:13:34.011+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:13:49.846+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:14:08.790+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:14:09.085+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:14:20.257+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:14:21.850+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:14:54.433+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:15:44.207+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:15:49.328+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:24:53.467+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:24:56.864+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:25:02.514+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:25:05.796+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:25:11.431+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:25:14.761+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:26:49.602+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:26:52.949+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:26:58.613+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:27:01.993+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:27:07.626+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:27:10.930+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:27:16.613+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:27:19.911+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:27:25.575+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:27:28.822+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:32:21.636+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:32:25.012+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:32:30.730+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:32:34.042+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:32:40.024+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:32:43.453+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:32:49.380+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:32:52.745+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T13:34:31.814+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:34:32.091+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:34:41.585+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:35:28.674+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:35:32.414+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:35:33.993+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:36:05.136+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:37:09.094+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:37:17.788+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:37:22.928+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:37:56.763+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:39:02.467+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:39:15.952+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:39:17.720+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:39:21.015+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:39:25.297+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:39:48.682+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:40:01.800+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:40:04.673+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:40:30.802+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:40:31.076+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:40:41.171+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:40:44.871+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:40:49.525+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:40:51.094+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:41:22.464+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:42:26.051+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:42:42.369+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:42:50.643+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:42:54.462+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:43:25.760+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:44:28.234+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:44:42.924+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:45:23.378+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:45:23.656+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:45:36.516+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:45:40.144+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:45:44.140+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:45:45.695+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:46:17.915+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:47:23.272+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:47:30.319+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T13:47:35.366+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T13:48:08.802+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T13:49:13.225+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T13:49:27.653+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T14:00:17.235+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:00:20.664+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:00:26.107+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:00:29.438+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:00:34.919+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:00:38.252+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:08:26.124+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:08:29.516+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:08:34.972+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:08:38.288+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:08:44.103+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:08:47.436+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:08:53.120+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:08:56.402+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:10:52.218+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:10:55.679+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:11:01.154+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:11:04.548+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:11:10.196+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:11:13.748+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T14:11:19.427+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T14:11:22.832+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T16:11:33.108+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T16:11:36.524+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T16:11:42.006+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T16:11:45.372+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T16:11:50.889+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T16:11:54.305+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T16:15:40.932+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:15:41.215+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:15:54.040+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:16:02.614+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:16:04.218+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T16:16:37.456+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T16:17:40.379+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T16:17:45.110+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:17:50.000+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T16:18:30.492+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T16:19:34.387+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T16:19:49.734+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:46:09.651+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:46:09.932+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:46:24.527+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:48:15.319+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:48:15.602+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:48:26.150+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:48:43.390+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:48:49.280+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:48:53.694+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:48:55.308+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T16:49:27.822+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T16:50:19.810+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T16:50:36.542+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T16:59:08.175+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T16:59:12.209+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T16:59:18.051+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T16:59:21.997+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:00:49.944+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:00:53.973+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:00:59.758+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:01:03.704+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:01:09.553+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:01:13.598+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:01:19.411+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:01:23.380+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:01:29.268+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:01:33.221+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:01:39.074+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:01:43.054+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:01:48.954+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:01:52.948+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:01:58.842+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:02:02.837+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:02:08.676+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:02:12.681+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:02:18.637+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:02:22.693+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:02:28.520+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:02:32.537+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:02:38.429+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:02:42.416+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:02:48.105+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:02:51.985+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:02:57.585+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:03:01.371+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:03:07.019+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:03:10.836+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:03:16.455+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:03:20.263+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:03:25.845+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:03:29.631+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:03:35.260+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:03:39.034+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:03:44.615+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:03:48.447+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:03:54.127+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:03:57.909+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:04:03.493+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:04:07.307+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:04:12.899+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:04:16.677+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:04:22.356+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:04:26.127+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:04:31.978+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:04:35.887+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:04:41.829+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:04:45.795+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:04:51.568+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:04:55.514+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:05:01.379+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:05:05.390+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:05:11.206+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:05:15.150+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:05:20.971+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:05:24.908+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:05:30.805+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:05:34.786+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:05:40.633+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:05:44.542+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:05:50.388+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:05:54.458+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:06:00.341+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:06:04.389+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:06:10.262+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:06:14.305+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:06:20.245+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:06:24.196+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:06:30.021+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:06:34.033+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:06:39.884+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:06:43.982+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:06:49.828+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:06:53.838+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:06:59.679+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:07:03.672+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:07:09.472+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:07:13.612+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:07:19.520+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:07:23.503+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:07:29.368+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:07:33.358+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:07:39.253+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:07:43.327+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:07:49.243+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:07:53.255+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:07:59.141+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:08:03.076+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:08:08.946+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:08:12.928+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:08:18.728+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:08:22.629+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:08:28.181+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:08:31.965+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:08:37.603+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:08:41.376+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:08:47.013+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:08:50.844+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:08:56.411+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:09:00.142+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:09:05.724+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:09:09.488+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:09:15.073+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:09:18.928+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:09:24.669+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:09:28.497+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:09:34.086+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:09:37.955+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:09:43.536+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:09:47.385+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:09:52.960+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:09:56.752+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:10:02.362+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:10:06.171+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:10:11.774+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:10:15.563+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:10:21.153+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:10:24.990+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:10:30.588+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:10:34.395+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:10:39.984+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:10:43.816+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:10:49.416+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:10:53.256+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:10:58.772+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:11:02.531+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:11:08.151+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:11:11.975+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:11:17.564+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:11:21.342+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:11:26.937+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:11:30.714+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:11:36.324+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:11:40.256+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:11:45.799+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:11:49.629+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:11:55.202+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:11:59.011+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:12:04.632+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:12:08.419+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:12:13.997+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:12:17.768+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:12:23.341+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:12:27.128+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:12:32.701+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:12:36.487+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:12:42.123+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:12:45.929+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:12:51.386+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:12:55.222+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:13:00.814+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:13:04.644+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:13:10.259+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:13:14.066+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:13:19.708+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:13:23.548+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:13:29.119+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:13:32.926+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:13:38.683+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:13:42.507+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:13:48.049+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:13:51.910+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:13:57.553+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:14:01.341+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:14:06.938+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:14:10.741+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:14:16.323+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:14:20.157+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:14:25.802+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:14:29.584+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:14:35.202+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:14:38.989+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:14:44.593+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:14:48.400+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:14:54.019+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:14:57.823+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:15:03.442+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:15:07.246+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:15:12.878+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:15:16.789+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:15:22.495+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:15:26.260+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:15:32.005+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:15:35.944+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:15:41.782+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:15:45.684+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:15:51.493+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:15:55.469+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:16:01.065+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:16:04.834+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:16:10.544+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:16:14.440+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:16:20.034+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:16:23.824+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:16:29.584+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:16:33.498+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:16:39.216+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:16:43.010+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:16:48.707+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:16:52.491+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:16:58.106+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:17:01.884+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:17:07.512+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:17:11.373+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:17:17.031+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:17:20.807+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:17:26.419+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:17:30.201+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:17:35.790+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:17:39.604+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:17:45.251+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:17:48.977+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:17:54.494+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:17:58.306+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:18:03.909+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:18:07.675+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:18:13.223+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:18:17.017+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:18:22.716+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:18:26.492+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:18:32.026+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:18:35.903+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:18:41.445+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:18:45.263+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:18:50.908+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:18:54.791+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:19:00.346+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:19:04.181+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:19:09.772+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:19:13.588+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:19:19.212+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:19:23.078+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:19:28.724+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:19:32.496+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:19:38.134+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:19:41.957+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:19:47.558+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:19:51.424+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:19:57.046+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:20:00.851+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:20:06.487+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:20:10.222+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:20:15.860+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:20:19.726+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:20:25.310+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:20:29.151+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:20:34.738+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:20:38.476+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:20:44.089+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:20:47.883+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:20:53.557+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:20:57.329+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:21:02.854+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:21:06.726+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:21:12.452+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:21:16.298+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:21:21.925+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:21:25.796+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:21:31.586+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:21:35.535+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:21:41.391+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:21:45.371+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:21:51.070+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:21:54.846+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:22:00.466+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:22:04.236+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:22:09.832+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:22:13.640+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:22:19.347+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:22:23.223+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:22:28.850+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:22:32.673+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:22:38.322+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:22:42.253+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:22:47.780+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:22:51.591+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:22:57.167+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:23:00.946+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:23:06.567+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:23:10.368+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:23:15.945+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:23:19.788+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:23:25.367+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:23:29.193+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:23:34.765+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:23:38.567+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:23:44.131+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:23:47.940+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:23:53.614+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:23:57.561+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:24:03.272+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:24:07.055+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:24:12.685+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:24:16.506+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:24:22.173+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:24:25.989+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:24:31.617+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:24:35.382+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:24:40.976+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:24:44.741+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:24:50.428+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:24:54.306+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:24:59.860+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:25:03.633+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:25:09.339+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:25:13.182+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:25:18.778+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:25:22.682+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:25:28.304+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:25:32.232+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:25:37.911+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:25:41.743+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:25:47.407+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:25:51.280+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:25:56.921+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:00.761+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:26:06.412+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:10.197+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:26:15.885+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:17.627+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:19.854+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:26:21.852+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:26:25.678+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:27.543+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:29.635+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:26:31.726+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:26:35.437+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:39.329+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:26:44.943+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:48.783+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:26:54.485+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:26:58.259+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:27:03.955+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:27:07.811+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:27:13.413+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:27:17.232+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:27:22.877+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:27:26.707+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:27:32.452+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:27:36.242+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:27:41.876+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:27:45.649+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:27:51.364+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:27:55.114+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:28:00.893+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:28:04.815+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:28:10.357+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:28:14.061+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:28:19.510+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:28:23.296+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:28:28.716+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:28:32.468+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:28:37.897+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:28:41.711+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:28:47.192+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:28:50.878+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:28:56.299+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:28:59.998+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:29:05.636+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:29:09.322+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:29:14.767+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:29:18.452+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:29:24.000+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:29:27.750+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:29:33.264+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:29:37.033+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:29:42.622+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:29:46.433+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:29:51.996+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:29:55.813+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:30:01.485+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:30:05.328+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:30:10.947+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:30:14.737+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:30:20.380+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:30:24.241+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:30:29.845+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:30:33.727+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:30:39.298+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:30:43.099+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:30:48.718+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:30:52.604+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:30:58.104+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:31:01.836+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:31:07.512+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:31:11.300+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:31:16.943+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:31:20.723+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:31:26.321+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:31:30.193+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:31:35.865+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:31:39.733+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:31:45.325+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:31:49.149+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:31:54.778+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:31:58.575+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:32:04.197+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:32:07.987+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:32:13.620+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:32:17.376+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:32:22.984+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:32:26.755+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:32:32.361+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:32:36.170+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:32:41.819+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:32:45.593+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:32:51.070+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:32:54.890+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:33:00.460+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:33:04.231+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:33:09.830+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:33:13.626+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:33:19.210+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:33:23.077+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:33:28.610+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:33:32.396+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:33:38.037+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:33:41.859+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:33:47.419+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:33:51.267+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:33:56.847+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:34:00.695+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:34:06.286+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:34:10.093+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:34:15.768+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:34:19.579+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:34:25.245+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:34:29.021+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:34:34.614+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:34:38.465+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:34:44.049+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:34:47.871+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:34:53.499+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:34:57.282+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:35:02.840+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:35:06.745+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:35:12.357+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:35:16.172+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:35:21.842+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:35:25.634+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:35:31.251+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:35:35.058+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:35:40.613+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:35:44.366+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:35:50.082+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:35:53.917+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:35:59.455+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:36:03.185+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:36:08.815+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:36:12.685+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:36:18.265+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:36:22.073+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:36:27.647+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:36:31.422+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:36:37.064+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:36:40.874+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:36:46.458+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:36:50.243+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:36:55.784+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:36:59.592+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:37:05.276+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:37:09.081+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:37:14.732+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:37:18.536+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:37:24.182+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:37:27.991+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:37:33.706+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:37:37.539+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:37:43.187+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:37:46.936+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:37:52.436+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:37:56.270+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:38:01.924+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:38:05.722+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:38:11.310+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:38:15.072+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:38:20.676+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:38:24.507+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:38:30.092+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:38:33.867+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:38:39.441+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:38:43.247+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:38:48.833+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:38:52.683+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:38:58.236+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:39:01.974+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:39:07.564+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:39:11.345+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:39:16.940+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:39:20.802+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:39:26.428+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:39:30.228+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:39:35.882+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:39:39.665+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:39:45.251+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:39:49.055+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:39:54.637+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:39:58.437+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:04.095+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:07.856+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:13.429+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:17.266+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:17.831+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:22.065+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:23.154+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:27.093+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:27.807+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:31.988+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:32.926+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:36.898+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:37.804+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:42.014+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:42.816+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:46.724+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:47.775+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:51.986+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:52.566+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:40:56.520+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:40:57.729+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:01.885+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:02.338+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:06.316+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:07.700+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:11.905+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:12.150+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:16.265+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:17.901+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:22.210+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:22.259+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:26.247+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:27.975+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:32.093+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:32.228+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:36.026+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:38.019+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:41.878+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:42.188+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:45.849+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:48.106+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:51.841+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:41:52.338+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:41:55.739+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:42:01.438+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:42:05.190+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:42:10.785+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:42:14.655+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:42:20.378+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:42:24.238+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:42:29.883+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:42:33.699+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:42:37.434+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:42:39.473+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:42:41.666+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:42:43.442+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:42:49.201+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:42:52.945+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:42:58.629+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:43:02.432+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:43:08.095+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:43:11.893+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:43:17.642+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:43:21.500+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:43:27.061+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:43:30.979+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:43:36.668+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:43:40.422+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:43:46.193+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:43:50.142+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:43:55.780+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:43:59.479+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:44:05.007+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:44:08.741+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:44:14.250+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:44:18.022+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:44:23.600+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:44:27.330+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:44:37.602+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:44:48.301+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:44:49.943+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:45:14.722+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:45:15.951+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:45:35.438+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:45:37.050+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:46:16.764+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T17:46:18.297+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:46:55.090+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:47:18.337+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T17:47:35.848+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:47:44.307+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:47:48.133+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:48:02.361+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:48:28.021+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T17:48:39.137+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:49:30.159+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T17:49:41.196+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:49:43.678+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:50:18.869+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:51:09.141+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:51:13.095+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:51:18.814+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:51:22.734+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:51:28.508+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:51:32.453+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:51:38.205+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:51:42.125+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:51:48.741+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:52:26.059+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:52:32.527+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:52:50.647+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:52:54.503+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:53:00.649+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:53:07.755+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:53:29.126+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:53:30.500+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:53:30.782+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:53:44.011+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:53:51.254+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:53:55.178+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:53:56.791+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:54:05.652+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:54:36.664+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T17:55:06.841+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:55:39.646+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T17:55:40.462+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:55:46.258+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:55:50.215+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:55:54.747+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:55:55.964+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:56:03.399+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:56:07.189+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:56:08.095+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:56:47.784+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:56:48.058+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:56:56.938+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:57:03.925+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:57:07.858+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:57:13.695+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:57:17.579+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:57:37.815+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:57:39.395+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:57:40.082+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:58:17.158+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T17:58:18.925+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T17:59:18.465+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:59:21.815+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T17:59:31.201+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T17:59:36.039+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T17:59:51.149+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:00:17.454+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T18:00:18.556+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:00:27.311+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:00:42.250+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:00:49.238+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:00:54.790+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:01:02.248+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:01:08.075+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:01:11.988+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:01:17.780+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:01:19.861+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T18:01:21.704+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:01:27.652+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:01:33.936+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T18:01:39.312+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:01:46.396+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:01:50.321+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:01:56.135+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:02:00.124+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:02:05.956+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:02:09.923+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:02:15.747+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:02:19.705+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:02:25.466+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:02:29.391+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:02:35.250+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:02:39.231+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:02:50.522+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:02:56.729+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:03:02.617+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:03:06.597+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:03:12.355+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:03:16.286+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:03:22.135+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:03:26.035+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:03:31.824+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:03:35.804+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:03:41.493+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:03:45.521+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:03:51.484+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:03:55.427+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:04:01.244+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:04:05.265+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:04:11.133+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:04:15.052+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:04:20.879+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:04:24.896+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:04:30.746+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:04:34.721+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:04:40.621+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:04:44.548+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:04:58.154+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:05:02.119+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:05:08.003+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:05:11.918+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:05:17.692+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:05:21.592+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:05:27.452+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:05:31.409+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:05:37.240+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:05:41.366+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:05:47.341+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:05:51.652+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:05:57.955+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:06:02.082+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:06:08.112+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:06:12.105+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:06:18.506+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:06:22.501+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:06:28.427+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:06:32.670+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:06:38.782+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:06:42.825+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:06:48.847+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:06:53.001+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:06:59.008+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:07:03.037+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:07:09.218+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:07:13.447+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:07:19.519+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:07:23.578+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:07:32.354+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:07:36.334+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:07:42.207+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:07:46.131+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:07:52.110+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:07:56.133+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:08:02.051+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:08:06.123+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:08:12.022+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:08:15.999+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:08:21.874+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:08:25.870+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:08:31.735+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:08:35.814+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:08:41.713+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:08:45.725+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:08:51.669+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:08:55.632+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:09:01.517+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:09:05.641+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:09:11.632+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:09:15.595+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:09:21.558+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:09:25.509+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:09:31.405+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:09:35.386+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:09:41.354+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:09:45.480+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:09:51.353+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:09:55.300+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:10:01.133+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:10:05.173+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:10:11.087+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:10:14.222+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:10:15.328+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:10:18.988+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:10:21.973+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:10:26.359+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:10:32.412+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:10:36.494+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:10:42.607+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:10:46.657+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:10:52.827+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:10:57.051+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:11:03.169+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:11:07.255+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:11:13.245+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:11:17.420+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:11:23.496+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:11:27.653+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:11:33.738+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:11:37.922+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:11:44.048+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:11:47.972+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:11:55.600+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:11:59.539+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:12:05.558+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:12:09.579+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:12:15.704+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:12:19.817+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:12:28.318+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:12:32.466+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:12:38.108+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:12:41.937+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:12:47.589+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:12:51.468+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:12:57.229+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:13:00.973+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:13:06.842+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:13:10.824+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:13:16.815+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:13:20.803+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:13:26.985+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:13:30.982+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:13:37.051+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:13:41.077+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:13:46.898+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:13:54.544+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:14:03.324+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T18:14:03.594+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T18:14:12.562+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T18:14:18.012+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T18:14:19.063+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:14:19.680+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:14:56.023+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:15:00.306+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T18:15:57.996+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:16:02.863+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T18:16:05.867+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T18:16:10.511+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:16:37.621+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:17:40.557+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:18:18.089+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:19:21.391+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:19:58.974+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:21:01.567+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:21:38.905+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:22:41.164+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:23:18.749+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:24:21.229+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:24:58.526+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:26:00.296+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:26:37.324+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:27:39.286+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:28:16.121+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:29:18.061+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:29:55.328+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:30:57.840+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:31:34.955+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:32:36.746+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:33:13.618+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:34:15.360+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:34:52.388+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:35:56.432+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:36:33.790+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:37:36.252+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:38:13.332+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:39:15.628+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:39:52.563+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:40:54.468+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:41:31.100+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:42:32.539+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:43:09.066+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:44:11.093+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:44:48.178+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:45:50.111+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:46:26.966+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:47:28.766+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:48:05.598+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:49:07.114+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:49:44.621+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:50:47.669+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:51:24.604+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:52:26.783+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:53:03.907+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:54:05.251+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:54:41.932+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:55:43.635+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:56:20.590+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:57:22.393+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:57:59.408+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T18:59:01.000+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T18:59:37.504+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:00:39.125+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:01:15.761+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:02:17.700+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:02:54.362+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:03:56.064+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:04:32.818+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:05:34.308+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:06:11.135+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:07:13.686+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:07:51.200+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:08:53.887+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:09:31.618+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:10:34.444+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:11:11.776+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:12:14.688+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:12:52.340+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:13:55.062+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:14:32.515+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:15:35.141+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:16:12.544+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:17:15.077+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:17:52.369+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:18:55.299+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:19:32.736+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:20:35.597+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:21:15.744+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:22:18.297+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:22:55.814+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:23:58.295+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:24:35.748+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:25:38.615+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:26:16.067+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:27:18.785+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:27:56.350+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:28:58.873+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:29:36.333+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:30:38.911+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:31:16.145+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:32:18.673+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:32:56.143+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:33:58.704+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:34:35.954+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:35:38.430+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:36:15.725+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:37:18.560+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:37:56.223+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:38:58.937+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:39:36.447+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:40:39.167+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:41:16.739+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:42:19.489+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:42:56.836+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:43:59.251+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:44:36.496+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:45:39.172+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:46:16.752+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:47:19.375+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:47:56.906+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:48:59.265+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:49:36.551+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:50:39.226+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:51:16.985+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:52:19.531+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:52:56.814+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:53:59.277+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:54:36.628+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:55:39.234+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:56:16.813+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:57:19.215+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:57:56.717+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T19:58:59.238+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T19:59:36.853+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:00:39.412+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:01:16.745+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:02:19.304+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:02:56.542+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:03:59.227+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:04:36.678+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:05:39.553+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:06:17.011+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:07:19.613+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:07:57.342+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:08:59.851+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:09:37.222+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:10:40.038+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:11:17.485+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:12:20.060+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:12:57.436+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:14:00.565+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:14:38.129+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:15:40.750+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:16:17.988+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:17:20.690+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:17:58.148+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:19:00.943+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:19:38.207+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:20:40.988+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:21:18.553+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:22:20.972+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:22:58.361+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:24:00.889+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:24:38.243+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:25:40.792+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:26:18.336+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:27:20.774+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:27:58.327+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:29:00.868+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:29:38.297+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:30:41.026+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:31:18.833+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:32:21.664+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:32:59.115+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:34:01.752+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:34:39.081+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:35:41.355+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:36:18.852+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:37:21.096+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:37:58.400+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:39:01.097+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:39:38.652+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:40:41.410+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:41:18.733+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:42:21.294+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:42:58.638+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:44:01.074+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:44:38.364+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:45:41.036+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:46:18.446+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:47:20.933+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:47:58.438+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:49:00.934+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:49:38.651+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:50:41.466+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:51:18.994+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:52:21.634+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:52:59.749+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:54:03.145+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:54:41.116+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:55:44.868+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:55:55.088+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:56:01.160+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:56:05.106+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:56:11.272+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:56:22.770+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:56:32.152+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:56:35.971+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:56:41.832+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:56:45.620+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:56:51.169+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:56:54.947+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:57:00.642+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:57:04.489+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:57:10.053+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:57:15.543+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:57:21.116+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:57:24.989+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:57:31.061+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:57:34.910+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:57:40.389+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:57:44.163+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:57:49.675+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:57:53.435+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:57:58.951+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:58:02.729+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:58:08.488+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:58:12.284+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:58:17.950+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:58:21.750+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:58:27.449+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:58:31.248+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:58:36.987+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:58:40.730+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:58:46.629+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:58:50.362+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:58:55.723+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:58:59.587+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:59:05.414+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:59:09.216+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:59:14.807+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:59:18.526+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:59:23.922+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:59:27.723+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:59:33.257+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T20:59:36.949+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 341,419 bars
+2026-04-05T20:59:42.429+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 341,419 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T21:24:40.037+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:24:40.338+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:24:47.911+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:24:49.531+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T21:24:52.613+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:24:56.645+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:25:00.066+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:25:02.207+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:25:30.839+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T21:25:36.383+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:25:36.688+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:25:43.105+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:25:47.573+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:25:49.204+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T21:26:19.833+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T21:27:21.324+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T21:27:25.567+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:27:29.962+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T21:28:15.236+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T21:29:16.476+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T21:29:24.576+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:19.869+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:20.156+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:31.394+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:34.650+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:36.013+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:37.611+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:39.169+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:47.195+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:48.615+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:38:50.170+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T21:58:08.689+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:58:08.977+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:58:17.498+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:58:32.240+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T21:58:34.410+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T21:59:13.889+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T22:00:14.810+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T22:00:24.201+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T22:12:42.035+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T22:12:43.433+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T22:12:48.979+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T22:12:50.245+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T22:13:07.142+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T22:13:29.587+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T22:13:35.617+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T22:13:39.587+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)
+2026-04-05T22:13:41.929+03:00 | INFO | reporting.backtest:121 | Backtest START: UVXY | bollinger_rsi | 340,706 bars | lev=1.0x | capital/trade=1000.0
+2026-04-05T22:13:57.913+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 340,706 bars
+2026-04-05T22:14:21.644+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-05T22:14:27.329+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 341419 bars (2024-04-04 → 2026-04-02)

@@ -8,67 +8,63 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 
-from config.settings import TradingMode, settings
+from config.settings import settings
 from ui.themes import mode_badge
 
 
 def render_mode_banner() -> None:
-    mode  = settings.trading_mode.value
+    mode = settings.trading_mode.value
     badge = mode_badge(mode)
     if settings.is_live():
         st.markdown(
             f"""<div style="background:#4a1a1a;border:2px solid #ff7043;border-radius:8px;
                 padding:10px 18px;margin-bottom:12px;">
               ⚠️ &nbsp;<strong>LIVE TRADING MODE</strong> &nbsp;{badge}&nbsp;
-              — Real money is at risk.
+              - Real money is at risk.
             </div>""",
             unsafe_allow_html=True,
         )
     else:
-        st.markdown(
-            f'<div style="padding:6px 14px;margin-bottom:8px;">Mode: {badge}</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div style="padding:6px 14px;margin-bottom:8px;">Mode: {badge}</div>', unsafe_allow_html=True)
 
 
 def render_data_source_selector() -> Optional[pd.DataFrame]:
     st.sidebar.subheader("📡 Data Source")
-    source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], key="data_source")
+    source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], index=2, key="data_source")
     data: Optional[pd.DataFrame] = None
 
     if source == "Yahoo Finance":
         from data.cache import DataCache
-        _yc = DataCache()
 
-        ticker   = st.sidebar.text_input("Ticker", value="UVXY", key="yf_ticker")
-        interval = st.sidebar.selectbox("Interval",
-            ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"], index=0, key="yf_interval")
+        _yc = DataCache()
+        ticker = st.sidebar.text_input("Ticker", value="UVXY", key="yf_ticker")
+        interval = st.sidebar.selectbox("Interval", ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"], index=0, key="yf_interval")
         col1, col2 = st.sidebar.columns(2)
         start = col1.date_input("Start", value=pd.Timestamp("2026-03-23").date(), key="yf_start")
-        end   = col2.date_input("End",   value=pd.Timestamp.today().date(), key="yf_end")
-
+        end = col2.date_input("End", value=pd.Timestamp.today().date(), key="yf_end")
         start_ts = pd.Timestamp(start)
-        end_ts   = pd.Timestamp(end)
+        end_ts = pd.Timestamp(end)
+        end_exclusive = end_ts + pd.Timedelta(days=1)
 
-        # Auto-load from cache if available
         _yf_key = f"yf_loaded_{ticker}_{interval}_{start}_{end}"
         if _yf_key not in st.session_state:
             cached_df = _yc.load("yfinance", ticker.upper(), interval)
             if cached_df is not None and not cached_df.empty:
-                mask = ((cached_df["date"] >= start_ts) & (cached_df["date"] <= end_ts))
+                mask = (cached_df["date"] >= start_ts) & (cached_df["date"] < end_exclusive)
                 in_range = cached_df[mask]
                 if not in_range.empty:
-                    st.session_state["loaded_data"]   = in_range.reset_index(drop=True)
+                    st.session_state["loaded_data"] = in_range.reset_index(drop=True)
                     st.session_state["loaded_symbol"] = ticker.upper()
-                    st.session_state[_yf_key]         = True
+                    st.session_state[_yf_key] = True
                     st.sidebar.success(f"✓ {len(in_range):,} bars from cache")
 
         if st.sidebar.button("🔄 Fetch / Update", type="primary", key="yf_fetch"):
             from data.ingestion import load_from_ticker
+
             with st.spinner("Fetching…"):
                 try:
-                    data = load_from_ticker(ticker, interval, start_ts, end_ts)
-                    st.session_state["loaded_data"]   = data
+                    data = load_from_ticker(ticker, interval, start_ts, end_exclusive)
+                    st.session_state["loaded_data"] = data
                     st.session_state["loaded_symbol"] = ticker.upper()
                     for k in list(st.session_state.keys()):
                         if k.startswith(f"yf_loaded_{ticker}_{interval}"):
@@ -81,9 +77,10 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
         uploaded = st.sidebar.file_uploader("Upload OHLCV CSV", type=["csv"], key="csv_upload")
         if uploaded:
             from data.ingestion import load_from_csv
+
             try:
                 data = load_from_csv(uploaded)
-                st.session_state["loaded_data"]   = data
+                st.session_state["loaded_data"] = data
                 st.session_state["loaded_symbol"] = uploaded.name.split(".")[0].upper()
             except Exception as e:
                 st.sidebar.error(str(e))
@@ -93,42 +90,43 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
             st.sidebar.warning("No Alpaca credentials. Add to .env")
         else:
             from data.cache import DataCache
+
             _ac = DataCache()
-
             symbol = st.sidebar.text_input("Symbol", value="UVXY", key="alp_symbol")
-            tf     = st.sidebar.selectbox("Timeframe",
-                         ["1Min","5Min","15Min","30Min","1Hour","1Day"],
-                         index=0, key="alp_tf")
+            tf = st.sidebar.selectbox("Timeframe", ["1Min", "5Min", "15Min", "30Min", "1Hour", "1Day"], index=0, key="alp_tf")
+            cached_df = _ac.load("alpaca", symbol, tf)
+            if cached_df is not None and not cached_df.empty:
+                default_start_date = pd.Timestamp(cached_df["date"].min()).date()
+                default_end_date = pd.Timestamp(cached_df["date"].max()).date()
+            else:
+                default_start_date = (pd.Timestamp.today() - pd.Timedelta(days=730)).date()
+                default_end_date = pd.Timestamp.today().date()
             col1, col2 = st.sidebar.columns(2)
-            start = col1.date_input("Start",
-                value=(pd.Timestamp.today()-pd.Timedelta(days=730)).date(),
-                key="alp_start")
-            end   = col2.date_input("End", value=pd.Timestamp.today().date(), key="alp_end")
-
+            start = col1.date_input("Start", value=default_start_date, key="alp_start")
+            end = col2.date_input("End", value=default_end_date, key="alp_end")
             start_ts = pd.Timestamp(start)
-            end_ts   = pd.Timestamp(end)
+            end_ts = pd.Timestamp(end)
+            end_exclusive = end_ts + pd.Timedelta(days=1)
 
-            # ── Auto-load from cache if available ─────────────────────────────
-            # Build a cache-state key so we only re-load when symbol/tf/dates change
             _cache_key = f"alp_loaded_{symbol}_{tf}_{start}_{end}"
             if _cache_key not in st.session_state:
-                cached_df = _ac.load("alpaca", symbol, tf)
                 if cached_df is not None and not cached_df.empty:
-                    # Filter to requested range
-                    mask = ((cached_df["date"] >= start_ts) &
-                            (cached_df["date"] <= end_ts))
+                    mask = (cached_df["date"] >= start_ts) & (cached_df["date"] < end_exclusive)
                     in_range = cached_df[mask]
                     if not in_range.empty:
-                        st.session_state["loaded_data"]   = in_range.reset_index(drop=True)
+                        st.session_state["loaded_data"] = in_range.reset_index(drop=True)
                         st.session_state["loaded_symbol"] = symbol.upper()
-                        st.session_state[_cache_key]      = True
+                        st.session_state[_cache_key] = True
                         st.sidebar.success(
                             f"✓ Loaded {len(in_range):,} bars from local cache  \n"
-                            f"({in_range['date'].iloc[0].date()} → "
-                            f"{in_range['date'].iloc[-1].date()})"
+                            f"({in_range['date'].iloc[0].date()} → {in_range['date'].iloc[-1].date()})"
                         )
+                elif _ac.exists("alpaca", symbol, tf):
+                    st.sidebar.warning(
+                        "⚠️ The local intraday cache appears corrupted and was ignored. "
+                        "Press Fetch / Update from Alpaca to rebuild it with full timestamps."
+                    )
 
-            # Show cache status for this symbol/tf
             existing = _ac.load("alpaca", symbol, tf)
             if existing is not None and not existing.empty:
                 last_cached = existing["date"].max()
@@ -140,34 +138,32 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
             else:
                 st.sidebar.caption(
                     "💡 **Alpaca SIP feed** — free, ~5 years of 1-min history.  \n"
-                    "For UVXY: start **2020-01-01** to get ~6 years.")
+                    "For UVXY: start **2020-01-01** to get ~6 years."
+                )
 
             if st.sidebar.button("🔄 Fetch / Update from Alpaca", key="alp_fetch"):
                 from data.ingestion import load_from_alpaca_history
+
                 creds = settings.alpaca
-                key_  = creds.paper_api_key    if not settings.is_live() else creds.live_api_key
-                sec_  = creds.paper_secret_key if not settings.is_live() else creds.live_secret_key
+                key_ = creds.paper_api_key if not settings.is_live() else creds.live_api_key
+                sec_ = creds.paper_secret_key if not settings.is_live() else creds.live_secret_key
                 with st.spinner("Checking for new bars…"):
                     try:
-                        data = load_from_alpaca_history(symbol, tf,
-                            start_ts, end_ts, key_, sec_,
-                            paper=not settings.is_live())
-                        st.session_state["loaded_data"]   = data
+                        data = load_from_alpaca_history(symbol, tf, start_ts, end_exclusive, key_, sec_, paper=not settings.is_live())
+                        st.session_state["loaded_data"] = data
                         st.session_state["loaded_symbol"] = symbol.upper()
-                        # Invalidate cache-state key so next load re-checks
                         for k in list(st.session_state.keys()):
                             if k.startswith(f"alp_loaded_{symbol}_{tf}"):
                                 del st.session_state[k]
                         st.sidebar.success(
                             f"✓ {len(data):,} bars  \n"
-                            f"({data['date'].iloc[0].date()} → "
-                            f"{data['date'].iloc[-1].date()})"
+                            f"({data['date'].iloc[0].date()} → {data['date'].iloc[-1].date()})"
                         )
                     except Exception as e:
                         st.sidebar.error(str(e))
 
-    # ── Cache status panel ─────────────────────────────────────────────────
     from data.cache import DataCache
+
     cache = DataCache()
     cached_list = cache.list_cached()
     if cached_list:
@@ -179,216 +175,192 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
                     f"{entry['from']} → {entry['to']} · "
                     f"{entry['bars']:,} bars · {entry['size_kb']} KB"
                 )
-                if col_b.button("🗑", key=f"del_{entry['source']}_{entry['symbol']}_{entry['timeframe']}",
-                                help="Delete this cache entry"):
-                    cache.delete(entry['source'], entry['symbol'].replace('=','_'), entry['timeframe'])
+                if col_b.button("🗑", key=f"del_{entry['source']}_{entry['symbol']}_{entry['timeframe']}", help="Delete this cache entry"):
+                    cache.delete(entry["source"], entry["symbol"].replace("=", "_"), entry["timeframe"])
                     st.rerun()
 
     return st.session_state.get("loaded_data")
 
 
-# ─── Per-param metadata for richer UI rendering ───────────────────────────────
 _PARAM_META: dict[str, dict] = {
-    # RSI strategy
-    "rsi_period":  {"label": "RSI Period",          "help": "Number of bars for RSI calculation. Default 9 (intraday 1-min/5-min). Shorter = faster reaction, more noise. Longer = smoother, more lag. Common: 9 (intraday), 14 (daily)."},
-    "buy_levels":  {"label": "Buy Levels (OS)",      "help": "Comma-separated RSI thresholds for LONG entry (RSI crosses below). e.g. '25, 30'. Leave BLANK to disable Long trades entirely."},
-    "sell_levels": {"label": "Sell Levels (OB)",     "help": "Comma-separated RSI thresholds for SHORT entry (RSI crosses above). e.g. '70, 75'. Leave BLANK to disable Short trades entirely."},
-    "tp_pct":      {"label": "Take-Profit % (price, 0=off)","help": "Raw price move % to take profit. Capital gain = this × leverage. Set to 0 to disable (SL-only exit)."},
-    "sl_pct":      {"label": "Stop-Loss % (price move)",  "help": "Raw price move % that triggers SL. Capital loss = this × leverage. RiskManager caps it further if needed."},
-    # MA crossover
-    "fast_period": {"label": "Fast MA Period",  "help": ""},
-    "slow_period": {"label": "Slow MA Period",  "help": ""},
-    "ma_type":     {"label": "MA Type",         "help": "ema or sma"},
-    # MACD
-    "fast_period": {"label": "MACD Fast",       "help": ""},
-    "slow_period": {"label": "MACD Slow",       "help": ""},
-    "signal_period":{"label": "Signal Period",  "help": ""},
-    # ATR-based params (shared)
-    "atr_period":     {"label": "ATR Period",          "help": "Lookback for Average True Range (volatility measure). Default 14."},
-    "atr_sl_mult":    {"label": "SL × ATR",            "help": "Stop-loss = this × ATR from entry. 1.5 = 1.5 ATR away. Adapts to volatility automatically."},
-    "atr_tp_mult":    {"label": "TP × ATR",            "help": "Take-profit = this × ATR from entry. 2.5 gives ~1.67 R:R with 1.5 SL mult."},
-    "tp_disabled":    {"label": "Disable TP",          "help": "If checked, no price TP — exit via counter-signal or SL only."},
-    # VWAP+RSI
-    "rsi_oversold":   {"label": "RSI Oversold",        "help": "RSI level to trigger BUY. Slightly higher than pure RSI strategy because VWAP acts as extra filter."},
-    "rsi_overbought": {"label": "RSI Overbought",      "help": "RSI level to trigger SELL."},
-    # Bollinger
-    "bb_period":      {"label": "BB Period",           "help": "Bollinger Bands SMA period. Default 20."},
-    "bb_std":         {"label": "BB Std Devs",         "help": "Standard deviations for upper/lower bands. Default 2.0."},
-    "sl_band_mult":        {"label": "SL beyond band",       "help": "SL = outer band ± (mult × band width). Default 0.2."},
-    "require_cross":       {"label": "Require band cross",   "help": "Price must cross band, not just touch. Reduces signals ~40%."},
-    "min_band_width_pct":  {"label": "Min band width %",     "help": "Skip if band < X% of price. Default 2.0%."},
-    "min_rr_ratio":        {"label": "Min R:R ratio",        "help": "Skip if TP distance / SL distance < X. Default 1.5."},
-    "cooldown_bars":       {"label": "Cooldown bars",        "help": "Min bars between entries. Default 5."},
-    "min_atr_pct":         {"label": "Min ATR % of price",   "help": "Skip ALL signals when ATR < X% of price (too flat to trade profitably). Default 0.3%."},
-    # Spike regime
-    "spike_atr_mult":      {"label": "Spike ATR mult",       "help": "Fast spike: ATR > X × ATR_MA. Default 2.0."},
-    "rise_lookback":       {"label": "Rise lookback bars",   "help": "Gradual rise check window. Default 1170 = 3 trading days. If price > rise_pct% above N-bar low → spike → no shorts."},
-    "rise_pct":            {"label": "Rise % threshold",     "help": "Price > X% above rise_lookback low → rising trend → suppress shorts. Default 5%. Catches gradual multi-day UVXY spikes."},
-    # Post-spike regime
-    "spike_high_window":   {"label": "Spike high window",    "help": "Rolling high window for spike detection. Default 1170 = 3 days."},
-    "spike_ema_mult":      {"label": "Spike EMA mult",       "help": "Spike if 3d-high > X × 5d-EMA. Default 1.5."},
-    "peak_drop_pct":       {"label": "Peak drop % trigger",  "help": "Price dropped X% from 3d-high → post-spike → aggressive shorts. Default 8%."},
-    "reversion_tp_pct":    {"label": "Reversion TP %",       "help": "Post-spike short TP = entry × (1 - X%). Default 15%."},
-    "reversion_sl_pct":    {"label": "Reversion SL %",       "help": "Post-spike short SL = entry × (1 + X%). Default 5%."},
-    "reversion_rsi_min":   {"label": "Reversion RSI min",    "help": "Don't short post-spike if RSI < X (already oversold). Default 40."},
-    "fast_ema":            {"label": "Fast EMA",       "help": "Fast EMA period (default 9). Golden cross above slow EMA = buy signal."},
-    "slow_ema":    {"label": "Slow EMA",       "help": "Slow EMA period (default 21). Death cross below fast EMA = sell signal."},
-    "trend_ema":   {"label": "Trend EMA",      "help": "Long-term trend filter (default 200). Set to 0 to disable. Longs only above, shorts only below."},
-    "rsi_gate":       {"label": "RSI Gate",          "help": "RSI must be above this for longs, below for shorts (default 50). Raise to 55 for stricter momentum filter."},
-    "atr_min_filter": {"label": "Min ATR filter",     "help": "Skip signal if ATR < this value (default 0=off). Set e.g. 0.5 for GC=F to avoid trading in tight choppy ranges. ATR is in price units (dollars for gold)."},
-    # Fixed level
-    "direction":        {"label": "Direction",          "help": "Long or Short"},
-    "signal_frequency": {"label": "Signal Frequency",   "help": "first_bar = one trade then hold; every_bar = re-signal each bar"},
+    "rsi_period": {"label": "RSI Period", "help": "Number of bars for RSI calculation."},
+    "rsi_oversold": {"label": "RSI Oversold", "help": "RSI level to trigger BUY."},
+    "rsi_overbought": {"label": "RSI Overbought", "help": "RSI level to trigger SELL."},
+    "bb_period": {"label": "BB Period", "help": "Bollinger Bands SMA period."},
+    "bb_std": {"label": "BB Std Devs", "help": "Standard deviations for upper/lower bands."},
+    "sl_band_mult": {"label": "SL beyond band", "help": "SL = outer band ± (mult × band width)."},
+    "require_cross": {"label": "Require band cross", "help": "Price must cross band, not just touch."},
+    "min_band_width_pct": {"label": "Min band width %", "help": "Skip if band < X% of price."},
+    "min_rr_ratio": {"label": "Min R:R ratio", "help": "Skip if TP distance / SL distance < X."},
+    "cooldown_bars": {"label": "Cooldown bars", "help": "Min bars between entries."},
+    "min_atr_pct": {"label": "Min ATR % of price", "help": "Skip signals when ATR < X% of price."},
+    "spike_gap_pct": {"label": "Spike gap %", "help": "Single-bar % jump that starts a spike episode immediately."},
+    "grad_spike_lookback": {"label": "Grad spike lookback", "help": "Lookback window for slower multi-day spike build-ups."},
+    "grad_spike_pct": {"label": "Grad spike %", "help": "Rise above rolling low that starts a spike episode."},
+    "rise_lookback": {"label": "Rise lookback bars", "help": "Gradual rise check window."},
+    "rise_pct": {"label": "Rise % threshold", "help": "Price > X% above lookback low suppresses shorts."},
+    "spike_long_sl_pct": {"label": "Spike long SL %", "help": "Hard stop for the dedicated gap-spike long leg."},
+    "spike_long_trail_pct": {"label": "Spike long trail %", "help": "Percent trailing stop for spike longs."},
+    "spike_long_max": {"label": "Spike long max", "help": "Maximum dedicated spike-long entries per episode."},
+    "spike_long_cooldown": {"label": "Spike long cooldown", "help": "Bars between dedicated spike-long entries."},
+    "spike_lockout_bars": {"label": "Spike lockout bars", "help": "Bars to wait after a spike episode ends before another spike-specific trade can fire."},
+    "spike_long_min_rsi": {"label": "Spike long min RSI", "help": "Dedicated spike longs only fire when RSI is at least this high."},
+    "spike_long_min_peak_pct": {"label": "Spike long min peak %", "help": "Minimum episode expansion above the spike base before spike-long logic can activate."},
+    "spike_long_min_atr_pct": {"label": "Spike long min ATR %", "help": "Dedicated spike longs only fire when ATR as a percent of price is at least this high."},
+    "spike_profile_shock_gap_pct": {"label": "Shock gap %", "help": "Gap size that classifies a spike as a shock-style spike instead of a persistent one."},
+    "spike_profile_shock_peak_pct": {"label": "Shock peak %", "help": "Episode expansion that upgrades a spike to shock-style behavior."},
+    "spike_rollover_watch_bars": {"label": "Rollover watch bars", "help": "Bars since peak before a persistent spike can be treated as rolling over."},
+    "spike_rollover_watch_peak_pct": {"label": "Rollover watch peak %", "help": "Minimum persistent spike size before rollover-watch logic is allowed."},
+    "spike_rollover_fast_ema_tol": {"label": "Rollover EMA tol", "help": "How close price must be to or below the fast EMA before a persistent spike is treated as rolling over."},
+    "persistent_rollover_long_rsi_max": {"label": "Rollover long RSI max", "help": "During persistent-rollover spikes, normal longs are only allowed if RSI is at or below this deeper-reset level."},
+    "persistent_spread_block_pct": {"label": "Persistent spread block %", "help": "When the fast EMA stays this far above the slow EMA during a persistent spike, normal longs require a deeper RSI reset."},
+    "persistent_spread_deep_rsi_max": {"label": "Persistent deep RSI max", "help": "Deeper RSI cap required for normal longs when persistent spike EMA spread is still highly stretched."},
+    "persistent_prepeak_block_peak_pct": {"label": "Pre-peak block peak %", "help": "During persistent spike build-ups, once peak expansion exceeds this level the strategy can stop taking normal longs if the move already looks too stretched."},
+    "persistent_prepeak_block_rsi_min": {"label": "Pre-peak block RSI min", "help": "Minimum RSI needed before the persistent pre-peak guard blocks normal longs. Higher values make the block apply only to more overheated ramps."},
+    "persistent_rebound_trap_peak_pct": {"label": "Rebound trap peak %", "help": "Minimum total spike expansion before the strategy treats a persistent-spike pullback as a mature rebound trap instead of a fresh dip-buying opportunity."},
+    "persistent_rebound_trap_drawdown_pct": {"label": "Rebound trap drawdown %", "help": "How far price must pull back from the running spike high before the mature persistent-spike rebound trap turns on."},
+    "persistent_active_long_day_max": {"label": "Persistent long/day max", "help": "Maximum number of normal longs allowed per day while a persistent spike is active."},
+    "spike_momentum_max": {"label": "Spike momo max", "help": "Maximum breakout-style momentum longs allowed per spike episode."},
+    "spike_momo_atr_mult": {"label": "Spike momo ATR mult", "help": "ATR must be at least this multiple of its recent average before the breakout momentum long is allowed."},
+    "spike_momo_momentum_bars": {"label": "Spike momo momentum bars", "help": "Lookback used to measure short-horizon price momentum for the breakout spike-long leg."},
+    "spike_momo_momentum_pct": {"label": "Spike momo momentum %", "help": "Price must be up by at least this percent versus the momentum lookback bar before a breakout spike long can trigger."},
+    "spike_momo_min_bar_pct": {"label": "Spike momo min bar %", "help": "Minimum single-bar expansion required for the dedicated spike momentum long."},
+    "spike_momo_min_rsi": {"label": "Spike momo min RSI", "help": "Momentum spike longs require RSI at or above this level."},
+    "spike_momo_max_rsi": {"label": "Spike momo max RSI", "help": "Momentum spike longs are blocked once RSI rises above this level to avoid chasing an already-exhausted blowoff."},
+    "spike_momo_min_peak_pct": {"label": "Spike momo min peak %", "help": "Momentum spike longs only activate once the episode has already expanded by at least this much."},
+    "spike_momo_min_atr_pct": {"label": "Spike momo min ATR %", "help": "Minimum ATR as a percent of price required for the breakout momentum long."},
+    "spike_momo_trail_pct": {"label": "Spike momo trail %", "help": "Trailing stop for the dedicated momentum spike long leg."},
+    "spike_momo_sl_pct": {"label": "Spike momo SL %", "help": "Hard stop for the dedicated momentum spike long leg."},
+    "spike_momo_cooldown": {"label": "Spike momo cooldown", "help": "Bars between dedicated momentum spike-long entries."},
+    "spike_momo_max": {"label": "Spike momo max", "help": "Maximum momentum spike-long entries per spike episode."},
+    "psshort_drop_pct": {"label": "Reversal drop %", "help": "How far price must fall from the spike peak before the episode can flip from spike to decay."},
+    "psshort_sl_pct": {"label": "Post-spike short SL %", "help": "Hard stop for the first confirmed post-spike short."},
+    "psshort_trail_pct": {"label": "Post-spike trail %", "help": "Percent trailing stop for the first confirmed post-spike short."},
+    "psshort_max": {"label": "Post-spike max", "help": "Maximum number of initial reversal shorts per spike episode."},
+    "event_target_short_enabled": {"label": "Event target short", "help": "Enable the optional one-short-per-spike module that enters after a confirmed peak and aims for a large portion of the spike unwind."},
+    "event_target_anchor_lookback": {"label": "Event anchor lookback", "help": "How far back the strategy looks from the spike peak to find the start price used for the event-target unwind calculation."},
+    "event_target_max_rise_bars": {"label": "Event max rise bars", "help": "Maximum number of bars allowed between the event anchor and the peak. Lower values restrict the module to sharper, more self-contained spike episodes."},
+    "event_target_min_peak_pct": {"label": "Event min peak %", "help": "Minimum rise from the event anchor to the peak for a spike episode to qualify for the event-target short."},
+    "event_target_completion_pct": {"label": "Event completion %", "help": "How much of the spike unwind the event short tries to capture. Higher values hold longer and target deeper retracements toward the spike start price."},
+    "event_target_confirm_drop_pct": {"label": "Event confirm drop %", "help": "Minimum drop from the peak required before the event-target short is allowed to open. This helps avoid shorting before the down-leg is truly underway."},
+    "event_target_sl_pct": {"label": "Event short SL %", "help": "Hard stop for the event-target short, measured above the short entry price."},
+    "psshort_cooldown": {"label": "Post-spike cooldown", "help": "Bars between confirmed post-spike short entries."},
+    "psshort_window": {"label": "Spike episode window", "help": "How long a spike episode stays active after onset for reversal/decay logic."},
+    "spike_reversal_atr_frac": {"label": "ATR cooloff frac", "help": "Spike must cool to this fraction of peak ATR before shorts unlock."},
+    "spike_reversal_ema_fast": {"label": "Reversal EMA fast", "help": "Fast EMA used to confirm the spike has rolled over."},
+    "spike_reversal_ema_slow": {"label": "Reversal EMA slow", "help": "Slow EMA used to confirm decay trend after a spike."},
+    "spike_reversal_min_bars": {"label": "Reversal min bars", "help": "Minimum bars after the peak before the first decay short can trigger."},
+    "spike_reversal_min_peak_pct": {"label": "Reversal min peak %", "help": "Minimum full spike size before post-spike shorts are allowed."},
+    "decay_reentry_rsi": {"label": "Decay re-entry RSI", "help": "Only short decay bounces after RSI has reset upward to at least this level."},
+    "decay_bounce_min_pct": {"label": "Decay bounce min %", "help": "Minimum rebound off the local decay low before a continuation short setup can arm."},
+    "decay_bounce_fail_pct": {"label": "Decay bounce fail %", "help": "How much the rebound must roll over from its bounce high before the continuation short triggers."},
+    "decay_bounce_cooldown": {"label": "Decay bounce cooldown", "help": "Bars between continuation-short entries during the same decay episode."},
+    "decay_bounce_max": {"label": "Decay bounce max", "help": "Maximum continuation-short entries inside one decay episode."},
+    "decay_cooldown": {"label": "Decay cooldown", "help": "Bars between decay re-entry shorts."},
+    "decay_max_entries": {"label": "Decay max entries", "help": "Maximum decay re-entry shorts per episode."},
+    "decay_floor": {"label": "Decay floor", "help": "Skip decay shorts below this absolute price."},
+    "low_price_chop_price": {"label": "Low-price chop price", "help": "Below this price, the strategy treats UVXY as being in a late low-price chop regime and suppresses some normal trades to avoid whipsaw clusters."},
+    "low_price_chop_bandwidth_pct": {"label": "Low-price chop BW %", "help": "Maximum Bollinger band width percent for the low-price chop guard. Narrower low-price action below this threshold is treated as whipsaw noise."},
 }
 
 
-def render_strategy_params(strategy_id: str, leverage: float = 1.0,
-                           max_capital_loss_pct: float = 50.0) -> dict:
-    """
-    Render param form with labels, help text, and type-aware widgets.
-
-    Args:
-        strategy_id          – registered strategy ID
-        leverage             – current leverage setting (used to derive max SL)
-        max_capital_loss_pct – platform cap on capital loss per trade (default 50%)
-                               eToro / Alpaca: 50%. This caps sl_pct to
-                               max_capital_loss_pct / leverage as a price move %.
-    """
+def render_strategy_params(strategy_id: str, leverage: float = 1.0, max_capital_loss_pct: float = 50.0) -> dict:
     from strategies import get_strategy
-    cls      = get_strategy(strategy_id)
+
+    cls = get_strategy(strategy_id)
     instance = cls()
     defaults = instance.default_params()
-
-    # ── Derived leverage constraint ────────────────────────────────────────────
-    # Max price move % before capital loss cap is hit:
-    #   sl_pct_max = max_capital_loss_pct / leverage
-    # e.g. 50% cap, leverage 5× → max 10% price drop allowed
     max_sl_price_pct = max_capital_loss_pct / max(leverage, 1.0)
 
     st.subheader(f"⚙️ {cls.name} Parameters")
     st.caption(cls.description)
 
-    # ── Strategy-specific info boxes ───────────────────────────────────────────
-    if strategy_id == "rsi_threshold":
+    if strategy_id == "bollinger_rsi":
         st.info(
-            "💡 **Buy Levels / Sell Levels** accept comma-separated values (e.g. `25, 30`).  \n"
-            "Leave blank to disable that direction. Set TP % = 0 for counter-signal exit only.  \n"
-            "🎯 Recommended thresholds: **UVXY** → buy=20 / sell=80 · "
-            "**GC=F** → buy=30 / sell=70  \n"
-            "*(RSI scale is universal — thresholds are instrument-specific, not strategy-specific)*"
-        )
-    elif strategy_id == "vwap_rsi":
-        st.info(
-            "📊 **VWAP + RSI** — Best for GC=F intraday (1-min / 5-min bars).  \n"
-            "Enters when price crosses VWAP **and** RSI confirms direction.  \n"
-            "ATR-based stops adapt automatically to gold's intraday volatility.  \n"
-            "🎯 Recommended thresholds: **GC=F** → oversold 30 / overbought 70 · "
-            "**UVXY** → oversold 20 / overbought 80 (more extreme = fewer, cleaner signals)"
-        )
-    elif strategy_id == "bollinger_rsi":
-        st.info(
-            "📉 **Bollinger + RSI (4-Regime)** — Full UVXY spike cycle strategy.  \n"
-            "**Four regimes (independently detected):**  \n"
-            "• 🟢 **Normal** — Bollinger mean reversion, both directions  \n"
-            "• 🟡 **Spike** — Fast (ATR) OR gradual (price > 5% above 3d-low): NO shorts  \n"
-            "• 🔴 **Post-spike** — 3d-high > 1.5× EMA AND dropped 8%: AGGRESSIVE SHORTS  \n"
-            "• ⏸️ **Drift** — ATR < 0.3% of price: all paused  \n"
-            "🎯 Key params: rise_pct=5 (gradual rise sensitivity), "
-            "peak_drop_pct=8 (post-spike entry), reversion_tp_pct=15 (short target)"
-        )
-    elif strategy_id == "ema_trend_rsi":
-        st.info(
-            "📈 **EMA Crossover + RSI + Trend Filter** — Purpose-built for GC=F 1-min/5-min.  \n"
-            "**Entry:** 9/21 EMA golden/death cross · **RSI gate:** > 50 confirms direction · "
-            "**200 EMA filter:** trades only with the broader trend.  \n"
-            "**Tuning guide:**  \n"
-            "• Near-zero return → raise `atr_tp_mult` (3.0–4.0) so wins outweigh losses  \n"
-            "• Too many losing trades → set `atr_min_filter` to 0.3–0.8 (skip choppy periods)  \n"
-            "• Too few trades → set `trend_ema=0` to remove the 200 EMA filter  \n"
-            "• Faster signals → reduce `slow_ema` from 21 to 13  \n"
-            "🎯 GC=F recommended: trend_ema=200, rsi_gate=50, atr_tp=3.0, atr_min_filter=0.5"
-        )
-    elif strategy_id == "atr_rsi":
-        st.info(
-            "🎯 **ATR-Adaptive RSI** — Works for both GC=F and UVXY.  \n"
-            "Stops and targets scale automatically with current volatility (ATR).  \n"
-            "More robust than fixed-% stops across different market conditions.  \n"
-            "🎯 Recommended thresholds: **UVXY** → buy_levels=20 / sell_levels=80 · "
-            "**GC=F** → buy_levels=30 / sell_levels=70"
+            "📉 **Bollinger + RSI (Spike-Aware)** — UVXY mean reversion plus explicit spike episode handling.  \n"
+            "**Episode flow:** `idle → spike → decay → idle`  \n"
+            "• 🟢 **Normal** — Bollinger mean reversion outside spike episodes  \n"
+            "• 🟡 **Spike** — rare dedicated spike-long logic plus a momentum long for true expansion bars; normal shorts suppressed  \n"
+            "• 🔴 **Decay** — conservative reversal-confirmed shorts plus decay re-entries on bearish bounce setups  \n"
+            "• ⏸️ **Drift** — ATR too low, so all signals pause  \n"
+            "• 🛑 **Lockout** — after a spike episode ends, spike-specific trades stay disabled for a cooldown window to avoid pseudo-spike churn"
         )
 
-    # ── Leverage constraint warning ────────────────────────────────────────────
     if leverage > 1.0:
         st.warning(
             f"⚡ **Leverage {leverage:.1f}×** active.  "
             f"Platform cap: max **{max_capital_loss_pct:.0f}% capital loss** per trade.  \n"
-            f"→ Maximum allowed **price move SL = {max_sl_price_pct:.2f}%** "
-            f"(= {max_capital_loss_pct:.0f}% ÷ {leverage:.1f}).  \n"
-            f"Any `sl_pct` or ATR-mult value implying a larger price drop will be "
-            f"auto-clamped by the Risk Manager."
+            f"→ Maximum allowed **price move SL = {max_sl_price_pct:.2f}%**."
         )
 
-    # ── Widget rendering ───────────────────────────────────────────────────────
-    # Use strategy's defaults but reset when strategy changes
-    # (Streamlit persists widget state by key; include strategy_id in key so
-    #  switching strategies resets to the new strategy's defaults)
     filled: dict = {}
-    cols = st.columns(2)
-    for i, (param, default) in enumerate(defaults.items()):
-        col   = cols[i % 2]
-        meta  = _PARAM_META.get(param, {})
-        label = meta.get("label", param)
-        help_ = meta.get("help", "") or None
-        # Key includes strategy_id → forces reset when strategy changes
-        key   = f"p_{strategy_id}_{param}"
 
-        # For sl_pct: show derived max and add constraint context to label
-        if param == "sl_pct":
-            label = f"Stop-Loss % (price move) · max {max_sl_price_pct:.2f}%"
-            help_ = (
-                f"Raw price move % that triggers SL. Capital loss = this × leverage. "
-                f"With {leverage:.1f}× leverage and {max_capital_loss_pct:.0f}% cap, "
-                f"maximum allowed = {max_sl_price_pct:.2f}%. "
-                f"Risk Manager will clamp any larger value automatically."
-            )
+    prominent_bools = ["require_cross", "event_target_short_enabled"]
+    checkbox_params = [param for param in prominent_bools if param in defaults]
+    if checkbox_params:
+        checkbox_cols = st.columns(len(checkbox_params))
+        for idx, param in enumerate(checkbox_params):
+            default = defaults[param]
+            meta = _PARAM_META.get(param, {})
+            label = meta.get("label", param)
+            help_ = meta.get("help", "") or None
+            key = f"p_{strategy_id}_{param}"
+            with checkbox_cols[idx]:
+                filled[param] = st.checkbox(label, value=bool(default), key=key, help=help_)
 
-        with col:
-            if isinstance(default, bool):
-                filled[param] = st.checkbox(label, value=default, key=key, help=help_)
+    st.markdown(
+            """
+        <style>
+        div[data-testid="stExpander"] details summary p {
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+        }
+        div[data-testid="stExpander"] label p,
+        div[data-testid="stExpander"] .stNumberInput label p,
+        div[data-testid="stExpander"] .stTextInput label p,
+        div[data-testid="stExpander"] .stCheckbox label p {
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-            elif param in ("buy_levels", "sell_levels"):
-                filled[param] = st.text_input(label, value=str(default), key=key, help=help_)
-
-            elif param == "ma_type":
-                filled[param] = st.selectbox(label, ["ema", "sma"], index=0, key=key, help=help_)
-
-            elif param == "direction":
-                filled[param] = st.selectbox(label, ["Long", "Short"], index=0, key=key, help=help_)
-
-            elif param == "signal_frequency":
-                filled[param] = st.selectbox(label, ["first_bar", "every_bar"], index=0, key=key, help=help_)
-
-            elif isinstance(default, int):
-                filled[param] = st.number_input(label, value=int(default), step=1,
-                                                  key=key, help=help_)
-
-            elif isinstance(default, float):
-                # For sl_pct: cap the max_value in the widget itself
-                if param == "sl_pct":
-                    capped_default = min(float(default), max_sl_price_pct)
-                    filled[param] = st.number_input(
-                        label, value=round(capped_default, 4),
-                        format="%.4f", min_value=0.0001,
-                        max_value=round(max_sl_price_pct, 4),
-                        key=key, help=help_,
+    grouped_params = [(param, default) for param, default in defaults.items() if param not in checkbox_params]
+    with st.expander("Model Parameters", expanded=False):
+        cols = st.columns(4)
+        for i, (param, default) in enumerate(grouped_params):
+            col = cols[i % 4]
+            meta = _PARAM_META.get(param, {})
+            label = meta.get("label", param)
+            help_ = meta.get("help", "") or None
+            full_label = f"{label} ({param})"
+            key = f"p_{strategy_id}_{param}"
+            with col:
+                head_a, head_b = st.columns([0.88, 0.12], vertical_alignment="center")
+                with head_a:
+                    st.markdown(
+                        (
+                                "<div style='color:#FFFFFF;font-weight:700;font-size:0.95rem;margin-bottom:0.20rem;'>"
+                                f"{label} <span style='color:#C9D4F0;font-weight:500;'>({param})</span>"
+                                "</div>"
+                        ),
+                        unsafe_allow_html = True,
                     )
+                if help_:
+                    with head_b:
+                        with st.popover("?", use_container_width=True):
+                            st.caption(help_)
+                if isinstance(default, bool):
+                    filled[param] = st.checkbox("Enabled", value=default, key=key, label_visibility="collapsed")
+                elif isinstance(default, int):
+                    filled[param] = st.number_input(label, value=int(default), step=1, key=key,
+                                                    label_visibility="collapsed")
+                elif isinstance(default, float):
+                    filled[param] = st.number_input(label, value=float(default), format="%.2f", min_value=0.0, key=key, label_visibility="collapsed")
                 else:
-                    filled[param] = st.number_input(label, value=float(default),
-                                                     format="%.2f", min_value=0.0,
-                                                     key=key, help=help_)
-            else:
-                filled[param] = st.text_input(label, value=str(default), key=key, help=help_)
-
+                    filled[param] = st.text_input(label, value=str(default), key=key, label_visibility="collapsed")
     return filled
 
 
@@ -396,10 +368,7 @@ def render_metrics_row(metrics: dict) -> None:
     cols = st.columns(len(metrics))
     for col, (label, value) in zip(cols, metrics.items()):
         with col:
-            if isinstance(value, tuple) and len(value) == 2:
-                st.metric(label, value[0], delta=value[1])
-            else:
-                st.metric(label, value)
+            st.metric(label, value[0], delta=value[1]) if isinstance(value, tuple) and len(value) == 2 else st.metric(label, value)
 
 
 def live_trade_confirm_dialog(symbol: str, direction: str, capital: float) -> bool:

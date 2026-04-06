@@ -86,6 +86,14 @@ class DataCache:
             return None
         try:
             df = pd.read_csv(p, parse_dates=["date"])
+            df["date"] = pd.to_datetime(df["date"], errors="coerce")
+            df = df.dropna(subset=["date"])
+            if self._is_intraday_cache_corrupt(df, timeframe):
+                log.warning(
+                    f"Cache CORRUPT: {source}/{symbol}/{timeframe} at {p} "
+                    "appears to have lost intraday timestamps; treating as miss"
+                )
+                return None
             df = df.sort_values("date").reset_index(drop=True)
             log.debug(f"Cache HIT: {source}/{symbol}/{timeframe} "
                       f"— {len(df)} bars "
@@ -100,11 +108,31 @@ class DataCache:
         """Save (or overwrite) cache for this source/symbol/timeframe."""
         p = self.path(source, symbol, timeframe)
         _ensure_dir(p)
+        df = df.copy()
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df = df.dropna(subset=["date"])
         df = df.sort_values("date").drop_duplicates(subset=["date"]).reset_index(drop=True)
-        df.to_csv(p, index=False)
+        df.to_csv(p, index=False, date_format="%Y-%m-%d %H:%M:%S")
         log.info(f"Cache SAVED: {source}/{symbol}/{timeframe} "
                  f"— {len(df)} bars "
                  f"({df['date'].iloc[0].date()} → {df['date'].iloc[-1].date()})")
+
+    @staticmethod
+    def _is_intraday_cache_corrupt(df: pd.DataFrame, timeframe: str) -> bool:
+        tf = str(timeframe).lower()
+        intraday = any(token in tf for token in ("min", "hour", "h"))
+        if not intraday or df.empty:
+            return False
+        dates = pd.to_datetime(df["date"], errors="coerce")
+        if dates.isna().all():
+            return True
+        midnight_only = (
+            (dates.dt.hour.fillna(0) == 0)
+            & (dates.dt.minute.fillna(0) == 0)
+            & (dates.dt.second.fillna(0) == 0)
+        ).all()
+        repeated_days = dates.dt.normalize().duplicated().any()
+        return bool(midnight_only and repeated_days)
 
     def append(self, source: str, symbol: str, timeframe: str,
                new_df: pd.DataFrame) -> pd.DataFrame:

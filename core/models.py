@@ -34,6 +34,7 @@ class OrderStatus(str, Enum):
 class TradeOutcome(str, Enum):
     TAKE_PROFIT      = "TP hit"              # price reached take-profit level
     STOP_LOSS        = "SL hit"              # price reached stop-loss level
+    TRAIL_STOP       = "Trail stop"          # trailing stop closed the trade
     SIGNAL_RSI_OB    = "RSI overbought exit" # RSI crossed above sell threshold → close Long
     SIGNAL_RSI_OS    = "RSI oversold exit"   # RSI crossed below buy threshold → close Short
     SIGNAL_EXIT      = "Counter-signal exit" # generic counter-signal (non-RSI strategies)
