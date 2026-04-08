@@ -8,7 +8,9 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 
+from config.symbol_profiles import context_label, resolve_context_symbol
 from config.settings import settings
+from strategies import get_strategy, list_strategies
 from ui.themes import mode_badge
 
 
@@ -28,7 +30,79 @@ def render_mode_banner() -> None:
         st.markdown(f'<div style="padding:6px 14px;margin-bottom:8px;">Mode: {badge}</div>', unsafe_allow_html=True)
 
 
-def render_data_source_selector() -> Optional[pd.DataFrame]:
+def _resolve_companion_strategy_id(explicit_strategy_id: str | None = None) -> str | None:
+    if explicit_strategy_id:
+        return explicit_strategy_id
+    available = list_strategies()
+    name_to_id = {item["name"]: item["id"] for item in available}
+    for key in ("bt_strategy", "pt_strategy"):
+        selected_name = st.session_state.get(key)
+        if selected_name in name_to_id:
+            return name_to_id[selected_name]
+    return None
+
+
+def _companion_strategy(explicit_strategy_id: str | None = None):
+    strategy_id = _resolve_companion_strategy_id(explicit_strategy_id)
+    if not strategy_id:
+        return None
+    try:
+        cls = get_strategy(strategy_id)
+        return cls(params={})
+    except Exception:
+        return None
+
+
+def _render_companion_hint(
+    symbol: str,
+    source: str,
+    interval: str | None,
+    explicit_strategy_id: str | None = None,
+) -> None:
+    strategy = _companion_strategy(explicit_strategy_id)
+    if strategy is None:
+        return
+
+    symbol_u = symbol.strip().upper()
+    companion_lines: list[str] = []
+    if hasattr(strategy, "companion_contexts"):
+        for context_key in strategy.companion_contexts(symbol_u, source=source, interval=interval) or []:
+            resolved = resolve_context_symbol(symbol_u, context_key)
+            if resolved and resolved.strip().upper() != symbol_u:
+                companion_lines.append(f"{context_label(context_key)}: {resolved.strip().upper()}")
+    elif hasattr(strategy, "companion_symbols"):
+        companions = strategy.companion_symbols(symbol_u, source=source, interval=interval) or []
+        companion_lines.extend([sym for sym in companions if sym and sym.strip().upper() != symbol_u])
+
+    if not companion_lines:
+        return
+    st.sidebar.info(
+        "Companion market context for this symbol: "
+        f"**{' | '.join(companion_lines)}**\n\n"
+        "When you fetch the main symbol, these caches will also be checked and only missing bars will be appended."
+    )
+
+
+def _is_intraday_interval(interval: str | None) -> bool:
+    if not interval:
+        return False
+    key = str(interval).lower()
+    return any(token in key for token in ("min", "hour", "m", "h")) and "day" not in key and "wk" not in key
+
+
+def _alpaca_safe_request_end(end_exclusive: pd.Timestamp, interval: str | None) -> tuple[pd.Timestamp, bool]:
+    """Avoid recent SIP bars that Alpaca accounts may not be allowed to query."""
+    requested_end = pd.Timestamp(end_exclusive).tz_localize(None)
+    if not _is_intraday_interval(interval):
+        return requested_end, False
+
+    safe_end = pd.Timestamp.utcnow().tz_localize(None) - pd.Timedelta(minutes=30)
+    if requested_end > safe_end:
+        return safe_end, True
+    return requested_end, False
+
+
+def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.DataFrame]:
     st.sidebar.subheader("📡 Data Source")
     source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], index=2, key="data_source")
     data: Optional[pd.DataFrame] = None
@@ -45,6 +119,7 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
         start_ts = pd.Timestamp(start)
         end_ts = pd.Timestamp(end)
         end_exclusive = end_ts + pd.Timedelta(days=1)
+        _render_companion_hint(ticker, "yfinance", interval, strategy_id)
 
         _yf_key = f"yf_loaded_{ticker}_{interval}_{start}_{end}"
         if _yf_key not in st.session_state:
@@ -55,21 +130,39 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
                 if not in_range.empty:
                     st.session_state["loaded_data"] = in_range.reset_index(drop=True)
                     st.session_state["loaded_symbol"] = ticker.upper()
+                    st.session_state["loaded_source"] = "yfinance"
+                    st.session_state["loaded_interval"] = interval
+                    st.session_state["loaded_start"] = start_ts
+                    st.session_state["loaded_end"] = pd.Timestamp(in_range["date"].max())
                     st.session_state[_yf_key] = True
                     st.sidebar.success(f"✓ {len(in_range):,} bars from cache")
 
         if st.sidebar.button("🔄 Fetch / Update", type="primary", key="yf_fetch"):
-            from data.ingestion import load_from_ticker
+            from data.ingestion import load_from_ticker, prefetch_strategy_companions
 
             with st.spinner("Fetching…"):
                 try:
                     data = load_from_ticker(ticker, interval, start_ts, end_exclusive)
                     st.session_state["loaded_data"] = data
                     st.session_state["loaded_symbol"] = ticker.upper()
+                    st.session_state["loaded_source"] = "yfinance"
+                    st.session_state["loaded_interval"] = interval
+                    st.session_state["loaded_start"] = start_ts
+                    st.session_state["loaded_end"] = pd.Timestamp(data["date"].max()) if not data.empty else end_exclusive
                     for k in list(st.session_state.keys()):
                         if k.startswith(f"yf_loaded_{ticker}_{interval}"):
                             del st.session_state[k]
+                    warmed = prefetch_strategy_companions(
+                        _companion_strategy(strategy_id),
+                        primary_symbol=ticker.upper(),
+                        source="yfinance",
+                        interval=interval,
+                        start=start_ts,
+                        end=end_exclusive,
+                    )
                     st.sidebar.success(f"✓ {len(data):,} bars")
+                    if warmed:
+                        st.sidebar.caption(f"Companion cache ready: {', '.join(warmed)}")
                 except Exception as e:
                     st.sidebar.error(str(e))
 
@@ -82,6 +175,10 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
                 data = load_from_csv(uploaded)
                 st.session_state["loaded_data"] = data
                 st.session_state["loaded_symbol"] = uploaded.name.split(".")[0].upper()
+                st.session_state["loaded_source"] = "csv"
+                st.session_state["loaded_interval"] = None
+                st.session_state["loaded_start"] = pd.Timestamp(data["date"].min()) if not data.empty else None
+                st.session_state["loaded_end"] = pd.Timestamp(data["date"].max()) if not data.empty else None
             except Exception as e:
                 st.sidebar.error(str(e))
 
@@ -107,6 +204,7 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
             start_ts = pd.Timestamp(start)
             end_ts = pd.Timestamp(end)
             end_exclusive = end_ts + pd.Timedelta(days=1)
+            _render_companion_hint(symbol, "alpaca", tf, strategy_id)
 
             _cache_key = f"alp_loaded_{symbol}_{tf}_{start}_{end}"
             if _cache_key not in st.session_state:
@@ -116,6 +214,10 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
                     if not in_range.empty:
                         st.session_state["loaded_data"] = in_range.reset_index(drop=True)
                         st.session_state["loaded_symbol"] = symbol.upper()
+                        st.session_state["loaded_source"] = "alpaca"
+                        st.session_state["loaded_interval"] = tf
+                        st.session_state["loaded_start"] = start_ts
+                        st.session_state["loaded_end"] = pd.Timestamp(in_range["date"].max())
                         st.session_state[_cache_key] = True
                         st.sidebar.success(
                             f"✓ Loaded {len(in_range):,} bars from local cache  \n"
@@ -137,30 +239,63 @@ def render_data_source_selector() -> Optional[pd.DataFrame]:
                 )
             else:
                 st.sidebar.caption(
-                    "💡 **Alpaca SIP feed** — free, ~5 years of 1-min history.  \n"
+                    "💡 **Alpaca SIP feed** — ~5 years of 1-min history, with recent intraday bars delayed by account permissions.  \n"
                     "For UVXY: start **2020-01-01** to get ~6 years."
                 )
 
             if st.sidebar.button("🔄 Fetch / Update from Alpaca", key="alp_fetch"):
-                from data.ingestion import load_from_alpaca_history
+                from data.ingestion import load_from_alpaca_history, prefetch_strategy_companions
 
                 creds = settings.alpaca
                 key_ = creds.paper_api_key if not settings.is_live() else creds.live_api_key
                 sec_ = creds.paper_secret_key if not settings.is_live() else creds.live_secret_key
                 with st.spinner("Checking for new bars…"):
                     try:
-                        data = load_from_alpaca_history(symbol, tf, start_ts, end_exclusive, key_, sec_, paper=not settings.is_live())
+                        request_end, capped_recent = _alpaca_safe_request_end(end_exclusive, tf)
+                        if request_end <= start_ts:
+                            raise ValueError(
+                                "Selected Alpaca end time is too recent for SIP intraday data. "
+                                "Choose an earlier end date or try again after the market data delay has passed."
+                            )
+                        if capped_recent:
+                            st.sidebar.warning(
+                                "Alpaca SIP does not allow this account to query very recent intraday bars. "
+                                f"Fetch capped at {request_end:%Y-%m-%d %H:%M} UTC; existing cache will still be appended only for missing bars."
+                            )
+
+                        data = load_from_alpaca_history(symbol, tf, start_ts, request_end, key_, sec_, paper=not settings.is_live())
                         st.session_state["loaded_data"] = data
                         st.session_state["loaded_symbol"] = symbol.upper()
+                        st.session_state["loaded_source"] = "alpaca"
+                        st.session_state["loaded_interval"] = tf
+                        st.session_state["loaded_start"] = start_ts
+                        st.session_state["loaded_end"] = pd.Timestamp(data["date"].max()) if not data.empty else request_end
                         for k in list(st.session_state.keys()):
                             if k.startswith(f"alp_loaded_{symbol}_{tf}"):
                                 del st.session_state[k]
+                        warmed = prefetch_strategy_companions(
+                            _companion_strategy(strategy_id),
+                            primary_symbol=symbol.upper(),
+                            source="alpaca",
+                            interval=tf,
+                            start=start_ts,
+                            end=request_end,
+                        )
                         st.sidebar.success(
                             f"✓ {len(data):,} bars  \n"
                             f"({data['date'].iloc[0].date()} → {data['date'].iloc[-1].date()})"
                         )
+                        if warmed:
+                            st.sidebar.caption(f"Companion cache ready: {', '.join(warmed)}")
                     except Exception as e:
-                        st.sidebar.error(str(e))
+                        msg = str(e)
+                        if "subscription does not permit querying recent SIP data" in msg:
+                            st.sidebar.error(
+                                "Alpaca rejected the request because the selected end time is too recent for SIP intraday data. "
+                                "Choose an earlier end date, or try again after the market data delay has passed."
+                            )
+                        else:
+                            st.sidebar.error(msg)
 
     from data.cache import DataCache
 
@@ -194,9 +329,22 @@ _PARAM_META: dict[str, dict] = {
     "min_rr_ratio": {"label": "Min R:R ratio", "help": "Skip if TP distance / SL distance < X."},
     "cooldown_bars": {"label": "Cooldown bars", "help": "Min bars between entries."},
     "min_atr_pct": {"label": "Min ATR % of price", "help": "Skip signals when ATR < X% of price."},
+    "normal_long_enabled": {"label": "Normal longs enabled", "help": "Enable the baseline Bollinger/RSI long mean-reversion entries. Some symbol presets disable this when the instrument is better handled by sparse momentum rules."},
+    "normal_short_enabled": {"label": "Normal shorts enabled", "help": "Enable the baseline Bollinger/RSI short mean-reversion entries outside active spike regimes."},
+    "intraday_pullback_short_enabled": {"label": "Intraday pullback short", "help": "Enable a short module that fades intraday overbought bursts only after downside confirmation. Useful for symbols like UVXY when RSI spikes into exhaustion and then starts rolling over."},
+    "intraday_pullback_rsi_trigger": {"label": "Pullback RSI trigger", "help": "Recent RSI must have reached at least this level before the intraday pullback short can arm."},
+    "intraday_pullback_rsi_fade_pts": {"label": "Pullback RSI fade pts", "help": "Minimum number of RSI points price must fade from the recent RSI peak before the pullback short is allowed."},
+    "intraday_pullback_lookback_bars": {"label": "Pullback lookback bars", "help": "Lookback used to measure the recent high and the highest RSI for the intraday pullback-short setup."},
+    "intraday_pullback_drop_pct": {"label": "Pullback drop %", "help": "Price must already be this far below the recent intraday high before the pullback short is allowed."},
+    "intraday_pullback_min_atr_pct": {"label": "Pullback min ATR %", "help": "Minimum ATR as a percent of price required before the intraday pullback-short setup is allowed."},
+    "intraday_pullback_sl_pct": {"label": "Pullback short SL %", "help": "Hard stop for the intraday pullback-short module, measured above the short entry price."},
+    "intraday_pullback_tp_pct": {"label": "Pullback short TP %", "help": "Initial target for the intraday pullback-short module, measured below the short entry price."},
+    "intraday_pullback_trail_pct": {"label": "Pullback short trail %", "help": "Percent trailing stop used once the intraday pullback short is open."},
+    "intraday_pullback_cooldown": {"label": "Pullback short cooldown", "help": "Bars to wait before allowing another intraday pullback short."},
     "spike_gap_pct": {"label": "Spike gap %", "help": "Single-bar % jump that starts a spike episode immediately."},
     "grad_spike_lookback": {"label": "Grad spike lookback", "help": "Lookback window for slower multi-day spike build-ups."},
     "grad_spike_pct": {"label": "Grad spike %", "help": "Rise above rolling low that starts a spike episode."},
+    "grad_spike_rearm_bars": {"label": "Grad spike rearm bars", "help": "Quiet-period bars required before a new gradual-spike onset can trigger again after the previous episode."},
     "rise_lookback": {"label": "Rise lookback bars", "help": "Gradual rise check window."},
     "rise_pct": {"label": "Rise % threshold", "help": "Price > X% above lookback low suppresses shorts."},
     "spike_long_sl_pct": {"label": "Spike long SL %", "help": "Hard stop for the dedicated gap-spike long leg."},
@@ -217,6 +365,11 @@ _PARAM_META: dict[str, dict] = {
     "persistent_spread_deep_rsi_max": {"label": "Persistent deep RSI max", "help": "Deeper RSI cap required for normal longs when persistent spike EMA spread is still highly stretched."},
     "persistent_prepeak_block_peak_pct": {"label": "Pre-peak block peak %", "help": "During persistent spike build-ups, once peak expansion exceeds this level the strategy can stop taking normal longs if the move already looks too stretched."},
     "persistent_prepeak_block_rsi_min": {"label": "Pre-peak block RSI min", "help": "Minimum RSI needed before the persistent pre-peak guard blocks normal longs. Higher values make the block apply only to more overheated ramps."},
+    "spike_atr_mult": {"label": "Spike ATR mult", "help": "ATR must rise above this multiple of its recent average before the strategy treats volatility as spike-active."},
+    "spike_sl_pct": {"label": "Spike SL %", "help": "Hard stop for the core spike long leg that trades inside active spike episodes."},
+    "spike_atr_trail": {"label": "Spike ATR trail", "help": "ATR-based trailing-stop multiple for the core spike long leg."},
+    "spike_max_entries": {"label": "Spike max entries", "help": "Maximum number of core spike-long entries allowed during a single spike episode."},
+    "spike_cooldown": {"label": "Spike cooldown", "help": "Bars to wait between core spike-long entries during the same episode."},
     "persistent_rebound_trap_peak_pct": {"label": "Rebound trap peak %", "help": "Minimum total spike expansion before the strategy treats a persistent-spike pullback as a mature rebound trap instead of a fresh dip-buying opportunity."},
     "persistent_rebound_trap_drawdown_pct": {"label": "Rebound trap drawdown %", "help": "How far price must pull back from the running spike high before the mature persistent-spike rebound trap turns on."},
     "persistent_active_long_day_max": {"label": "Persistent long/day max", "help": "Maximum number of normal longs allowed per day while a persistent spike is active."},
@@ -243,7 +396,39 @@ _PARAM_META: dict[str, dict] = {
     "event_target_min_peak_pct": {"label": "Event min peak %", "help": "Minimum rise from the event anchor to the peak for a spike episode to qualify for the event-target short."},
     "event_target_completion_pct": {"label": "Event completion %", "help": "How much of the spike unwind the event short tries to capture. Higher values hold longer and target deeper retracements toward the spike start price."},
     "event_target_confirm_drop_pct": {"label": "Event confirm drop %", "help": "Minimum drop from the peak required before the event-target short is allowed to open. This helps avoid shorting before the down-leg is truly underway."},
+    "event_target_persistent_confirm_drop_pct": {"label": "Event persistent drop %", "help": "Stricter peak-drop confirmation used for slower persistent-style spikes before the event-target short can open."},
     "event_target_sl_pct": {"label": "Event short SL %", "help": "Hard stop for the event-target short, measured above the short entry price."},
+    "event_target_profit_giveback_frac": {"label": "Event profit giveback frac", "help": "After the event short has meaningful open profit, close it if price gives back this fraction of the best unrealized gain."},
+    "event_target_profit_giveback_min_pct": {"label": "Event giveback min %", "help": "Minimum open profit required before the event short's giveback-protection exit becomes active."},
+    "spy_selloff_assist_ret_30": {"label": "Benchmark selloff 30-bar %", "help": "The companion equity benchmark's 30-bar return must be at or below this level before UVXY spike-momentum longs can use the selloff-assist path."},
+    "spy_selloff_assist_ret_120": {"label": "Benchmark selloff 120-bar %", "help": "The companion equity benchmark's 120-bar return must be at or below this level before UVXY spike-momentum longs can use the selloff-assist path."},
+    "spy_rebound_block_ret_30": {"label": "Benchmark rebound 30-bar %", "help": "If the companion equity benchmark rebounds by at least this much over 30 bars and reclaims its EMAs, UVXY longs are blocked during active spike phases."},
+    "spy_rebound_block_ret_120": {"label": "Benchmark rebound 120-bar %", "help": "Medium-horizon rebound filter used with the 30-bar benchmark rebound rule to avoid buying UVXY while equities are already stabilizing."},
+    "dollar_strength_block_ret_30": {"label": "Dollar strength block 30-bar %", "help": "Block gold momentum longs when the dollar benchmark is rising by at least this much over 30 bars and is in an uptrend. Neutral high values disable this filter."},
+    "dollar_strength_block_ret_120": {"label": "Dollar strength block 120-bar %", "help": "Medium-horizon dollar-strength threshold used with the 30-bar dollar filter for GLD-style presets."},
+    "rates_weakness_block_ret_30": {"label": "Rates weakness block 30-bar %", "help": "Block gold momentum longs when the rates benchmark is falling by at least this much over 30 bars and is in a downtrend. Neutral very-low values disable this filter."},
+    "rates_weakness_block_ret_120": {"label": "Rates weakness block 120-bar %", "help": "Medium-horizon rates-weakness threshold used with the 30-bar rates filter for GLD-style presets."},
+    "long_rates_weakness_block_ret_30": {"label": "Long-rates weakness block 30-bar %", "help": "Block gold momentum longs when the long-rates benchmark is falling by at least this much over 30 bars and is in a downtrend."},
+    "long_rates_weakness_block_ret_120": {"label": "Long-rates weakness block 120-bar %", "help": "Medium-horizon long-rates weakness threshold used with the 30-bar long-rates filter for GLD-style presets."},
+    "gold_macro_score_enabled": {"label": "Gold macro score enabled", "help": "Use a weighted macro-risk score for gold-style symbols instead of simple one-indicator blocking."},
+    "gold_macro_block_score": {"label": "Gold macro block score", "help": "Block GLD-style momentum longs when the weighted dollar/rates macro-risk score reaches this level."},
+    "dollar_strength_weight": {"label": "Dollar strength weight", "help": "Weight assigned to dollar-strength risk in the GLD macro-risk score."},
+    "rates_weakness_weight": {"label": "Rates weakness weight", "help": "Weight assigned to intermediate-rates weakness risk in the GLD macro-risk score."},
+    "long_rates_weakness_weight": {"label": "Long-rates weakness weight", "help": "Weight assigned to long-rates weakness risk in the GLD macro-risk score. Leave neutral unless the symbol profile maps a long-rates benchmark."},
+    "gold_peer_confirm_enabled": {"label": "Precious peer confirmation", "help": "Require the precious-metals peer, such as SLV for GLD, to be in an uptrend before opening gold momentum longs."},
+    "gold_peer_confirm_ret_30": {"label": "Precious peer confirm 30-bar %", "help": "Minimum 30-bar return required from the precious-metals peer when peer confirmation is enabled."},
+    "gold_peer_confirm_ret_120": {"label": "Precious peer confirm 120-bar %", "help": "Minimum 120-bar return required from the precious-metals peer when peer confirmation is enabled."},
+    "gold_miners_confirm_enabled": {"label": "Miners confirmation", "help": "Require the gold-miners proxy, such as GDX for GLD, to be in an uptrend before opening gold momentum longs."},
+    "gold_miners_confirm_ret_30": {"label": "Miners confirm 30-bar %", "help": "Minimum 30-bar return required from the miners proxy when miners confirmation is enabled."},
+    "gold_miners_confirm_ret_120": {"label": "Miners confirm 120-bar %", "help": "Minimum 120-bar return required from the miners proxy when miners confirmation is enabled."},
+    "gold_riskoff_override_enabled": {"label": "Risk-off override", "help": "Allow a strong risk-off proxy move, such as VIXY rising, to override hostile dollar/rates macro filters for gold momentum longs."},
+    "gold_riskoff_ret_30": {"label": "Risk-off override 30-bar %", "help": "Minimum 30-bar return required from the risk-off proxy before it can override the gold macro-risk filter."},
+    "gold_riskoff_ret_120": {"label": "Risk-off override 120-bar %", "help": "Minimum 120-bar return required from the risk-off proxy before it can override the gold macro-risk filter."},
+    "gold_context_assist_enabled": {"label": "Gold context assist", "help": "Allow strong SLV/GDX/VIXY-style context to help GLD momentum entries qualify with slightly softer internal thresholds."},
+    "gold_context_assist_min_score": {"label": "Gold context assist min score", "help": "Minimum combined confirmation score from the gold companion proxies before the context-assist entry path can activate."},
+    "gold_peer_strength_weight": {"label": "Precious peer strength weight", "help": "Score contribution when the precious-metals peer, such as SLV, confirms GLD strength."},
+    "gold_miners_strength_weight": {"label": "Miners strength weight", "help": "Score contribution when the gold-miners proxy, such as GDX, confirms GLD strength."},
+    "gold_riskoff_strength_weight": {"label": "Risk-off strength weight", "help": "Score contribution when the risk-off proxy, such as VIXY, confirms a risk-off backdrop that may support gold."},
     "psshort_cooldown": {"label": "Post-spike cooldown", "help": "Bars between confirmed post-spike short entries."},
     "psshort_window": {"label": "Spike episode window", "help": "How long a spike episode stays active after onset for reversal/decay logic."},
     "spike_reversal_atr_frac": {"label": "ATR cooloff frac", "help": "Spike must cool to this fraction of peak ATR before shorts unlock."},
@@ -256,6 +441,18 @@ _PARAM_META: dict[str, dict] = {
     "decay_bounce_fail_pct": {"label": "Decay bounce fail %", "help": "How much the rebound must roll over from its bounce high before the continuation short triggers."},
     "decay_bounce_cooldown": {"label": "Decay bounce cooldown", "help": "Bars between continuation-short entries during the same decay episode."},
     "decay_bounce_max": {"label": "Decay bounce max", "help": "Maximum continuation-short entries inside one decay episode."},
+    "spike_high_window": {"label": "Spike high window", "help": "Rolling lookback used to track recent episode highs for spike-strength and peak-drop calculations."},
+    "spike_ema_mult": {"label": "Spike EMA mult", "help": "Price extension multiplier versus the long spike EMA used by the broader spike-state filters."},
+    "spike_ema_span": {"label": "Spike EMA span", "help": "Long EMA span used by spike-state filters that measure extended spike conditions."},
+    "peak_drop_pct": {"label": "Peak drop %", "help": "Additional peak-drop threshold used by legacy spike-to-decay filters. Very high values effectively disable this path."},
+    "reversion_tp_pct": {"label": "Reversion TP %", "help": "Target percentage for the early reversal short leg once a spike first flips into decay."},
+    "reversion_sl_pct": {"label": "Reversion SL %", "help": "Stop percentage for the early reversal short leg once a spike first flips into decay."},
+    "reversion_rsi_min": {"label": "Reversion RSI min", "help": "Minimum RSI reset required before the early reversal short leg is allowed to trigger."},
+    "decay_ema_period": {"label": "Decay EMA period", "help": "EMA length used to define the broader decay trend after a spike peak."},
+    "decay_slope_lb": {"label": "Decay slope lookback", "help": "Lookback used to measure the EMA slope for decay-trend detection."},
+    "decay_slope_min_pct": {"label": "Decay slope min %", "help": "Minimum negative EMA slope required by the broader decay filter. Very high values effectively disable this path."},
+    "decay_atr_trail": {"label": "Decay ATR trail", "help": "ATR-based trailing-stop multiple used for decay short legs."},
+    "decay_sl_pct": {"label": "Decay SL %", "help": "Hard stop percentage used for decay continuation and re-entry shorts."},
     "decay_cooldown": {"label": "Decay cooldown", "help": "Bars between decay re-entry shorts."},
     "decay_max_entries": {"label": "Decay max entries", "help": "Maximum decay re-entry shorts per episode."},
     "decay_floor": {"label": "Decay floor", "help": "Skip decay shorts below this absolute price."},
@@ -263,14 +460,218 @@ _PARAM_META: dict[str, dict] = {
     "low_price_chop_bandwidth_pct": {"label": "Low-price chop BW %", "help": "Maximum Bollinger band width percent for the low-price chop guard. Narrower low-price action below this threshold is treated as whipsaw noise."},
 }
 
+_PARAM_GROUPS: list[tuple[str, str, list[str]]] = [
+    (
+        "Core Mean Reversion",
+        "Baseline Bollinger/RSI entry, reset, and reward-to-risk controls outside special spike handling.",
+        [
+            "bb_period",
+            "bb_std",
+            "rsi_period",
+            "rsi_oversold",
+            "rsi_overbought",
+            "sl_band_mult",
+            "min_band_width_pct",
+            "min_rr_ratio",
+            "cooldown_bars",
+            "min_atr_pct",
+            "normal_long_enabled",
+            "normal_short_enabled",
+        ],
+    ),
+    (
+        "Spike Lifecycle",
+        "How the strategy detects, classifies, and manages spike episodes before switching into rollover or decay logic.",
+        [
+            "spike_gap_pct",
+            "grad_spike_lookback",
+            "grad_spike_pct",
+            "grad_spike_rearm_bars",
+            "rise_lookback",
+            "rise_pct",
+            "spike_lockout_bars",
+            "spike_profile_shock_gap_pct",
+            "spike_profile_shock_peak_pct",
+            "spike_rollover_watch_bars",
+            "spike_rollover_watch_peak_pct",
+            "spike_rollover_fast_ema_tol",
+            "persistent_rollover_long_rsi_max",
+            "persistent_spread_block_pct",
+            "persistent_spread_deep_rsi_max",
+            "persistent_prepeak_block_peak_pct",
+            "persistent_prepeak_block_rsi_min",
+            "persistent_rebound_trap_peak_pct",
+            "persistent_rebound_trap_drawdown_pct",
+            "persistent_active_long_day_max",
+        ],
+    ),
+    (
+        "Momentum & Up-Leg Capture",
+        "Dedicated long-side rules for explosive upside moves, including breakout, volatility, and trailing-stop behavior.",
+        [
+            "spike_long_sl_pct",
+            "spike_long_trail_pct",
+            "spike_long_max",
+            "spike_long_cooldown",
+            "spike_long_min_rsi",
+            "spike_long_min_peak_pct",
+            "spike_long_min_atr_pct",
+            "spike_momentum_max",
+            "spike_momo_atr_mult",
+            "spike_momo_momentum_bars",
+            "spike_momo_momentum_pct",
+            "spike_momo_min_bar_pct",
+            "spike_momo_min_rsi",
+            "spike_momo_max_rsi",
+            "spike_momo_min_peak_pct",
+            "spike_momo_min_atr_pct",
+            "spike_momo_trail_pct",
+            "spike_momo_sl_pct",
+            "spike_momo_cooldown",
+            "spike_momo_max",
+        ],
+    ),
+    (
+        "Intraday Pullback Short",
+        "Fade overbought intraday bursts only after RSI has rolled over, price has pulled back, and downside confirmation is present.",
+        [
+            "intraday_pullback_rsi_trigger",
+            "intraday_pullback_rsi_fade_pts",
+            "intraday_pullback_lookback_bars",
+            "intraday_pullback_drop_pct",
+            "intraday_pullback_min_atr_pct",
+            "intraday_pullback_sl_pct",
+            "intraday_pullback_tp_pct",
+            "intraday_pullback_trail_pct",
+            "intraday_pullback_cooldown",
+        ],
+    ),
+    (
+        "Post-Peak & Event Short",
+        "Rules for confirming the top, entering post-peak shorts, and managing decay or large unwind targets.",
+        [
+            "psshort_drop_pct",
+            "psshort_sl_pct",
+            "psshort_trail_pct",
+            "psshort_max",
+            "psshort_cooldown",
+            "psshort_window",
+            "spike_reversal_atr_frac",
+            "spike_reversal_ema_fast",
+            "spike_reversal_ema_slow",
+            "spike_reversal_min_bars",
+            "spike_reversal_min_peak_pct",
+            "event_target_anchor_lookback",
+            "event_target_max_rise_bars",
+            "event_target_min_peak_pct",
+            "event_target_completion_pct",
+            "event_target_confirm_drop_pct",
+            "event_target_persistent_confirm_drop_pct",
+            "event_target_sl_pct",
+            "event_target_profit_giveback_frac",
+            "event_target_profit_giveback_min_pct",
+            "decay_reentry_rsi",
+            "decay_bounce_min_pct",
+            "decay_bounce_fail_pct",
+            "decay_bounce_cooldown",
+            "decay_bounce_max",
+            "decay_cooldown",
+            "decay_max_entries",
+            "decay_floor",
+            "spike_high_window",
+            "spike_ema_mult",
+            "spike_ema_span",
+            "peak_drop_pct",
+            "reversion_tp_pct",
+            "reversion_sl_pct",
+            "reversion_rsi_min",
+            "decay_ema_period",
+            "decay_slope_lb",
+            "decay_slope_min_pct",
+            "decay_atr_trail",
+            "decay_sl_pct",
+        ],
+    ),
+    (
+        "External Context",
+        "Companion-market filters and assists that use the symbol profile's benchmark context when one is available.",
+        [
+            "spy_selloff_assist_ret_30",
+            "spy_selloff_assist_ret_120",
+            "spy_rebound_block_ret_30",
+            "spy_rebound_block_ret_120",
+            "dollar_strength_block_ret_30",
+            "dollar_strength_block_ret_120",
+            "rates_weakness_block_ret_30",
+            "rates_weakness_block_ret_120",
+            "long_rates_weakness_block_ret_30",
+            "long_rates_weakness_block_ret_120",
+            "gold_macro_score_enabled",
+            "gold_macro_block_score",
+            "dollar_strength_weight",
+            "rates_weakness_weight",
+            "long_rates_weakness_weight",
+            "gold_peer_confirm_enabled",
+            "gold_peer_confirm_ret_30",
+            "gold_peer_confirm_ret_120",
+            "gold_miners_confirm_enabled",
+            "gold_miners_confirm_ret_30",
+            "gold_miners_confirm_ret_120",
+            "gold_riskoff_override_enabled",
+            "gold_riskoff_ret_30",
+            "gold_riskoff_ret_120",
+            "gold_context_assist_enabled",
+            "gold_context_assist_min_score",
+            "gold_peer_strength_weight",
+            "gold_miners_strength_weight",
+            "gold_riskoff_strength_weight",
+        ],
+    ),
+    (
+        "Late-Regime Cleanup",
+        "Filters that suppress noisy trades in weak late-stage, low-price chop conditions.",
+        [
+            "low_price_chop_price",
+            "low_price_chop_bandwidth_pct",
+        ],
+    ),
+]
 
-def render_strategy_params(strategy_id: str, leverage: float = 1.0, max_capital_loss_pct: float = 50.0) -> dict:
+
+def render_strategy_params(
+    strategy_id: str,
+    leverage: float = 1.0,
+    max_capital_loss_pct: float = 50.0,
+    symbol: str | None = None,
+    source: str | None = None,
+    interval: str | None = None,
+) -> dict:
     from strategies import get_strategy
 
     cls = get_strategy(strategy_id)
     instance = cls()
-    defaults = instance.default_params()
+    active_symbol = symbol or st.session_state.get("loaded_symbol")
+    active_source = source or st.session_state.get("loaded_source")
+    active_interval = interval or st.session_state.get("loaded_interval")
+    defaults = instance.effective_default_params(
+        symbol=active_symbol,
+        source=active_source,
+        interval=active_interval,
+    )
     max_sl_price_pct = max_capital_loss_pct / max(leverage, 1.0)
+    reset_key = f"reset_params_{strategy_id}"
+    defaults_signature = (
+        strategy_id,
+        str(active_symbol or ""),
+        str(active_source or ""),
+        str(active_interval or ""),
+        tuple(defaults.items()),
+    )
+    signature_key = f"p_{strategy_id}_defaults_signature"
+    if st.session_state.get(signature_key) != defaults_signature:
+        for param, default in defaults.items():
+            st.session_state[f"p_{strategy_id}_{param}"] = default
+        st.session_state[signature_key] = defaults_signature
 
     st.subheader(f"⚙️ {cls.name} Parameters")
     st.caption(cls.description)
@@ -293,9 +694,17 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0, max_capital_
             f"→ Maximum allowed **price move SL = {max_sl_price_pct:.2f}%**."
         )
 
+    header_a, header_b = st.columns([0.82, 0.18], vertical_alignment="center")
+    with header_b:
+        if st.button("↺ Reset to defaults", key=reset_key, use_container_width=True):
+            for param, default in defaults.items():
+                st.session_state[f"p_{strategy_id}_{param}"] = default
+            st.session_state[signature_key] = defaults_signature
+            st.rerun()
+
     filled: dict = {}
 
-    prominent_bools = ["require_cross", "event_target_short_enabled"]
+    prominent_bools = ["require_cross", "event_target_short_enabled", "intraday_pullback_short_enabled"]
     checkbox_params = [param for param in prominent_bools if param in defaults]
     if checkbox_params:
         checkbox_cols = st.columns(len(checkbox_params))
@@ -329,38 +738,72 @@ def render_strategy_params(strategy_id: str, leverage: float = 1.0, max_capital_
 
     grouped_params = [(param, default) for param, default in defaults.items() if param not in checkbox_params]
     with st.expander("Model Parameters", expanded=False):
-        cols = st.columns(4)
-        for i, (param, default) in enumerate(grouped_params):
-            col = cols[i % 4]
+        remaining = {param for param, _ in grouped_params}
+
+        def _render_param(param: str, default):
             meta = _PARAM_META.get(param, {})
             label = meta.get("label", param)
             help_ = meta.get("help", "") or None
-            full_label = f"{label} ({param})"
             key = f"p_{strategy_id}_{param}"
-            with col:
-                head_a, head_b = st.columns([0.88, 0.12], vertical_alignment="center")
-                with head_a:
-                    st.markdown(
-                        (
-                                "<div style='color:#FFFFFF;font-weight:700;font-size:0.95rem;margin-bottom:0.20rem;'>"
-                                f"{label} <span style='color:#C9D4F0;font-weight:500;'>({param})</span>"
-                                "</div>"
-                        ),
-                        unsafe_allow_html = True,
-                    )
-                if help_:
-                    with head_b:
-                        with st.popover("?", use_container_width=True):
-                            st.caption(help_)
-                if isinstance(default, bool):
-                    filled[param] = st.checkbox("Enabled", value=default, key=key, label_visibility="collapsed")
-                elif isinstance(default, int):
-                    filled[param] = st.number_input(label, value=int(default), step=1, key=key,
-                                                    label_visibility="collapsed")
-                elif isinstance(default, float):
-                    filled[param] = st.number_input(label, value=float(default), format="%.2f", min_value=0.0, key=key, label_visibility="collapsed")
-                else:
-                    filled[param] = st.text_input(label, value=str(default), key=key, label_visibility="collapsed")
+            head_a, head_b = st.columns([0.88, 0.12], vertical_alignment="center")
+            with head_a:
+                st.markdown(
+                    (
+                        "<div style='color:#FFFFFF;font-weight:700;font-size:0.95rem;margin-bottom:0.20rem;'>"
+                        f"{label} <span style='color:#C9D4F0;font-weight:500;'>({param})</span>"
+                        "</div>"
+                    ),
+                    unsafe_allow_html=True,
+                )
+            if help_:
+                with head_b:
+                    with st.popover("?", use_container_width=True):
+                        st.caption(help_)
+            if isinstance(default, bool):
+                filled[param] = st.checkbox("Enabled", value=default, key=key, label_visibility="collapsed")
+            elif isinstance(default, int):
+                filled[param] = st.number_input(label, value=int(default), step=1, key=key, label_visibility="collapsed")
+            elif isinstance(default, float):
+                min_value = None if default < 0 else 0.0
+                filled[param] = st.number_input(
+                    label,
+                    value=float(default),
+                    format="%.2f",
+                    min_value=min_value,
+                    key=key,
+                    label_visibility="collapsed",
+                )
+            else:
+                filled[param] = st.text_input(label, value=str(default), key=key, label_visibility="collapsed")
+
+        for title, caption, params_in_group in _PARAM_GROUPS:
+            group_items = [(param, defaults[param]) for param in params_in_group if param in defaults and param in remaining]
+            if not group_items:
+                continue
+            st.markdown(
+                f"<div style='color:#E8EAF6;font-weight:800;font-size:1.0rem;margin-top:0.6rem;margin-bottom:0.5rem;'>{title}</div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"<div style='color:#D7E3FF;font-size:0.92rem;margin-top:-0.15rem;margin-bottom:0.55rem;'>{caption}</div>",
+                unsafe_allow_html=True,
+            )
+            cols = st.columns(4)
+            for i, (param, default) in enumerate(group_items):
+                with cols[i % 4]:
+                    _render_param(param, default)
+                remaining.discard(param)
+
+        other_items = [(param, defaults[param]) for param in defaults if param in remaining]
+        if other_items:
+            st.markdown(
+                "<div style='color:#E8EAF6;font-weight:800;font-size:1.0rem;margin-top:0.6rem;margin-bottom:0.5rem;'>Other</div>",
+                unsafe_allow_html=True,
+            )
+            cols = st.columns(4)
+            for i, (param, default) in enumerate(other_items):
+                with cols[i % 4]:
+                    _render_param(param, default)
     return filled
 
 

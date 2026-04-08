@@ -16,6 +16,7 @@ import streamlit as st
 
 from config.settings import settings, TradingMode
 from core.models import Direction, TradeOutcome
+from data.ingestion import prepare_strategy_data
 from db.database import Database
 from execution.router import OrderRouter
 from risk.manager import RiskManager
@@ -33,6 +34,7 @@ def _db() -> Database:
 
 def render() -> None:
     render_mode_banner()
+    st.session_state.setdefault("pt_strategy", "Bollinger + RSI (Spike-Aware)")
 
     mode = settings.trading_mode
 
@@ -73,7 +75,16 @@ def render() -> None:
     if st.button("🔍 Generate Signal + Submit Paper Order", type="primary", key="pt_submit"):
         cls      = get_strategy(selected_id)
         strategy = cls(params=params)
-        signal   = strategy.generate_signal(prices, symbol)
+        prepared_prices = prepare_strategy_data(
+            prices,
+            strategy,
+            primary_symbol=symbol,
+            source=st.session_state.get("loaded_source"),
+            interval=st.session_state.get("loaded_interval"),
+            start=st.session_state.get("loaded_start"),
+            end=st.session_state.get("loaded_end"),
+        )
+        signal   = strategy.generate_signal(prepared_prices, symbol)
 
         st.info(
             f"Signal: **{signal.action.value}** | "

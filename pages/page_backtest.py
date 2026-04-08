@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from config.settings import settings
+from data.ingestion import prepare_strategy_data
 from reporting.backtest import BacktestEngine
 from risk.manager import RiskManager
 from strategies import get_strategy, list_strategies
@@ -71,7 +72,19 @@ def _parse_levels(raw) -> list[float]:
 def _bar_label(prices: pd.DataFrame) -> str:
     if len(prices) < 2:
         return "bars"
-    delta = (prices["date"].iloc[1] - prices["date"].iloc[0]).total_seconds()
+
+    # Use the dominant spacing, not the first two rows. Intraday data can start
+    # with a missing/opening gap, which made 1-min caches display as "4-min".
+    dates = pd.to_datetime(prices["date"], errors="coerce").dropna().sort_values()
+    if len(dates) < 2:
+        return "bars"
+    diffs = dates.diff().dropna().dt.total_seconds()
+    diffs = diffs[diffs > 0]
+    if diffs.empty:
+        return "bars"
+
+    mode = diffs.mode()
+    delta = int(round(float(mode.iloc[0] if not mode.empty else diffs.median())))
     return {
         60: "1-min",
         300: "5-min",
@@ -79,7 +92,7 @@ def _bar_label(prices: pd.DataFrame) -> str:
         1800: "30-min",
         3600: "1-hour",
         86400: "1-day",
-    }.get(int(delta), f"{int(delta // 60)}-min")
+    }.get(delta, f"{max(1, int(round(delta / 60)))}-min")
 
 
 def _trade_regime_from_notes(notes: str) -> str:
@@ -439,6 +452,7 @@ def _equity_chart(equity_curve: pd.DataFrame, symbol: str):
 def render() -> None:
     render_mode_banner()
     st.title("⏪ Backtester")
+    st.session_state.setdefault("bt_strategy", "Bollinger + RSI (Spike-Aware)")
     prices = render_data_source_selector()
     if prices is not None:
         st.session_state["bt_prices_live"] = prices
@@ -460,10 +474,13 @@ def render() -> None:
     strat_names = {s["name"]: s["id"] for s in strategies}
     strategy_names = list(strat_names.keys())
     default_strategy_name = "Bollinger + RSI (Spike-Aware)"
-    default_strategy_index = strategy_names.index(default_strategy_name) if default_strategy_name in strategy_names else 0
+    if st.session_state.get("bt_strategy") not in strategy_names:
+        st.session_state["bt_strategy"] = (
+            default_strategy_name if default_strategy_name in strategy_names else strategy_names[0]
+        )
     col_cfg, col_risk = st.columns(2)
     with col_cfg:
-        selected_name = st.selectbox("Strategy", strategy_names, index=default_strategy_index, key="bt_strategy")
+        selected_name = st.selectbox("Strategy", strategy_names, key="bt_strategy")
         selected_id = strat_names[selected_name]
         leverage = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="bt_lev")
         capital_per_trade = st.number_input("Capital per trade ($)", 100.0, value=1000.0, key="bt_cap")
@@ -526,9 +543,18 @@ def render() -> None:
             slippage_pct=float(slippage_pct),
             commission_per_trade=float(commission),
         )
+        prepared_prices = prepare_strategy_data(
+            prices,
+            strategy,
+            primary_symbol=symbol,
+            source=st.session_state.get("loaded_source"),
+            interval=st.session_state.get("loaded_interval"),
+            start=st.session_state.get("loaded_start"),
+            end=st.session_state.get("loaded_end"),
+        )
         with st.spinner(f"Running backtest on {len(prices):,} bars…"):
             result = engine.run(
-                data=prices,
+                data=prepared_prices,
                 symbol=symbol,
                 leverage=leverage,
                 capital_per_trade=capital_per_trade,
@@ -540,6 +566,11 @@ def render() -> None:
         st.session_state["bt_selected_id"] = selected_id
         st.session_state["bt_params"] = dict(params)
         st.session_state["bt_starting_equity"] = float(starting_equity)
+        st.session_state["bt_cost_settings"] = {
+            "spread_pct": float(spread_pct),
+            "slippage_pct": float(slippage_pct),
+            "commission": float(commission),
+        }
         try:
             from db.database import Database
 
@@ -549,7 +580,9 @@ def render() -> None:
             st.session_state["bt_db_msg"] = f"✓ {len(result.trades)} trades saved."
         except Exception as e:
             st.session_state["bt_db_msg"] = f"DB save skipped: {e}"
-        st.rerun()
+        st.divider()
+        _show_results()
+        return
 
 
 def _show_results() -> None:
@@ -559,6 +592,7 @@ def _show_results() -> None:
     symbol_r = st.session_state.get("bt_symbol", "DATA")
     selected_id_r = st.session_state.get("bt_selected_id", "")
     params_r = st.session_state.get("bt_params", {})
+    costs_r = st.session_state.get("bt_cost_settings", {})
     prices_r = st.session_state.get("bt_prices_live")
     closed = [t for t in result.trades if t.leveraged_return_pct is not None]
 
@@ -583,6 +617,17 @@ def _show_results() -> None:
         cols = st.columns(min(len(outcome_counts), 5))
         for col, (label, cnt) in zip(cols, sorted(outcome_counts.items())):
             col.metric(label, cnt)
+        gross_pnl = sum((t.capital_allocated or 0) * ((t.leveraged_return_pct or 0) / 100.0) for t in closed)
+        net_pnl = sum((t.pnl or 0) for t in closed)
+        deducted_cost = gross_pnl - net_pnl
+        spread_used = float(costs_r.get("spread_pct", 0.0) or 0.0)
+        slippage_used = float(costs_r.get("slippage_pct", 0.0) or 0.0)
+        commission_used = float(costs_r.get("commission", 0.0) or 0.0)
+        st.caption(
+            f"Applied costs: spread {spread_used:.2f}% + slippage {slippage_used:.2f}% "
+            f"+ commission {commission_used:.2f} dollars/trade = approx. "
+            f"{deducted_cost:,.2f} dollars deducted from gross closed-trade PnL."
+        )
     st.caption("📖 **PnL ($)** = dollar profit/loss · **Return %** = leveraged return on capital · **TP hit** = price target reached · **SL hit** = stop hit · **RSI exits** = RSI threshold crossed")
     if closed:
         st.subheader("🧪 Spike Comparison Report")
