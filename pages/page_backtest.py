@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from config.settings import settings
+from data.fair_value import compute_gld_fair_value_diagnostics
 from data.ingestion import prepare_strategy_data
 from reporting.backtest import BacktestEngine
 from risk.manager import RiskManager
@@ -449,6 +450,85 @@ def _equity_chart(equity_curve: pd.DataFrame, symbol: str):
     return alt.layer(line).properties(title=alt.TitleParams(f"{symbol} – Portfolio Equity", **_TITLE), height=300).configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE)
 
 
+@st.cache_data(show_spinner=False)
+def _cached_gld_fair_value(start: str | None, end: str | None):
+    diagnostics = compute_gld_fair_value_diagnostics(start=start, end=end)
+    if diagnostics is None:
+        return None
+    return {
+        "frame": diagnostics.frame,
+        "stats": diagnostics.stats,
+        "model": diagnostics.model,
+        "symbol": diagnostics.symbol,
+    }
+
+
+def _fair_value_chart(frame: pd.DataFrame, symbol: str):
+    plot_df = frame.copy()
+    value_df = plot_df.melt(
+        id_vars=["date"],
+        value_vars=["actual", "fair_value"],
+        var_name="series",
+        value_name="price",
+    )
+    value_df["series"] = value_df["series"].map(
+        {"actual": f"{symbol} actual", "fair_value": f"{symbol} fair value"}
+    )
+    return (
+        alt.Chart(value_df)
+        .mark_line(strokeWidth=2)
+        .encode(
+            x=alt.X("date:T", title="Date", axis=alt.Axis(**_AXIS)),
+            y=alt.Y("price:Q", title="Price", scale=alt.Scale(zero=False), axis=alt.Axis(**_AXIS)),
+            color=alt.Color(
+                "series:N",
+                scale=alt.Scale(
+                    domain=[f"{symbol} actual", f"{symbol} fair value"],
+                    range=[_BLUE, _GOLD],
+                ),
+                legend=alt.Legend(title=None, labelColor="#d0d4f0"),
+            ),
+            tooltip=["date:T", "series:N", alt.Tooltip("price:Q", format=".2f")],
+        )
+        .properties(title=alt.TitleParams(f"{symbol} – Actual vs Fair Value (slow macro fit)", **_TITLE), height=320)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(**_AXIS)
+        .configure_title(**_TITLE)
+    )
+
+
+def _fair_gap_chart(frame: pd.DataFrame, symbol: str):
+    plot_df = frame.copy()
+    plot_df["gap_sign"] = plot_df["fair_gap_pct"].apply(lambda x: "Undervalued" if x > 0 else "Overvalued")
+    bars = (
+        alt.Chart(plot_df)
+        .mark_bar(opacity=0.75)
+        .encode(
+            x=alt.X("date:T", title="Date", axis=alt.Axis(**_AXIS)),
+            y=alt.Y("fair_gap_pct:Q", title="Fair Gap %", axis=alt.Axis(**_AXIS)),
+            color=alt.Color(
+                "gap_sign:N",
+                scale=alt.Scale(domain=["Undervalued", "Overvalued"], range=[_GREEN, _RED]),
+                legend=alt.Legend(title=None, labelColor="#d0d4f0"),
+            ),
+            tooltip=[
+                "date:T",
+                alt.Tooltip("fair_gap_pct:Q", format=".2f", title="Gap %"),
+                alt.Tooltip("actual:Q", format=".2f", title=f"{symbol} actual"),
+                alt.Tooltip("fair_value:Q", format=".2f", title="Fair value"),
+            ],
+        )
+    )
+    zero = alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color="#cfd8dc", opacity=0.5).encode(y="y:Q")
+    return (
+        alt.layer(bars, zero)
+        .properties(title=alt.TitleParams(f"{symbol} – Fair Value Gap", **_TITLE), height=180)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(**_AXIS)
+        .configure_title(**_TITLE)
+    )
+
+
 def render() -> None:
     render_mode_banner()
     st.title("⏪ Backtester")
@@ -648,6 +728,32 @@ def _show_results() -> None:
         label_extra = f"  ·  *{len(prices_plot):,} of {n_bars:,} bars shown*" if len(prices_plot) < n_bars else ""
         st.markdown(f"#### 📈 Price{label_extra}")
         st.altair_chart(_price_chart(prices_plot, result.trades, symbol_r, show_long, show_short, show_tp, show_sl, show_sig), use_container_width=True)
+        if symbol_r.upper() == "GLD":
+            fair_payload = _cached_gld_fair_value(
+                str(st.session_state.get("loaded_start")) if st.session_state.get("loaded_start") is not None else None,
+                str(st.session_state.get("loaded_end")) if st.session_state.get("loaded_end") is not None else None,
+            )
+            if fair_payload:
+                fair_stats = fair_payload["stats"]
+                model = fair_payload["model"]
+                st.markdown("#### 🪙 Macro Fair Value")
+                render_metrics_row(
+                    {
+                        "Correlation": f"{fair_stats['corr']:.3f}",
+                        "R²": f"{fair_stats['r2']:.3f}",
+                        "MAE Gap": f"{fair_stats['mae_pct']:.2f}%",
+                        "RMSE Gap": f"{fair_stats['rmse_pct']:.2f}%",
+                        "Direction Hit": f"{fair_stats['directional_hit'] * 100:.1f}%",
+                    }
+                )
+                st.caption(
+                    "Daily slow fair-value proxy optimized on cached macro and peer series. "
+                    f"Best fit: feature set `{model['feature_set']}`, z-window `{model['z_window']}` days, "
+                    f"fit window `{model['fit_window']}` days, ridge α `{model['ridge_alpha']:.2f}`, "
+                    f"smoothing span `{model['smooth_span']}` days."
+                )
+                st.altair_chart(_fair_value_chart(fair_payload["frame"], symbol_r), use_container_width=True)
+                st.altair_chart(_fair_gap_chart(fair_payload["frame"], symbol_r), use_container_width=True)
         if selected_id_r in ("rsi_threshold", "atr_rsi", "vwap_rsi", "bollinger_rsi", "ema_trend_rsi"):
             period = int(params_r.get("rsi_period", 9))
             buy_levels = _parse_levels(params_r.get("buy_levels", "30"))

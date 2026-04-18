@@ -26,12 +26,17 @@ from core.models import Signal, SignalAction
 from strategies.base import BaseStrategy, register_strategy
 from strategies.components import (
     build_event_short_setup,
+    directional_trend_state,
     event_completion_target,
     event_short_ready,
+    gold_macro_regime_state,
     intraday_pullback_short_ready,
     spike_breakout_long_ready,
     spike_momentum_long_ready,
     trend_bias_long_ready,
+    trend_context_ready,
+    weighted_gold_macro_regime_score,
+    weighted_trend_context_score,
 )
 
 
@@ -88,16 +93,25 @@ class BollingerRSIStrategy(BaseStrategy):
         if bool(params.get("gold_peer_confirm_enabled", False)) or (
             bool(params.get("gold_context_assist_enabled", False))
             and float(params.get("gold_peer_strength_weight", 0.0)) != 0.0
+        ) or (
+            bool(params.get("trend_context_score_enabled", False))
+            and float(params.get("trend_peer_strength_weight", 0.0)) != 0.0
         ):
             contexts.append("precious_metal_peer")
         if bool(params.get("gold_miners_confirm_enabled", False)) or (
             bool(params.get("gold_context_assist_enabled", False))
             and float(params.get("gold_miners_strength_weight", 0.0)) != 0.0
+        ) or (
+            bool(params.get("trend_context_score_enabled", False))
+            and float(params.get("trend_miners_strength_weight", 0.0)) != 0.0
         ):
             contexts.append("miners_proxy")
         if bool(params.get("gold_riskoff_override_enabled", False)) or (
             bool(params.get("gold_context_assist_enabled", False))
             and float(params.get("gold_riskoff_strength_weight", 0.0)) != 0.0
+        ) or (
+            bool(params.get("trend_context_score_enabled", False))
+            and float(params.get("trend_riskoff_strength_weight", 0.0)) != 0.0
         ):
             contexts.append("riskoff_proxy")
         return contexts
@@ -137,6 +151,11 @@ class BollingerRSIStrategy(BaseStrategy):
             "trend_bias_trail_pct": 2.5,
             "trend_bias_sl_pct": 1.2,
             "trend_bias_cooldown": 120,
+            "trend_context_score_enabled": False,
+            "trend_context_min_score": 1.0,
+            "trend_peer_strength_weight": 1.0,
+            "trend_miners_strength_weight": 0.0,
+            "trend_riskoff_strength_weight": 0.0,
             "intraday_pullback_short_enabled": False,
             "intraday_pullback_rsi_trigger": 80.0,
             "intraday_pullback_rsi_fade_pts": 8.0,
@@ -216,6 +235,17 @@ class BollingerRSIStrategy(BaseStrategy):
             "dollar_strength_weight": 1.0,
             "rates_weakness_weight": 1.0,
             "long_rates_weakness_weight": 1.0,
+            "gold_macro_regime_enabled": False,
+            "gold_macro_regime_fast_bars": 390,
+            "gold_macro_regime_slow_bars": 1950,
+            "gold_macro_regime_bullish_score": 1.0,
+            "gold_macro_regime_bearish_score": -1.0,
+            "gold_regime_dollar_weight": 0.8,
+            "gold_regime_rates_weight": 1.0,
+            "gold_regime_long_rates_weight": 0.0,
+            "gold_regime_peer_weight": 0.6,
+            "gold_regime_miners_weight": 0.4,
+            "gold_regime_riskoff_weight": 0.2,
             "gold_peer_confirm_enabled": False,
             "gold_peer_confirm_ret_30": 0.0,
             "gold_peer_confirm_ret_120": 0.0,
@@ -318,6 +348,14 @@ class BollingerRSIStrategy(BaseStrategy):
             errors.append("event_target_profit_giveback_frac must be between 0 and 1.")
         if float(p["event_target_profit_giveback_min_pct"]) < 0:
             errors.append("event_target_profit_giveback_min_pct must be >= 0.")
+        if int(p["gold_macro_regime_fast_bars"]) < 2:
+            errors.append("gold_macro_regime_fast_bars must be >= 2.")
+        if int(p["gold_macro_regime_slow_bars"]) < int(p["gold_macro_regime_fast_bars"]):
+            errors.append("gold_macro_regime_slow_bars must be >= gold_macro_regime_fast_bars.")
+        if float(p["gold_macro_regime_bearish_score"]) >= 0:
+            errors.append("gold_macro_regime_bearish_score must be < 0.")
+        if float(p["gold_macro_regime_bullish_score"]) <= 0:
+            errors.append("gold_macro_regime_bullish_score must be > 0.")
         return errors
 
     def _compute_regimes_bulk(self, close: pd.Series, data: pd.DataFrame, p: dict):
@@ -443,6 +481,11 @@ class BollingerRSIStrategy(BaseStrategy):
         trend_bias_trail_pct = float(p["trend_bias_trail_pct"])
         trend_bias_sl_pct = float(p["trend_bias_sl_pct"])
         trend_bias_cooldown = int(p["trend_bias_cooldown"])
+        trend_context_score_enabled = bool(p["trend_context_score_enabled"])
+        trend_context_min_score = float(p["trend_context_min_score"])
+        trend_peer_strength_weight = float(p["trend_peer_strength_weight"])
+        trend_miners_strength_weight = float(p["trend_miners_strength_weight"])
+        trend_riskoff_strength_weight = float(p["trend_riskoff_strength_weight"])
         intraday_pullback_short_enabled = bool(p["intraday_pullback_short_enabled"])
         intraday_pullback_rsi_trigger = float(p["intraday_pullback_rsi_trigger"])
         intraday_pullback_rsi_fade_pts = float(p["intraday_pullback_rsi_fade_pts"])
@@ -522,6 +565,17 @@ class BollingerRSIStrategy(BaseStrategy):
         dollar_strength_weight = float(p["dollar_strength_weight"])
         rates_weakness_weight = float(p["rates_weakness_weight"])
         long_rates_weakness_weight = float(p["long_rates_weakness_weight"])
+        gold_macro_regime_enabled = bool(p["gold_macro_regime_enabled"])
+        gold_macro_regime_fast_bars = int(p["gold_macro_regime_fast_bars"])
+        gold_macro_regime_slow_bars = int(p["gold_macro_regime_slow_bars"])
+        gold_macro_regime_bullish_score = float(p["gold_macro_regime_bullish_score"])
+        gold_macro_regime_bearish_score = float(p["gold_macro_regime_bearish_score"])
+        gold_regime_dollar_weight = float(p["gold_regime_dollar_weight"])
+        gold_regime_rates_weight = float(p["gold_regime_rates_weight"])
+        gold_regime_long_rates_weight = float(p["gold_regime_long_rates_weight"])
+        gold_regime_peer_weight = float(p["gold_regime_peer_weight"])
+        gold_regime_miners_weight = float(p["gold_regime_miners_weight"])
+        gold_regime_riskoff_weight = float(p["gold_regime_riskoff_weight"])
         gold_peer_confirm_enabled = bool(p["gold_peer_confirm_enabled"])
         gold_peer_confirm_ret_30 = float(p["gold_peer_confirm_ret_30"])
         gold_peer_confirm_ret_120 = float(p["gold_peer_confirm_ret_120"])
@@ -673,16 +727,20 @@ class BollingerRSIStrategy(BaseStrategy):
         onset_arr = spike_onset.to_numpy()
         active_arr = spike_active.to_numpy()
 
-        def _context_arrays(prefix: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        def _context_arrays(
+            prefix: str,
+            fast_bars: int = 30,
+            slow_bars: int = 120,
+        ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
             close_col = f"{prefix}_close"
             if close_col not in data.columns:
                 empty = np.full(n, np.nan)
                 return empty, empty, empty, empty, empty
             context_close = pd.Series(data[close_col], dtype=float)
-            context_fast = context_close.ewm(span=30, adjust=False).mean()
-            context_slow = context_close.ewm(span=120, adjust=False).mean()
-            context_ret_30 = context_close.pct_change(30, fill_method=None) * 100.0
-            context_ret_120 = context_close.pct_change(120, fill_method=None) * 100.0
+            context_fast = context_close.ewm(span=fast_bars, adjust=False).mean()
+            context_slow = context_close.ewm(span=slow_bars, adjust=False).mean()
+            context_ret_30 = context_close.pct_change(fast_bars, fill_method=None) * 100.0
+            context_ret_120 = context_close.pct_change(slow_bars, fill_method=None) * 100.0
             return (
                 context_close.to_numpy(dtype=float),
                 context_fast.to_numpy(dtype=float),
@@ -714,6 +772,48 @@ class BollingerRSIStrategy(BaseStrategy):
         metal_peer_close_arr, metal_peer_fast_arr, metal_peer_slow_arr, metal_peer_ret_30_arr, metal_peer_ret_120_arr = _context_arrays("metal_peer")
         miners_close_arr, miners_fast_arr, miners_slow_arr, miners_ret_30_arr, miners_ret_120_arr = _context_arrays("miners")
         riskoff_close_arr, riskoff_fast_arr, riskoff_slow_arr, riskoff_ret_30_arr, riskoff_ret_120_arr = _context_arrays("riskoff")
+        (
+            dollar_regime_close_arr,
+            dollar_regime_fast_arr,
+            dollar_regime_slow_arr,
+            dollar_regime_ret_fast_arr,
+            dollar_regime_ret_slow_arr,
+        ) = _context_arrays("dollar", gold_macro_regime_fast_bars, gold_macro_regime_slow_bars)
+        (
+            rates_regime_close_arr,
+            rates_regime_fast_arr,
+            rates_regime_slow_arr,
+            rates_regime_ret_fast_arr,
+            rates_regime_ret_slow_arr,
+        ) = _context_arrays("rates", gold_macro_regime_fast_bars, gold_macro_regime_slow_bars)
+        (
+            long_rates_regime_close_arr,
+            long_rates_regime_fast_arr,
+            long_rates_regime_slow_arr,
+            long_rates_regime_ret_fast_arr,
+            long_rates_regime_ret_slow_arr,
+        ) = _context_arrays("long_rates", gold_macro_regime_fast_bars, gold_macro_regime_slow_bars)
+        (
+            metal_peer_regime_close_arr,
+            metal_peer_regime_fast_arr,
+            metal_peer_regime_slow_arr,
+            metal_peer_regime_ret_fast_arr,
+            metal_peer_regime_ret_slow_arr,
+        ) = _context_arrays("metal_peer", gold_macro_regime_fast_bars, gold_macro_regime_slow_bars)
+        (
+            miners_regime_close_arr,
+            miners_regime_fast_arr,
+            miners_regime_slow_arr,
+            miners_regime_ret_fast_arr,
+            miners_regime_ret_slow_arr,
+        ) = _context_arrays("miners", gold_macro_regime_fast_bars, gold_macro_regime_slow_bars)
+        (
+            riskoff_regime_close_arr,
+            riskoff_regime_fast_arr,
+            riskoff_regime_slow_arr,
+            riskoff_regime_ret_fast_arr,
+            riskoff_regime_ret_slow_arr,
+        ) = _context_arrays("riskoff", gold_macro_regime_fast_bars, gold_macro_regime_slow_bars)
 
         def _uptrend_risk_score(
             close_value: float,
@@ -814,31 +914,61 @@ class BollingerRSIStrategy(BaseStrategy):
             dollar_slow_now = dollar_slow_arr[pos]
             dollar_ret_30_now = dollar_ret_30_arr[pos]
             dollar_ret_120_now = dollar_ret_120_arr[pos]
+            dollar_regime_close_now = dollar_regime_close_arr[pos]
+            dollar_regime_fast_now = dollar_regime_fast_arr[pos]
+            dollar_regime_slow_now = dollar_regime_slow_arr[pos]
+            dollar_regime_ret_fast_now = dollar_regime_ret_fast_arr[pos]
+            dollar_regime_ret_slow_now = dollar_regime_ret_slow_arr[pos]
             rates_close_now = rates_close_arr[pos]
             rates_fast_now = rates_fast_arr[pos]
             rates_slow_now = rates_slow_arr[pos]
             rates_ret_30_now = rates_ret_30_arr[pos]
             rates_ret_120_now = rates_ret_120_arr[pos]
+            rates_regime_close_now = rates_regime_close_arr[pos]
+            rates_regime_fast_now = rates_regime_fast_arr[pos]
+            rates_regime_slow_now = rates_regime_slow_arr[pos]
+            rates_regime_ret_fast_now = rates_regime_ret_fast_arr[pos]
+            rates_regime_ret_slow_now = rates_regime_ret_slow_arr[pos]
             long_rates_close_now = long_rates_close_arr[pos]
             long_rates_fast_now = long_rates_fast_arr[pos]
             long_rates_slow_now = long_rates_slow_arr[pos]
             long_rates_ret_30_now = long_rates_ret_30_arr[pos]
             long_rates_ret_120_now = long_rates_ret_120_arr[pos]
+            long_rates_regime_close_now = long_rates_regime_close_arr[pos]
+            long_rates_regime_fast_now = long_rates_regime_fast_arr[pos]
+            long_rates_regime_slow_now = long_rates_regime_slow_arr[pos]
+            long_rates_regime_ret_fast_now = long_rates_regime_ret_fast_arr[pos]
+            long_rates_regime_ret_slow_now = long_rates_regime_ret_slow_arr[pos]
             metal_peer_close_now = metal_peer_close_arr[pos]
             metal_peer_fast_now = metal_peer_fast_arr[pos]
             metal_peer_slow_now = metal_peer_slow_arr[pos]
             metal_peer_ret_30_now = metal_peer_ret_30_arr[pos]
             metal_peer_ret_120_now = metal_peer_ret_120_arr[pos]
+            metal_peer_regime_close_now = metal_peer_regime_close_arr[pos]
+            metal_peer_regime_fast_now = metal_peer_regime_fast_arr[pos]
+            metal_peer_regime_slow_now = metal_peer_regime_slow_arr[pos]
+            metal_peer_regime_ret_fast_now = metal_peer_regime_ret_fast_arr[pos]
+            metal_peer_regime_ret_slow_now = metal_peer_regime_ret_slow_arr[pos]
             miners_close_now = miners_close_arr[pos]
             miners_fast_now = miners_fast_arr[pos]
             miners_slow_now = miners_slow_arr[pos]
             miners_ret_30_now = miners_ret_30_arr[pos]
             miners_ret_120_now = miners_ret_120_arr[pos]
+            miners_regime_close_now = miners_regime_close_arr[pos]
+            miners_regime_fast_now = miners_regime_fast_arr[pos]
+            miners_regime_slow_now = miners_regime_slow_arr[pos]
+            miners_regime_ret_fast_now = miners_regime_ret_fast_arr[pos]
+            miners_regime_ret_slow_now = miners_regime_ret_slow_arr[pos]
             riskoff_close_now = riskoff_close_arr[pos]
             riskoff_fast_now = riskoff_fast_arr[pos]
             riskoff_slow_now = riskoff_slow_arr[pos]
             riskoff_ret_30_now = riskoff_ret_30_arr[pos]
             riskoff_ret_120_now = riskoff_ret_120_arr[pos]
+            riskoff_regime_close_now = riskoff_regime_close_arr[pos]
+            riskoff_regime_fast_now = riskoff_regime_fast_arr[pos]
+            riskoff_regime_slow_now = riskoff_regime_slow_arr[pos]
+            riskoff_regime_ret_fast_now = riskoff_regime_ret_fast_arr[pos]
+            riskoff_regime_ret_slow_now = riskoff_regime_ret_slow_arr[pos]
             active_now = bool(active_arr[pos])
             onset_now = bool(onset_arr[pos])
             just_confirmed_decay = False
@@ -1070,11 +1200,6 @@ class BollingerRSIStrategy(BaseStrategy):
                 + rates_weakness_weight * rates_weakness_score
                 + long_rates_weakness_weight * long_rates_weakness_score
             )
-            gold_macro_risk = (
-                gold_macro_score >= gold_macro_block_score
-                if gold_macro_score_enabled
-                else dollar_strength_risk or rates_weakness_risk or long_rates_weakness_risk
-            )
             metal_peer_confirm = _uptrend_confirmation(
                 metal_peer_close_now,
                 metal_peer_fast_now,
@@ -1102,12 +1227,96 @@ class BollingerRSIStrategy(BaseStrategy):
                 gold_riskoff_ret_30,
                 gold_riskoff_ret_120,
             )
+            dollar_regime_state = directional_trend_state(
+                close_value=dollar_regime_close_now,
+                fast_value=dollar_regime_fast_now,
+                slow_value=dollar_regime_slow_now,
+                ret_fast_value=dollar_regime_ret_fast_now,
+                ret_slow_value=dollar_regime_ret_slow_now,
+            )
+            rates_regime_state = directional_trend_state(
+                close_value=rates_regime_close_now,
+                fast_value=rates_regime_fast_now,
+                slow_value=rates_regime_slow_now,
+                ret_fast_value=rates_regime_ret_fast_now,
+                ret_slow_value=rates_regime_ret_slow_now,
+            )
+            long_rates_regime_state = directional_trend_state(
+                close_value=long_rates_regime_close_now,
+                fast_value=long_rates_regime_fast_now,
+                slow_value=long_rates_regime_slow_now,
+                ret_fast_value=long_rates_regime_ret_fast_now,
+                ret_slow_value=long_rates_regime_ret_slow_now,
+            )
+            metal_peer_regime_state = directional_trend_state(
+                close_value=metal_peer_regime_close_now,
+                fast_value=metal_peer_regime_fast_now,
+                slow_value=metal_peer_regime_slow_now,
+                ret_fast_value=metal_peer_regime_ret_fast_now,
+                ret_slow_value=metal_peer_regime_ret_slow_now,
+            )
+            miners_regime_state = directional_trend_state(
+                close_value=miners_regime_close_now,
+                fast_value=miners_regime_fast_now,
+                slow_value=miners_regime_slow_now,
+                ret_fast_value=miners_regime_ret_fast_now,
+                ret_slow_value=miners_regime_ret_slow_now,
+            )
+            riskoff_regime_state = directional_trend_state(
+                close_value=riskoff_regime_close_now,
+                fast_value=riskoff_regime_fast_now,
+                slow_value=riskoff_regime_slow_now,
+                ret_fast_value=riskoff_regime_ret_fast_now,
+                ret_slow_value=riskoff_regime_ret_slow_now,
+            )
+            gold_macro_regime_score = weighted_gold_macro_regime_score(
+                dollar_state=dollar_regime_state,
+                dollar_weight=gold_regime_dollar_weight,
+                rates_state=rates_regime_state,
+                rates_weight=gold_regime_rates_weight,
+                long_rates_state=long_rates_regime_state,
+                long_rates_weight=gold_regime_long_rates_weight,
+                peer_state=metal_peer_regime_state,
+                peer_weight=gold_regime_peer_weight,
+                miners_state=miners_regime_state,
+                miners_weight=gold_regime_miners_weight,
+                riskoff_state=riskoff_regime_state,
+                riskoff_weight=gold_regime_riskoff_weight,
+            )
+            gold_macro_state = gold_macro_regime_state(
+                score=gold_macro_regime_score,
+                bullish_threshold=gold_macro_regime_bullish_score,
+                bearish_threshold=gold_macro_regime_bearish_score,
+            )
+            gold_macro_bullish = gold_macro_regime_enabled and gold_macro_state == "bullish"
+            gold_macro_bearish = gold_macro_regime_enabled and gold_macro_state == "bearish"
+            gold_macro_risk = (
+                gold_macro_bearish
+                if gold_macro_regime_enabled
+                else (
+                    gold_macro_score >= gold_macro_block_score
+                    if gold_macro_score_enabled
+                    else dollar_strength_risk or rates_weakness_risk or long_rates_weakness_risk
+                )
+            )
             if gold_riskoff_override_enabled and riskoff_override:
                 gold_macro_risk = False
+                if gold_macro_regime_enabled and gold_macro_state == "bearish":
+                    gold_macro_state = "neutral"
+                    gold_macro_bearish = False
             gold_context_assist_score = (
                 (gold_peer_strength_weight if metal_peer_confirm else 0.0)
                 + (gold_miners_strength_weight if miners_confirm else 0.0)
                 + (gold_riskoff_strength_weight if riskoff_override else 0.0)
+            )
+            gold_context_effective_score = gold_context_assist_score + (0.5 if gold_macro_bullish else 0.0)
+            trend_context_score = weighted_trend_context_score(
+                peer_confirm=metal_peer_confirm,
+                peer_weight=trend_peer_strength_weight,
+                miners_confirm=miners_confirm,
+                miners_weight=trend_miners_strength_weight,
+                riskoff_confirm=riskoff_override,
+                riskoff_weight=trend_riskoff_strength_weight,
             )
             spy_assisted_breakout = (
                 active_now
@@ -1126,7 +1335,7 @@ class BollingerRSIStrategy(BaseStrategy):
                 and active_now
                 and episode_phase == "spike"
                 and not in_spike_lockout
-                and gold_context_assist_score >= gold_context_assist_min_score
+                and gold_context_effective_score >= gold_context_assist_min_score
                 and not spy_rebound_risk
                 and not gold_macro_risk
                 and atr_ma_now > 0
@@ -1201,6 +1410,7 @@ class BollingerRSIStrategy(BaseStrategy):
             if (
                 event_drop_hit
                 and event_target_short_enabled
+                and not gold_macro_bullish
                 and event_short_ready(
                     event_setup,
                     min_peak_pct=event_target_min_peak_pct,
@@ -1230,6 +1440,8 @@ class BollingerRSIStrategy(BaseStrategy):
                             "event_confirm_drop_req": round(event_confirm_drop_req, 4),
                             "profit_giveback_frac": round(event_target_profit_giveback_frac, 4),
                             "profit_giveback_min_pct": round(event_target_profit_giveback_min_pct, 4),
+                            "gold_macro_regime_state": gold_macro_state,
+                            "gold_macro_regime_score": round(float(gold_macro_regime_score), 3),
                         },
                     }
                     event_target_entries += 1
@@ -1268,6 +1480,9 @@ class BollingerRSIStrategy(BaseStrategy):
                             "riskoff_ret_120": round(float(riskoff_ret_120_now), 3) if not np.isnan(riskoff_ret_120_now) else None,
                             "gold_macro_score": round(float(gold_macro_score), 3),
                             "gold_context_assist_score": round(float(gold_context_assist_score), 3),
+                            "gold_context_effective_score": round(float(gold_context_effective_score), 3),
+                            "gold_macro_regime_state": gold_macro_state,
+                            "gold_macro_regime_score": round(float(gold_macro_regime_score), 3),
                             "metal_peer_confirm": bool(metal_peer_confirm),
                             "miners_confirm": bool(miners_confirm),
                             "riskoff_override": bool(riskoff_override),
@@ -1452,6 +1667,7 @@ class BollingerRSIStrategy(BaseStrategy):
             if (
                 intraday_pullback_short_enabled
                 and intraday_pullback_ready
+                and not gold_macro_bullish
                 and (pos - last_intraday_pullback_bar) >= intraday_pullback_cooldown
                 and px > low_price_chop_price
             ):
@@ -1469,16 +1685,24 @@ class BollingerRSIStrategy(BaseStrategy):
                         "recent_max_rsi": round(float(recent_max_rsi_now), 2),
                         "rsi_fade_points": round(float(recent_max_rsi_now - rsi_val), 2),
                         "drop_from_recent_high_pct": round(float(drop_from_recent_high_pct), 2),
+                        "gold_macro_regime_state": gold_macro_state,
+                        "gold_macro_regime_score": round(float(gold_macro_regime_score), 3),
                     },
                 }
                 last_intraday_pullback_bar = pos
                 continue
 
-            trend_context_ok = (
+            trend_base_context_ok = (
                 not gold_macro_risk
                 and not spy_rebound_risk
                 and (not gold_peer_confirm_enabled or metal_peer_confirm)
                 and (not gold_miners_confirm_enabled or miners_confirm)
+            )
+            trend_context_ok = trend_context_ready(
+                base_context_ok=trend_base_context_ok,
+                score_enabled=trend_context_score_enabled,
+                score=trend_context_score,
+                min_score=trend_context_min_score,
             )
             trend_up = (
                 not np.isnan(trend_fast_now)
@@ -1520,6 +1744,7 @@ class BollingerRSIStrategy(BaseStrategy):
                         "pct_trail": trend_bias_trail_pct,
                         "trend_retrace_from_high_pct": round(float(trend_retrace_from_high_pct), 2),
                         "trend_momentum_120": round(float(trend_momentum_120), 2),
+                        "trend_context_score": round(float(trend_context_score), 2),
                     },
                 }
                 last_trend_bias_bar = pos
@@ -1530,6 +1755,8 @@ class BollingerRSIStrategy(BaseStrategy):
 
             allow_normal_long = bool(normal_long_sig.iloc[pos])
             if not bool(p["normal_long_enabled"]):
+                allow_normal_long = False
+            if gold_macro_bearish:
                 allow_normal_long = False
             if active_now and spy_rebound_risk:
                 allow_normal_long = False
@@ -1596,6 +1823,9 @@ class BollingerRSIStrategy(BaseStrategy):
                     "trend_bias_ready": bool(trend_bias_ready),
                     "trend_retrace_from_high_pct": round(float(trend_retrace_from_high_pct), 3),
                     "trend_momentum_120": round(float(trend_momentum_120), 3),
+                    "trend_context_score": round(float(trend_context_score), 3),
+                    "gold_macro_regime_state": gold_macro_state,
+                    "gold_macro_regime_score": round(float(gold_macro_regime_score), 3),
                     "breakout_spike_long": bool(breakout_spike_long),
                     "spy_assisted_breakout": bool(spy_assisted_breakout),
                     "spy_rebound_risk": bool(spy_rebound_risk),
@@ -1622,6 +1852,8 @@ class BollingerRSIStrategy(BaseStrategy):
                     blocked_by.append("RSI overbought alone is not a short trigger")
                 if intraday_pullback_short_enabled and not intraday_pullback_ready:
                     blocked_by.append("intraday pullback short not confirmed")
+                if gold_macro_bullish:
+                    blocked_by.append("bullish gold macro regime suppresses shorts")
                 if not bool(normal_short_sig.iloc[pos]):
                     blocked_by.append("normal_short_sig=false")
                 if episode_phase != "idle":
@@ -1656,6 +1888,7 @@ class BollingerRSIStrategy(BaseStrategy):
             elif (
                 bool(p["normal_short_enabled"])
                 and episode_phase == "idle"
+                and not gold_macro_bullish
                 and px > low_price_chop_price
                 and bool(normal_short_sig.iloc[pos])
             ):

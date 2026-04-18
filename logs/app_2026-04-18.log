@@ -55,3 +55,847 @@
 2026-04-18T11:47:17.204+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
 2026-04-18T11:47:17.204+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
 2026-04-18T11:47:19.742+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:21.946+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:21.954+03:00 | INFO | data.ingestion:250 | Alpaca CACHE HIT: SLV/1Min — serving 353916 bars from cache, no API call needed
+2026-04-18T11:47:22.434+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T11:47:45.649+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T11:49:03.551+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T11:50:11.012+03:00 | INFO | db.database:105 | Database ready: db\trading.db
+2026-04-18T11:55:38.404+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:38.697+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:38.698+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:55:39.311+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:55:39.482+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:39.976+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:39.977+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T11:55:40.290+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:40.291+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:55:40.854+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:55:41.122+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:41.936+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:41.936+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T11:55:42.402+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:42.402+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:55:42.973+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:55:43.369+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:44.626+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:55:44.626+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T11:55:44.734+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T11:55:55.967+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T14:49:04.496+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:04.763+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:04.763+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T14:49:05.374+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T14:49:05.546+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:06.032+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:06.034+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T14:49:06.354+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:06.354+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T14:49:06.918+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T14:49:07.177+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:07.993+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:07.995+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T14:49:08.463+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:08.463+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T14:49:09.034+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T14:49:09.439+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:10.681+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:49:10.681+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T14:49:10.801+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T14:49:22.160+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T14:58:04.988+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:05.251+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:05.251+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T14:58:05.840+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T14:58:06.012+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:06.488+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:06.488+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T14:58:06.822+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:06.823+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T14:58:07.389+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T14:58:07.655+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:08.440+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:08.442+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T14:58:08.882+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:08.882+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T14:58:09.437+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T14:58:09.846+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:11.092+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T14:58:11.094+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T14:58:11.218+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T14:58:22.569+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T14:58:29.267+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T14:58:40.558+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T14:58:47.354+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T14:58:58.519+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T14:59:05.281+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T14:59:16.676+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T14:59:23.459+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T14:59:34.673+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T14:59:41.422+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T14:59:52.770+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T14:59:59.498+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:00:10.876+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:00:17.649+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:00:28.980+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:00:35.646+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:00:46.761+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:00:53.410+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:01:04.574+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:01:11.458+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:01:14.091+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:14.369+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:14.372+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:01:14.956+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:01:15.126+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:15.606+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:15.606+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:01:15.906+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:15.906+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:01:16.474+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:01:16.724+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:17.557+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:17.557+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:01:18.027+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:18.027+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:01:18.590+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:01:18.991+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:20.274+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:01:20.275+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:01:20.388+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:01:23.188+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:01:30.120+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:01:32.060+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:01:46.806+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:01:57.567+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:02:08.848+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:02:15.696+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:02:18.561+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:18.813+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:18.813+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:02:19.397+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:02:19.565+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:20.045+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:20.045+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:02:20.357+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:20.357+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:02:20.917+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:02:21.182+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:21.980+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:21.981+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:02:22.450+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:22.450+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:02:23.033+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:02:23.416+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:24.660+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:02:24.660+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:02:24.776+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:02:27.200+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:02:34.060+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:02:36.160+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:02:42.841+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:02:45.442+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:02:52.173+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:02:54.207+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:03:00.972+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:03:03.573+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:03:10.369+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:03:12.303+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:03:18.919+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:03:21.602+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:03:28.351+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:03:30.383+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:03:37.016+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:03:39.616+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:03:46.380+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:03:48.446+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:03:55.263+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:03:57.746+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:04:17.476+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:04:19.508+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:04:26.440+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:04:28.791+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:04:35.555+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:04:37.823+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:04:44.848+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:04:44.936+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:45.204+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:45.204+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:04:45.804+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:04:45.973+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:46.470+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:46.470+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:04:46.806+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:46.806+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:04:47.066+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:04:47.387+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:04:47.639+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:48.454+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:48.454+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:04:48.938+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:48.938+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:04:49.503+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:04:49.903+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:51.169+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:04:51.185+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:04:51.286+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:04:54.069+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:04:56.686+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:03.102+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:03.634+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:05.851+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:10.150+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:12.899+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:15.801+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:22.517+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:23.115+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:25.197+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:29.780+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:32.434+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:35.212+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:41.850+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:42.517+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:44.612+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:05:49.426+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:51.992+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:05:55.026+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:01.642+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:02.174+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:04.108+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:08.930+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:11.613+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:14.590+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:21.338+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:21.855+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:23.887+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:28.786+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:31.186+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:34.070+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:40.936+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:41.435+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:43.352+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:06:48.568+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:50.840+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:06:53.733+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:07:00.599+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:07:01.015+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:07:02.898+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:07:07.963+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:07:10.263+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:07:13.480+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:07:20.378+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:07:22.494+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:07:29.459+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:07:40.758+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:07:47.524+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:07:58.755+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:08:05.536+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:08:16.685+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:08:23.417+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:08:34.581+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:08:41.214+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:08:52.328+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:08:58.940+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:09:10.159+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:09:16.842+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:09:27.011+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:27.277+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:27.278+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:09:27.854+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:09:28.017+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:28.506+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:28.506+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:09:29.655+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:29.655+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:09:31.171+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:09:32.608+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:37.807+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:37.807+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:09:40.221+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:40.231+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:09:40.554+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:09:41.762+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:09:43.956+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:51.992+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:09:51.992+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:09:52.462+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:10:43.771+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:10:53.301+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:10:59.341+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:11:00.016+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:11:06.024+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:11:11.372+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:11:17.337+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:11:18.355+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:11:24.052+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:11:34.458+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:12:05.970+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:12:21.094+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:13:05.253+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:13:25.449+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:14:07.214+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:14:08.592+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:14:13.942+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:14:42.587+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:14:47.719+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:14:49.485+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:14:54.501+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:15:00.716+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:15:05.549+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:15:07.532+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:15:12.515+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:15:12.898+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:13.182+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:13.182+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:15:13.781+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:15:13.944+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:14.464+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:14.464+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:15:14.783+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:14.783+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:15:15.367+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:15:15.637+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:16.497+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:16.497+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:15:16.998+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:16.998+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:15:17.565+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:15:17.971+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:19.305+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:15:19.305+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:15:19.413+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:15:19.403+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:15:24.958+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:15:27.253+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:15:32.144+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:15:32.661+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:15:40.344+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:15:40.388+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:15:45.851+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:15:48.125+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:15:53.241+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:15:53.777+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:16:00.941+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:16:01.040+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:16:06.393+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:16:08.697+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:16:13.713+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:16:14.179+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:16:21.320+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:16:21.345+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:16:26.720+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:16:33.521+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:16:33.819+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:16:51.565+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:16:58.431+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:17:21.367+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:21.635+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:21.636+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:17:22.211+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:17:22.380+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:22.877+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:22.877+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:17:23.200+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:23.200+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:17:23.783+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:17:24.061+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:24.932+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:24.932+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:17:25.380+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:17:25.477+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:25.477+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:17:26.057+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:17:26.467+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:27.784+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:17:27.784+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:17:27.904+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:17:32.424+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:17:39.591+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:17:43.957+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:17:46.617+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:17:50.909+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:17:58.220+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:18:02.380+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:18:05.251+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:18:09.169+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:18:16.760+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:18:20.701+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:18:23.870+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:18:27.515+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:18:35.439+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:18:39.079+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:18:46.053+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:18:57.678+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:19:04.652+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:19:12.592+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:12.858+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:12.858+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:19:13.434+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:19:13.601+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:14.100+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:14.100+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:19:14.417+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:14.417+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:19:14.978+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:19:15.241+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:16.057+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:16.057+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:19:16.395+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:19:16.531+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:16.535+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:19:17.105+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:19:17.497+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:18.758+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:19:18.758+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:19:18.874+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:19:23.356+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:19:30.458+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:19:34.859+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:19:37.374+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:19:41.720+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:19:48.894+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:19:53.231+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:19:55.835+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:20:00.149+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:20:07.282+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:20:11.564+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:20:14.114+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:20:18.396+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:20:25.479+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:20:29.694+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:20:36.443+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:20:47.758+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:20:54.525+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:21:05.969+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:21:12.826+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:21:16.786+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:17.048+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:17.048+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:21:17.638+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:21:17.806+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:18.304+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:18.304+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:21:18.616+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:18.616+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:21:19.189+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:21:19.451+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:20.247+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:20.247+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:21:20.720+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:20.722+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:21:21.279+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:21:21.676+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:22.919+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:21:22.919+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:21:23.037+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:21:24.427+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:21:31.131+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:21:34.412+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:21:42.383+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:21:49.297+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:22:00.745+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:22:07.113+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:22:17.915+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:22:24.364+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:22:35.082+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:22:41.262+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:22:52.106+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:22:58.317+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:23:08.997+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:23:15.165+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:23:25.846+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:23:32.023+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:23:42.703+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:23:48.897+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:23:59.545+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:24:05.749+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:24:16.397+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:24:22.547+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:24:33.250+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:24:39.530+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:24:50.342+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:24:56.544+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:25:07.267+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:25:13.502+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:25:24.326+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:25:30.703+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:25:41.412+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:25:47.712+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:25:58.403+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:26:04.631+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:26:15.405+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:26:21.792+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:26:32.405+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:26:38.764+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:26:49.511+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:26:55.736+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:27:06.424+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:27:12.541+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:27:23.299+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:27:29.572+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:27:40.236+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:27:46.358+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:27:57.089+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:28:03.362+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:28:14.014+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:28:20.342+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:28:31.091+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:28:37.204+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:28:47.905+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:28:53.999+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:29:04.638+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:29:10.846+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:29:21.533+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:29:27.733+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:29:38.417+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:29:44.732+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:29:55.392+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:30:01.593+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:30:12.358+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:30:18.897+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:30:29.711+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:30:36.139+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:30:47.152+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:30:53.472+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:31:04.205+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:31:10.773+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:31:21.684+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:31:28.058+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:31:39.233+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:31:45.701+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:31:56.618+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:32:02.788+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:32:13.618+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:32:19.850+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:32:30.680+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:32:36.918+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:32:47.753+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:32:53.960+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:33:04.856+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:33:11.014+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:33:21.761+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:33:28.086+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:33:38.972+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:33:45.262+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:33:56.041+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:34:02.392+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:34:13.202+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:34:19.667+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:34:30.412+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:34:36.777+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:34:47.573+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:34:53.981+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:35:04.735+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:35:11.561+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:35:22.995+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:35:29.968+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:35:41.474+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:35:48.647+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:35:59.853+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:36:06.269+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:36:17.016+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:36:23.280+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:36:34.104+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:36:40.451+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:36:51.212+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:36:57.430+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:37:08.185+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:37:14.575+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:37:25.547+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:37:31.864+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:37:42.748+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:37:49.035+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:37:59.833+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:38:06.144+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:38:17.020+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:38:23.347+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:38:34.207+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:38:40.799+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:38:51.774+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:38:58.354+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:46:27.714+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:27.996+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:28.006+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:46:28.655+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:46:28.825+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:29.314+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:29.314+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:46:29.642+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:29.642+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:46:30.211+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:46:30.478+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:31.271+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:31.271+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:46:31.764+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:31.764+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:46:32.340+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:46:32.738+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:33.978+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:46:33.978+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:46:34.104+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:46:45.609+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:46:52.468+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:47:04.008+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:47:10.967+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:47:22.475+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:47:29.415+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:47:40.867+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:47:47.710+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:47:59.256+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:49:28.114+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:28.375+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:28.380+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:49:28.951+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:49:29.124+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:29.608+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:29.608+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:49:29.932+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:29.932+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:49:30.493+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:49:30.762+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:31.548+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:31.548+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:49:32.024+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:32.024+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:49:32.591+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:49:32.982+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:34.224+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:34.224+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:49:34.707+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:34.709+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: GDX 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:49:35.265+03:00 | INFO | data.ingestion:322 | Alpaca API: GDX 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:49:35.614+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:36.712+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:36.712+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/GDX/1Min +0 new bars → 445551 total
+2026-04-18T15:49:37.091+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:37.094+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: VIXY 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:49:37.656+03:00 | INFO | data.ingestion:322 | Alpaca API: VIXY 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:49:37.941+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:38.783+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:49:38.785+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/VIXY/1Min +0 new bars → 339934 total
+2026-04-18T15:49:38.923+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:49:51.723+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:54:48.154+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:48.427+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:48.427+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:54:49.138+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:54:49.305+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:49.785+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:49.785+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:54:50.111+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:50.111+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:54:50.677+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:54:50.951+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:51.737+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:51.737+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:54:52.242+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:52.244+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:54:52.805+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:54:53.210+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:54.460+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:54.460+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:54:54.943+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:54.943+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: GDX 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:54:55.501+03:00 | INFO | data.ingestion:322 | Alpaca API: GDX 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:54:55.846+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:56.934+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:56.934+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/GDX/1Min +0 new bars → 445551 total
+2026-04-18T15:54:57.325+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:57.325+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: VIXY 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:54:57.886+03:00 | INFO | data.ingestion:322 | Alpaca API: VIXY 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:54:58.151+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:59.001+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:54:59.001+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/VIXY/1Min +0 new bars → 339934 total
+2026-04-18T15:54:59.142+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:55:11.732+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:58:28.664+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:28.942+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:28.942+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:58:29.519+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:58:29.687+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:30.181+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:30.181+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T15:58:30.514+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:30.514+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:58:31.083+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:58:31.354+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:32.214+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:32.214+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T15:58:32.682+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:32.682+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:58:33.252+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:58:33.653+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:34.978+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:34.978+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T15:58:35.468+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:35.468+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: GDX 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:58:36.048+03:00 | INFO | data.ingestion:322 | Alpaca API: GDX 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:58:36.405+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:37.587+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:37.587+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/GDX/1Min +0 new bars → 445551 total
+2026-04-18T15:58:37.986+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:37.986+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: VIXY 1Min 2026-04-02 → 2026-04-03
+2026-04-18T15:58:38.551+03:00 | INFO | data.ingestion:322 | Alpaca API: VIXY 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T15:58:38.827+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:39.713+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T15:58:39.713+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/VIXY/1Min +0 new bars → 339934 total
+2026-04-18T15:58:39.848+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:58:52.737+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:59:00.195+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:59:13.199+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:59:20.522+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:59:33.294+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T15:59:40.452+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T15:59:53.282+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:00:00.789+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:00:13.805+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:01:07.703+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:07.971+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:07.971+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:01:08.586+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:01:08.759+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:09.243+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:09.243+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T16:01:09.551+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:09.551+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:01:10.123+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:01:10.388+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:11.186+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:11.186+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T16:01:11.670+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:11.670+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:01:12.237+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:01:12.637+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:13.869+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:01:13.885+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T16:01:14.009+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:01:25.569+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:31:50.001+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:50.259+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:50.261+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:31:50.854+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:31:51.017+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:51.503+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:51.503+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T16:31:51.813+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:51.813+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:31:52.418+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:31:52.683+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:53.501+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:53.501+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T16:31:53.969+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:53.969+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:31:54.537+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:31:54.953+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:56.235+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:31:56.235+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T16:31:56.352+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:32:09.924+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:34:46.606+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:46.871+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:46.873+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:34:47.440+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:34:47.611+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:48.094+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:48.094+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T16:34:48.423+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:48.424+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:34:48.979+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:34:49.261+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:50.074+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:50.074+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T16:34:50.572+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:50.573+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:34:51.139+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:34:51.546+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:52.811+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:34:52.812+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T16:34:52.938+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:35:06.751+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:35:13.851+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:35:27.320+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:35:34.114+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:35:47.427+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:35:54.376+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:36:07.874+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:36:14.689+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:36:28.137+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:36:34.972+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:36:48.406+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:38:28.724+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:28.988+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:28.988+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:38:29.574+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:38:29.739+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:30.232+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:30.233+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T16:38:30.553+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:30.553+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:38:31.108+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:38:31.393+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:32.205+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:32.205+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T16:38:32.676+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:32.676+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T16:38:33.253+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T16:38:33.666+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:34.931+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T16:38:34.931+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T16:38:35.057+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:38:49.053+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:38:56.163+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:39:10.158+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:39:17.209+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:39:30.782+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T16:39:37.504+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T16:39:51.152+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T17:10:40.465+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:40.533+03:00 | INFO | data.cache:116 | Cache SAVED: derived/GLD/1D — 807 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:40.533+03:00 | INFO | data.cache:116 | Cache SAVED: derived/GLD/1M — 37 bars (2023-04-01 → 2026-04-01)
+2026-04-18T17:10:40.707+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:40.745+03:00 | INFO | data.cache:116 | Cache SAVED: derived/UUP/1D — 771 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:40.747+03:00 | INFO | data.cache:116 | Cache SAVED: derived/UUP/1M — 37 bars (2023-04-01 → 2026-04-01)
+2026-04-18T17:10:41.015+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:41.061+03:00 | INFO | data.cache:116 | Cache SAVED: derived/IEF/1D — 779 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:41.062+03:00 | INFO | data.cache:116 | Cache SAVED: derived/IEF/1M — 37 bars (2023-04-01 → 2026-04-01)
+2026-04-18T17:10:41.302+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/TIP/1Min — 278455 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:41.344+03:00 | INFO | data.cache:116 | Cache SAVED: derived/TIP/1D — 757 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:41.346+03:00 | INFO | data.cache:116 | Cache SAVED: derived/TIP/1M — 37 bars (2023-04-01 → 2026-04-01)
+2026-04-18T17:10:41.749+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/TLT/1Min — 521527 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:41.799+03:00 | INFO | data.cache:116 | Cache SAVED: derived/TLT/1D — 810 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:41.799+03:00 | INFO | data.cache:116 | Cache SAVED: derived/TLT/1M — 37 bars (2023-04-01 → 2026-04-01)
+2026-04-18T17:10:42.188+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:42.248+03:00 | INFO | data.cache:116 | Cache SAVED: derived/SLV/1D — 810 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:42.248+03:00 | INFO | data.cache:116 | Cache SAVED: derived/SLV/1M — 37 bars (2023-04-01 → 2026-04-01)
+2026-04-18T17:10:42.599+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GDX/1Min — 445551 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:42.649+03:00 | INFO | data.cache:116 | Cache SAVED: derived/GDX/1D — 810 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:42.649+03:00 | INFO | data.cache:116 | Cache SAVED: derived/GDX/1M — 37 bars (2023-04-01 → 2026-04-01)
+2026-04-18T17:10:42.915+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/VIXY/1Min — 339934 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:42.973+03:00 | INFO | data.cache:116 | Cache SAVED: derived/VIXY/1D — 801 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:10:42.973+03:00 | INFO | data.cache:116 | Cache SAVED: derived/VIXY/1M — 37 bars (2023-04-01 → 2026-04-01)
+2026-04-18T17:10:43.565+03:00 | INFO | data.cache:116 | Cache SAVED: fred/CPIAUCSL/1M — 950 bars (1947-01-01 → 2026-03-01)
+2026-04-18T17:10:44.132+03:00 | INFO | data.cache:116 | Cache SAVED: fred/WALCL/1M — 1218 bars (2002-12-18 → 2026-04-15)
+2026-04-18T17:10:44.580+03:00 | INFO | data.cache:116 | Cache SAVED: fred/M2SL/1M — 806 bars (1959-01-01 → 2026-02-01)
+2026-04-18T17:10:45.514+03:00 | INFO | data.cache:116 | Cache SAVED: fred/DFII10/1M — 5826 bars (2003-01-02 → 2026-04-16)
+2026-04-18T17:10:45.831+03:00 | INFO | data.cache:116 | Cache SAVED: fred/VIXCLS/1M — 9166 bars (1990-01-02 → 2026-04-16)
+2026-04-18T17:11:14.720+03:00 | INFO | data.cache:116 | Cache SAVED: fred/CPIAUCSL/1D — 950 bars (1947-01-01 → 2026-03-01)
+2026-04-18T17:11:14.726+03:00 | INFO | data.cache:116 | Cache SAVED: fred/CPIAUCSL/1M — 950 bars (1947-01-01 → 2026-03-01)
+2026-04-18T17:11:14.916+03:00 | INFO | data.cache:116 | Cache SAVED: fred/WALCL/1D — 1218 bars (2002-12-18 → 2026-04-15)
+2026-04-18T17:11:14.921+03:00 | INFO | data.cache:116 | Cache SAVED: fred/WALCL/1M — 281 bars (2002-12-01 → 2026-04-01)
+2026-04-18T17:11:15.074+03:00 | INFO | data.cache:116 | Cache SAVED: fred/M2SL/1D — 806 bars (1959-01-01 → 2026-02-01)
+2026-04-18T17:11:15.082+03:00 | INFO | data.cache:116 | Cache SAVED: fred/M2SL/1M — 806 bars (1959-01-01 → 2026-02-01)
+2026-04-18T17:11:15.345+03:00 | INFO | data.cache:116 | Cache SAVED: fred/DFII10/1D — 5826 bars (2003-01-02 → 2026-04-16)
+2026-04-18T17:11:15.350+03:00 | INFO | data.cache:116 | Cache SAVED: fred/DFII10/1M — 280 bars (2003-01-01 → 2026-04-01)
+2026-04-18T17:11:15.644+03:00 | INFO | data.cache:116 | Cache SAVED: fred/VIXCLS/1D — 9166 bars (1990-01-02 → 2026-04-16)
+2026-04-18T17:11:15.661+03:00 | INFO | data.cache:116 | Cache SAVED: fred/VIXCLS/1M — 436 bars (1990-01-01 → 2026-04-01)
+2026-04-18T17:20:52.535+03:00 | DEBUG | data.cache:98 | Cache HIT: derived/GLD/1D — 807 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:20:52.568+03:00 | DEBUG | data.cache:98 | Cache HIT: derived/UUP/1D — 771 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:20:52.577+03:00 | DEBUG | data.cache:98 | Cache HIT: derived/IEF/1D — 779 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:20:52.610+03:00 | DEBUG | data.cache:98 | Cache HIT: derived/SLV/1D — 810 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:20:52.639+03:00 | DEBUG | data.cache:98 | Cache HIT: derived/GDX/1D — 810 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:20:52.661+03:00 | DEBUG | data.cache:98 | Cache HIT: derived/VIXY/1D — 801 bars (2023-04-03 → 2026-04-02)
+2026-04-18T17:20:52.688+03:00 | DEBUG | data.cache:98 | Cache HIT: fred/CPIAUCSL/1D — 950 bars (1947-01-01 → 2026-03-01)
+2026-04-18T17:20:52.727+03:00 | DEBUG | data.cache:98 | Cache HIT: fred/DFII10/1D — 5826 bars (2003-01-02 → 2026-04-16)
+2026-04-18T17:20:52.752+03:00 | DEBUG | data.cache:98 | Cache HIT: fred/WALCL/1D — 1218 bars (2002-12-18 → 2026-04-15)
+2026-04-18T17:20:52.776+03:00 | DEBUG | data.cache:98 | Cache HIT: fred/M2SL/1D — 806 bars (1959-01-01 → 2026-02-01)
+2026-04-18T17:20:52.811+03:00 | DEBUG | data.cache:98 | Cache HIT: fred/VIXCLS/1D — 9166 bars (1990-01-02 → 2026-04-16)

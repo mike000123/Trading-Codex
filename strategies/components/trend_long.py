@@ -1,6 +1,34 @@
 from __future__ import annotations
 
 
+def weighted_trend_context_score(
+    *,
+    peer_confirm: bool,
+    peer_weight: float,
+    miners_confirm: bool,
+    miners_weight: float,
+    riskoff_confirm: bool,
+    riskoff_weight: float,
+) -> float:
+    """Build a simple additive companion-context score for long-trend entries."""
+    return (
+        (peer_weight if peer_confirm else 0.0)
+        + (miners_weight if miners_confirm else 0.0)
+        + (riskoff_weight if riskoff_confirm else 0.0)
+    )
+
+
+def trend_context_ready(
+    *,
+    base_context_ok: bool,
+    score_enabled: bool,
+    score: float,
+    min_score: float,
+) -> bool:
+    """Require weighted companion confirmation only when the score mode is enabled."""
+    return base_context_ok and ((not score_enabled) or score >= min_score)
+
+
 def trend_bias_long_ready(
     *,
     trend_up: bool,
