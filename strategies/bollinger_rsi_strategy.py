@@ -31,6 +31,7 @@ from strategies.components import (
     intraday_pullback_short_ready,
     spike_breakout_long_ready,
     spike_momentum_long_ready,
+    trend_bias_long_ready,
 )
 
 
@@ -124,6 +125,18 @@ class BollingerRSIStrategy(BaseStrategy):
             "min_atr_pct": 0.3,
             "normal_long_enabled": True,
             "normal_short_enabled": True,
+            "trend_bias_long_enabled": False,
+            "trend_bias_fast_ema": 195,
+            "trend_bias_slow_ema": 780,
+            "trend_bias_lookback_bars": 120,
+            "trend_bias_min_retrace_pct": 0.8,
+            "trend_bias_min_momentum_120": 0.0,
+            "trend_bias_min_atr_pct": 0.03,
+            "trend_bias_min_rsi": 48.0,
+            "trend_bias_max_rsi": 72.0,
+            "trend_bias_trail_pct": 2.5,
+            "trend_bias_sl_pct": 1.2,
+            "trend_bias_cooldown": 120,
             "intraday_pullback_short_enabled": False,
             "intraday_pullback_rsi_trigger": 80.0,
             "intraday_pullback_rsi_fade_pts": 8.0,
@@ -257,6 +270,8 @@ class BollingerRSIStrategy(BaseStrategy):
             errors.append("rsi_oversold must be < rsi_overbought.")
         if float(p["intraday_pullback_rsi_trigger"]) <= float(p["rsi_overbought"]):
             errors.append("intraday_pullback_rsi_trigger must be > rsi_overbought.")
+        if int(p["trend_bias_lookback_bars"]) < 2:
+            errors.append("trend_bias_lookback_bars must be >= 2.")
         if float(p["intraday_pullback_rsi_fade_pts"]) < 0:
             errors.append("intraday_pullback_rsi_fade_pts must be >= 0.")
         if int(p["intraday_pullback_lookback_bars"]) < 2:
@@ -416,6 +431,18 @@ class BollingerRSIStrategy(BaseStrategy):
         min_bw_pct = float(p["min_band_width_pct"])
         min_rr = float(p["min_rr_ratio"])
         cooldown = int(p["cooldown_bars"])
+        trend_bias_long_enabled = bool(p["trend_bias_long_enabled"])
+        trend_bias_fast_ema = int(p["trend_bias_fast_ema"])
+        trend_bias_slow_ema = int(p["trend_bias_slow_ema"])
+        trend_bias_lookback_bars = int(p["trend_bias_lookback_bars"])
+        trend_bias_min_retrace_pct = float(p["trend_bias_min_retrace_pct"])
+        trend_bias_min_momentum_120 = float(p["trend_bias_min_momentum_120"])
+        trend_bias_min_atr_pct = float(p["trend_bias_min_atr_pct"])
+        trend_bias_min_rsi = float(p["trend_bias_min_rsi"])
+        trend_bias_max_rsi = float(p["trend_bias_max_rsi"])
+        trend_bias_trail_pct = float(p["trend_bias_trail_pct"])
+        trend_bias_sl_pct = float(p["trend_bias_sl_pct"])
+        trend_bias_cooldown = int(p["trend_bias_cooldown"])
         intraday_pullback_short_enabled = bool(p["intraday_pullback_short_enabled"])
         intraday_pullback_rsi_trigger = float(p["intraday_pullback_rsi_trigger"])
         intraday_pullback_rsi_fade_pts = float(p["intraday_pullback_rsi_fade_pts"])
@@ -532,10 +559,13 @@ class BollingerRSIStrategy(BaseStrategy):
         rsi = _calc_rsi(close, rsi_period)
         reversal_ema_fast = close.ewm(span=int(p["spike_reversal_ema_fast"]), adjust=False).mean()
         reversal_ema_slow = close.ewm(span=int(p["spike_reversal_ema_slow"]), adjust=False).mean()
+        trend_fast_ema = close.ewm(span=trend_bias_fast_ema, adjust=False).mean()
+        trend_slow_ema = close.ewm(span=trend_bias_slow_ema, adjust=False).mean()
         band_width = upper - lower
         bw_pct = band_width / close.replace(0, np.nan) * 100
         recent_max_rsi = rsi.rolling(intraday_pullback_lookback_bars, min_periods=1).max()
         recent_high = data["high"].astype(float).rolling(intraday_pullback_lookback_bars, min_periods=1).max()
+        trend_recent_high = data["high"].astype(float).rolling(trend_bias_lookback_bars, min_periods=1).max()
 
         in_spike_atr, suppress_shorts, post_spike, is_drift, _in_decay_raw, atr_s, spike_onset, spike_active = (
             self._compute_regimes_bulk(close, data, p)
@@ -587,6 +617,7 @@ class BollingerRSIStrategy(BaseStrategy):
         metas = [{"suggested_tp": None, "suggested_sl": None, "metadata": {}} for _ in range(n)]
 
         last_normal_bar = -cooldown - 1
+        last_trend_bias_bar = -trend_bias_cooldown - 1
         last_spike_bar = -spike_cooldown - 1
         last_splong_bar = -splong_cooldown - 1
         last_spike_momo_bar = -spike_momo_cooldown - 1
@@ -634,8 +665,11 @@ class BollingerRSIStrategy(BaseStrategy):
         atr_ma_arr = atr_s.rolling(20, min_periods=5).mean().to_numpy()
         fast_arr = reversal_ema_fast.to_numpy()
         slow_arr = reversal_ema_slow.to_numpy()
+        trend_fast_arr = trend_fast_ema.to_numpy(dtype=float)
+        trend_slow_arr = trend_slow_ema.to_numpy(dtype=float)
         recent_max_rsi_arr = recent_max_rsi.to_numpy(dtype=float)
         recent_high_arr = recent_high.to_numpy(dtype=float)
+        trend_recent_high_arr = trend_recent_high.to_numpy(dtype=float)
         onset_arr = spike_onset.to_numpy()
         active_arr = spike_active.to_numpy()
 
@@ -767,6 +801,9 @@ class BollingerRSIStrategy(BaseStrategy):
             slow_now = slow_arr[pos]
             recent_max_rsi_now = recent_max_rsi_arr[pos] if not np.isnan(recent_max_rsi_arr[pos]) else rsi_val
             recent_high_now = recent_high_arr[pos] if not np.isnan(recent_high_arr[pos]) else px
+            trend_recent_high_now = trend_recent_high_arr[pos] if not np.isnan(trend_recent_high_arr[pos]) else px
+            trend_fast_now = trend_fast_arr[pos] if not np.isnan(trend_fast_arr[pos]) else px
+            trend_slow_now = trend_slow_arr[pos] if not np.isnan(trend_slow_arr[pos]) else px
             benchmark_close_now = benchmark_close_arr[pos]
             benchmark_fast_now = benchmark_fast_arr[pos]
             benchmark_slow_now = benchmark_slow_arr[pos]
@@ -807,9 +844,12 @@ class BollingerRSIStrategy(BaseStrategy):
             just_confirmed_decay = False
             atr_pct_now = (atr_now / max(px, 1e-9)) * 100 if px > 0 else 0.0
             drop_from_recent_high_pct = ((recent_high_now - px) / max(recent_high_now, 1e-9)) * 100 if recent_high_now > 0 else 0.0
+            trend_retrace_from_high_pct = ((trend_recent_high_now - px) / max(trend_recent_high_now, 1e-9)) * 100 if trend_recent_high_now > 0 else 0.0
             momentum_prev_pos = pos - spike_momo_momentum_bars
             momentum_prev_px = close_arr[momentum_prev_pos] if momentum_prev_pos >= 0 else px
             spike_momo_momentum_live = ((px / max(momentum_prev_px, 1e-9)) - 1.0) * 100 if momentum_prev_pos >= 0 else 0.0
+            trend_prev_px = close_arr[pos - 1] if pos > 0 else px
+            trend_momentum_120 = ((px / max(close_arr[pos - 120], 1e-9)) - 1.0) * 100 if pos >= 120 else 0.0
 
             if onset_now and not prev_spike_onset:
                 episode_phase = "spike"
@@ -1434,6 +1474,57 @@ class BollingerRSIStrategy(BaseStrategy):
                 last_intraday_pullback_bar = pos
                 continue
 
+            trend_context_ok = (
+                not gold_macro_risk
+                and not spy_rebound_risk
+                and (not gold_peer_confirm_enabled or metal_peer_confirm)
+                and (not gold_miners_confirm_enabled or miners_confirm)
+            )
+            trend_up = (
+                not np.isnan(trend_fast_now)
+                and not np.isnan(trend_slow_now)
+                and px >= trend_fast_now
+                and trend_fast_now >= trend_slow_now
+                and trend_momentum_120 >= trend_bias_min_momentum_120
+            )
+            trend_reclaim_fast = px >= trend_fast_now and trend_prev_px <= trend_fast_now * 1.01
+            trend_prior_near_fast = trend_prev_px >= trend_fast_now * (1 - trend_bias_min_retrace_pct / 100)
+            trend_bias_ready = trend_bias_long_ready(
+                trend_up=trend_up,
+                context_ok=trend_context_ok,
+                atr_pct=atr_pct_now,
+                min_atr_pct=trend_bias_min_atr_pct,
+                rsi_value=rsi_val,
+                min_rsi=trend_bias_min_rsi,
+                max_rsi=trend_bias_max_rsi,
+                retrace_from_recent_high_pct=trend_retrace_from_high_pct,
+                min_retrace_pct=trend_bias_min_retrace_pct,
+                reclaim_fast_ema=trend_reclaim_fast,
+                prior_near_fast_ema=trend_prior_near_fast,
+                up_bar=(px > prev_px),
+            )
+            if (
+                trend_bias_long_enabled
+                and trend_bias_ready
+                and episode_phase != "decay"
+                and (pos - last_trend_bias_bar) >= trend_bias_cooldown
+            ):
+                actions[pos] = SignalAction.BUY
+                metas[pos] = {
+                    "suggested_tp": None,
+                    "suggested_sl": px * (1 - trend_bias_sl_pct / 100),
+                    "metadata": {
+                        "rsi": round(rsi_val, 2),
+                        "regime": "trend_bias_long",
+                        "spike_type": episode_type,
+                        "pct_trail": trend_bias_trail_pct,
+                        "trend_retrace_from_high_pct": round(float(trend_retrace_from_high_pct), 2),
+                        "trend_momentum_120": round(float(trend_momentum_120), 2),
+                    },
+                }
+                last_trend_bias_bar = pos
+                continue
+
             if (pos - last_normal_bar) < cooldown:
                 continue
 
@@ -1502,6 +1593,9 @@ class BollingerRSIStrategy(BaseStrategy):
                     "rsi_fade_points": round(float(recent_max_rsi_now - rsi_val), 3),
                     "drop_from_recent_high_pct": round(float(drop_from_recent_high_pct), 3),
                     "intraday_pullback_ready": bool(intraday_pullback_ready),
+                    "trend_bias_ready": bool(trend_bias_ready),
+                    "trend_retrace_from_high_pct": round(float(trend_retrace_from_high_pct), 3),
+                    "trend_momentum_120": round(float(trend_momentum_120), 3),
                     "breakout_spike_long": bool(breakout_spike_long),
                     "spy_assisted_breakout": bool(spy_assisted_breakout),
                     "spy_rebound_risk": bool(spy_rebound_risk),

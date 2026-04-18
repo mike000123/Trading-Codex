@@ -1,0 +1,57 @@
+2026-04-18T11:41:01.735+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:02.018+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:02.033+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:41:02.768+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:41:02.938+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:03.417+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:03.417+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T11:41:03.733+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:03.733+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:41:04.302+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:41:04.552+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:05.333+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:05.342+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T11:41:05.800+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:05.800+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:41:06.351+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:41:06.750+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:07.950+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:41:07.950+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T11:41:08.067+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T11:41:19.282+03:00 | INFO | reporting.backtest:128 | Bulk signal generation complete: 315,063 bars
+2026-04-18T11:45:58.864+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 342842 bars (2024-04-04 → 2026-04-07)
+2026-04-18T11:46:00.003+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 342842 bars (2024-04-04 → 2026-04-07)
+2026-04-18T11:46:20.045+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:21.980+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:46.244+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:48.298+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:49.822+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:50.060+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:50.060+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: UUP 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:46:50.653+03:00 | INFO | data.ingestion:322 | Alpaca API: UUP 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:46:50.806+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:51.273+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:51.273+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/UUP/1Min +0 new bars → 195943 total
+2026-04-18T11:46:51.899+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:51.899+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:46:53.357+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:46:54.789+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:59.860+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:46:59.865+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T11:47:02.441+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:02.451+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: SLV 1Min 2026-04-02 → 2026-04-03
+2026-04-18T11:47:03.989+03:00 | INFO | data.ingestion:322 | Alpaca API: SLV 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:47:06.140+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:06.560+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:07.487+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UUP/1Min — 195943 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:07.487+03:00 | INFO | data.ingestion:250 | Alpaca CACHE HIT: UUP/1Min — serving 121634 bars from cache, no API call needed
+2026-04-18T11:47:09.127+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:09.134+03:00 | INFO | data.ingestion:256 | Alpaca FETCH: IEF 1Min 2026-04-02 → 2026-04-02
+2026-04-18T11:47:10.602+03:00 | INFO | data.ingestion:322 | Alpaca API: IEF 1Min → 1 new bars (2026-04-02 → 2026-04-02)
+2026-04-18T11:47:12.068+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:14.116+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:14.116+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/SLV/1Min +0 new bars → 488795 total
+2026-04-18T11:47:14.595+03:00 | INFO | reporting.backtest:121 | Backtest START: GLD | bollinger_rsi | 315,063 bars | lev=1.0x | capital/trade=1000.0
+2026-04-18T11:47:17.204+03:00 | INFO | data.cache:116 | Cache SAVED: alpaca/IEF/1Min — 323579 bars (2023-04-03 → 2026-04-02)
+2026-04-18T11:47:17.204+03:00 | INFO | data.cache:154 | Cache APPEND: alpaca/IEF/1Min +0 new bars → 323579 total
+2026-04-18T11:47:19.742+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/SLV/1Min — 488795 bars (2023-04-03 → 2026-04-02)
