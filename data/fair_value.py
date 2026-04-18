@@ -27,7 +27,7 @@ class FairValueDiagnostics:
 
 def _rolling_zscore(series: pd.Series, window: int, min_periods: int | None = None) -> pd.Series:
     s = pd.to_numeric(series, errors="coerce")
-    min_obs = min_periods or max(20, window // 3)
+    min_obs = min_periods or max(3, min(window, window // 3 if window >= 3 else window))
     mu = s.rolling(window, min_periods=min_obs).mean()
     sigma = s.rolling(window, min_periods=min_obs).std(ddof=0).replace(0.0, np.nan)
     return ((s - mu) / sigma).clip(-6.0, 6.0)
@@ -52,20 +52,20 @@ def _load_close_series(
     return series[~series.index.duplicated(keep="last")].sort_index()
 
 
-def _aligned_daily_dataset(cache_root: Path) -> pd.DataFrame:
+def _aligned_dataset(cache_root: Path, timeframe: str = "1M") -> pd.DataFrame:
     cache = DataCache(root=cache_root)
     required = {
-        "GLD": ("derived", "GLD", "1D"),
-        "UUP": ("derived", "UUP", "1D"),
-        "IEF": ("derived", "IEF", "1D"),
-        "SLV": ("derived", "SLV", "1D"),
-        "GDX": ("derived", "GDX", "1D"),
-        "VIXY": ("derived", "VIXY", "1D"),
-        "CPIAUCSL": ("fred", "CPIAUCSL", "1D"),
-        "DFII10": ("fred", "DFII10", "1D"),
-        "WALCL": ("fred", "WALCL", "1D"),
-        "M2SL": ("fred", "M2SL", "1D"),
-        "VIXCLS": ("fred", "VIXCLS", "1D"),
+        "GLD": ("derived", "GLD", timeframe),
+        "UUP": ("derived", "UUP", timeframe),
+        "IEF": ("derived", "IEF", timeframe),
+        "SLV": ("derived", "SLV", timeframe),
+        "GDX": ("derived", "GDX", timeframe),
+        "VIXY": ("derived", "VIXY", timeframe),
+        "CPIAUCSL": ("fred", "CPIAUCSL", timeframe),
+        "DFII10": ("fred", "DFII10", timeframe),
+        "WALCL": ("fred", "WALCL", timeframe),
+        "M2SL": ("fred", "M2SL", timeframe),
+        "VIXCLS": ("fred", "VIXCLS", timeframe),
     }
 
     series_map: dict[str, pd.Series] = {}
@@ -82,7 +82,7 @@ def _aligned_daily_dataset(cache_root: Path) -> pd.DataFrame:
     return df.dropna(subset=["GLD"]).copy()
 
 
-def _build_feature_frame(raw: pd.DataFrame, z_window: int) -> pd.DataFrame:
+def _build_feature_frame(raw: pd.DataFrame, z_window: int, *, is_monthly: bool) -> pd.DataFrame:
     df = raw.copy()
     gld = pd.to_numeric(df["GLD"], errors="coerce")
     uup = pd.to_numeric(df["UUP"], errors="coerce")
@@ -100,10 +100,15 @@ def _build_feature_frame(raw: pd.DataFrame, z_window: int) -> pd.DataFrame:
     features["target"] = np.log(gld.replace(0.0, np.nan))
     features["actual"] = gld
 
-    inflation_yoy = cpi.pct_change(252)
-    liquidity_flow = np.log(walcl.replace(0.0, np.nan)).diff(63)
-    money_flow = np.log(m2.replace(0.0, np.nan)).diff(126)
-    gold_mom = gld.pct_change(63)
+    yoy_lag = 12 if is_monthly else 252
+    liquidity_lag = 3 if is_monthly else 63
+    money_lag = 6 if is_monthly else 126
+    momentum_lag = 3 if is_monthly else 63
+
+    inflation_yoy = cpi.pct_change(yoy_lag)
+    liquidity_flow = np.log(walcl.replace(0.0, np.nan)).diff(liquidity_lag)
+    money_flow = np.log(m2.replace(0.0, np.nan)).diff(money_lag)
+    gold_mom = gld.pct_change(momentum_lag)
 
     features["real_yield"] = _rolling_zscore(-real_yield, z_window)
     features["usd"] = _rolling_zscore(-np.log(uup.replace(0.0, np.nan)), z_window)
@@ -214,7 +219,8 @@ def compute_gld_fair_value_diagnostics(
     start: str | pd.Timestamp | None = None,
     end: str | pd.Timestamp | None = None,
 ) -> FairValueDiagnostics | None:
-    raw = _aligned_daily_dataset(Path(cache_root))
+    raw = _aligned_dataset(Path(cache_root), timeframe="1M")
+    is_monthly = True
     feature_sets = {
         "macro_core": ["real_yield", "usd", "inflation", "liquidity", "stress"],
         "macro_plus_market": ["real_yield", "usd", "inflation", "liquidity", "stress", "peer", "miners"],
@@ -232,19 +238,19 @@ def compute_gld_fair_value_diagnostics(
             "momentum",
         ],
     }
-    z_windows = (63, 126, 252)
-    fit_windows = (252, 378, 504)
-    ridge_alphas = (0.0, 0.5, 2.0)
-    smooth_spans = (5, 10, 21)
+    z_windows = (12, 24, 36)
+    fit_windows = (18, 24, 36)
+    ridge_alphas = (0.0, 0.5, 1.5)
+    smooth_spans = (2, 3, 6)
 
     best: FairValueDiagnostics | None = None
     best_score = -np.inf
     for z_window in z_windows:
-        features = _build_feature_frame(raw, z_window=z_window)
+        features = _build_feature_frame(raw, z_window=z_window, is_monthly=is_monthly)
         for set_name, cols in feature_sets.items():
             available_cols = [col for col in cols if col in features.columns]
             for fit_window in fit_windows:
-                min_fit_obs = max(126, fit_window // 2)
+                min_fit_obs = max(12, fit_window // 2)
                 for ridge_alpha in ridge_alphas:
                     for smooth_span in smooth_spans:
                         fair_value, betas = _rolling_fair_value(

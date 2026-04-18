@@ -899,3 +899,8 @@
 2026-04-18T17:20:52.752+03:00 | DEBUG | data.cache:98 | Cache HIT: fred/WALCL/1D — 1218 bars (2002-12-18 → 2026-04-15)
 2026-04-18T17:20:52.776+03:00 | DEBUG | data.cache:98 | Cache HIT: fred/M2SL/1D — 806 bars (1959-01-01 → 2026-02-01)
 2026-04-18T17:20:52.811+03:00 | DEBUG | data.cache:98 | Cache HIT: fred/VIXCLS/1D — 9166 bars (1990-01-02 → 2026-04-16)
+2026-04-18T19:10:22.626+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 342842 bars (2024-04-04 → 2026-04-07)
+2026-04-18T19:10:22.922+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 342842 bars (2024-04-04 → 2026-04-07)
+2026-04-18T19:10:32.579+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T19:10:35.927+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/GLD/1Min — 438789 bars (2023-04-03 → 2026-04-02)
+2026-04-18T19:11:38.311+03:00 | DEBUG | data.cache:98 | Cache HIT: alpaca/UVXY/1Min — 342842 bars (2024-04-04 → 2026-04-07)
