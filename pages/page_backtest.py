@@ -728,32 +728,6 @@ def _show_results() -> None:
         label_extra = f"  ·  *{len(prices_plot):,} of {n_bars:,} bars shown*" if len(prices_plot) < n_bars else ""
         st.markdown(f"#### 📈 Price{label_extra}")
         st.altair_chart(_price_chart(prices_plot, result.trades, symbol_r, show_long, show_short, show_tp, show_sl, show_sig), use_container_width=True)
-        if symbol_r.upper() == "GLD":
-            fair_payload = _cached_gld_fair_value(
-                str(st.session_state.get("loaded_start")) if st.session_state.get("loaded_start") is not None else None,
-                str(st.session_state.get("loaded_end")) if st.session_state.get("loaded_end") is not None else None,
-            )
-            if fair_payload:
-                fair_stats = fair_payload["stats"]
-                model = fair_payload["model"]
-                st.markdown("#### 🪙 Macro Fair Value")
-                render_metrics_row(
-                    {
-                        "Correlation": f"{fair_stats['corr']:.3f}",
-                        "R²": f"{fair_stats['r2']:.3f}",
-                        "MAE Gap": f"{fair_stats['mae_pct']:.2f}%",
-                        "RMSE Gap": f"{fair_stats['rmse_pct']:.2f}%",
-                        "Direction Hit": f"{fair_stats['directional_hit'] * 100:.1f}%",
-                    }
-                )
-                st.caption(
-                    "Daily slow fair-value proxy optimized on cached macro and peer series. "
-                    f"Best fit: feature set `{model['feature_set']}`, z-window `{model['z_window']}` days, "
-                    f"fit window `{model['fit_window']}` days, ridge α `{model['ridge_alpha']:.2f}`, "
-                    f"smoothing span `{model['smooth_span']}` days."
-                )
-                st.altair_chart(_fair_value_chart(fair_payload["frame"], symbol_r), use_container_width=True)
-                st.altair_chart(_fair_gap_chart(fair_payload["frame"], symbol_r), use_container_width=True)
         if selected_id_r in ("rsi_threshold", "atr_rsi", "vwap_rsi", "bollinger_rsi", "ema_trend_rsi"):
             period = int(params_r.get("rsi_period", 9))
             buy_levels = _parse_levels(params_r.get("buy_levels", "30"))
@@ -796,3 +770,41 @@ def _show_results() -> None:
 
     if "bt_db_msg" in st.session_state:
         st.caption(st.session_state["bt_db_msg"])
+
+    if symbol_r.upper() == "GLD":
+        st.markdown("#### 🪙 Macro Fair Value")
+        st.caption(
+            "This is a slow diagnostic model for GLD only. It fits a daily fair-value proxy from cached macro and peer series, "
+            "so we can judge the macro layer by fit quality before using it for trading bias."
+        )
+        trigger_key = "bt_gld_fair_value_visible"
+        if st.button("Build / Refresh Fair Value Diagnostics", key="bt_gld_fair_value_btn"):
+            st.session_state[trigger_key] = True
+        if st.session_state.get(trigger_key):
+            with st.spinner("Fitting GLD fair-value curve from cached slow macro data…"):
+                fair_payload = _cached_gld_fair_value(
+                    str(st.session_state.get("loaded_start")) if st.session_state.get("loaded_start") is not None else None,
+                    str(st.session_state.get("loaded_end")) if st.session_state.get("loaded_end") is not None else None,
+                )
+            if fair_payload:
+                fair_stats = fair_payload["stats"]
+                model = fair_payload["model"]
+                render_metrics_row(
+                    {
+                        "Correlation": f"{fair_stats['corr']:.3f}",
+                        "R²": f"{fair_stats['r2']:.3f}",
+                        "MAE Gap": f"{fair_stats['mae_pct']:.2f}%",
+                        "RMSE Gap": f"{fair_stats['rmse_pct']:.2f}%",
+                        "Direction Hit": f"{fair_stats['directional_hit'] * 100:.1f}%",
+                    }
+                )
+                st.caption(
+                    "Daily slow fair-value proxy optimized on cached macro and peer series. "
+                    f"Best fit: feature set `{model['feature_set']}`, z-window `{model['z_window']}` days, "
+                    f"fit window `{model['fit_window']}` days, ridge α `{model['ridge_alpha']:.2f}`, "
+                    f"smoothing span `{model['smooth_span']}` days."
+                )
+                st.altair_chart(_fair_value_chart(fair_payload["frame"], symbol_r), use_container_width=True)
+                st.altair_chart(_fair_gap_chart(fair_payload["frame"], symbol_r), use_container_width=True)
+            else:
+                st.warning("Could not build GLD fair-value diagnostics from the cached slow datasets.")
