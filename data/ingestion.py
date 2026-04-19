@@ -23,6 +23,7 @@ from config.symbol_profiles import context_label, context_prefix, resolve_contex
 from config.settings import settings
 from core.logger import log
 from data.cache import DataCache
+from data.fair_value import prepare_gld_fair_value_context
 
 _cache = DataCache()
 
@@ -468,6 +469,16 @@ def _strategy_companion_requests(strategy, primary_symbol: str, source: str | No
     return requests
 
 
+def _strategy_derived_requests(strategy, primary_symbol: str, source: str | None, interval: str | None) -> list[str]:
+    if strategy is None or not hasattr(strategy, "derived_contexts"):
+        return []
+    try:
+        return list(strategy.derived_contexts(primary_symbol, source=source, interval=interval) or [])
+    except Exception as e:
+        log.warning(f"Derived context resolution failed for {primary_symbol}: {e}")
+        return []
+
+
 def prepare_strategy_data(
     data: pd.DataFrame,
     strategy,
@@ -487,39 +498,61 @@ def prepare_strategy_data(
 
     companion_requests = _strategy_companion_requests(strategy, primary_symbol, source, interval)
     if not companion_requests or source not in {"alpaca", "yfinance", "forward_blend"}:
-        return data
+        enriched = data
+    else:
+        enriched = data.sort_values("date").reset_index(drop=True).copy()
+        start_ts = pd.Timestamp(start) if start is not None else pd.Timestamp(enriched["date"].min())
+        end_ts = pd.Timestamp(end) if end is not None else pd.Timestamp(enriched["date"].max()) + pd.Timedelta(minutes=1)
+        tolerance = _merge_tolerance(interval)
 
-    enriched = data.sort_values("date").reset_index(drop=True).copy()
-    start_ts = pd.Timestamp(start) if start is not None else pd.Timestamp(enriched["date"].min())
-    end_ts = pd.Timestamp(end) if end is not None else pd.Timestamp(enriched["date"].max()) + pd.Timedelta(minutes=1)
-    tolerance = _merge_tolerance(interval)
+        for _context_key, companion_symbol, prefix in companion_requests:
+            try:
+                companion = _load_companion_data(source, companion_symbol, interval, start_ts, end_ts)
+            except Exception as e:
+                log.warning(f"Companion load failed for {companion_symbol}/{interval}: {e}")
+                continue
+            if companion is None or companion.empty:
+                continue
 
-    for _context_key, companion_symbol, prefix in companion_requests:
+            comp = companion.sort_values("date").reset_index(drop=True).copy()
+            rename_map = {
+                "open": f"{prefix}_open",
+                "high": f"{prefix}_high",
+                "low": f"{prefix}_low",
+                "close": f"{prefix}_close",
+                "volume": f"{prefix}_volume",
+            }
+            comp = comp.rename(columns=rename_map)
+            keep_cols = ["date", *rename_map.values()]
+            enriched = pd.merge_asof(
+                enriched.sort_values("date"),
+                comp[keep_cols].sort_values("date"),
+                on="date",
+                direction="backward",
+                tolerance=tolerance,
+            )
+
+    derived_requests = _strategy_derived_requests(strategy, primary_symbol, source, interval)
+    if "gold_fair_value" in derived_requests and primary_symbol.strip().upper() == "GLD":
+        start_ts = pd.Timestamp(start) if start is not None else pd.Timestamp(enriched["date"].min())
+        end_ts = pd.Timestamp(end) if end is not None else pd.Timestamp(enriched["date"].max())
         try:
-            companion = _load_companion_data(source, companion_symbol, interval, start_ts, end_ts)
+            resolved = strategy.resolve_params(
+                symbol=primary_symbol,
+                source=source,
+                interval=interval,
+            )
+            enriched = prepare_gld_fair_value_context(
+                enriched,
+                start=start_ts,
+                end=end_ts,
+                bullish_slope_min=float(resolved.get("gold_fair_value_bullish_slope_min", 1.0)),
+                bearish_slope_max=float(resolved.get("gold_fair_value_bearish_slope_max", -1.0)),
+                undervalued_gap_pct=float(resolved.get("gold_fair_value_undervalued_gap_pct", 2.5)),
+                overvalued_gap_pct=float(resolved.get("gold_fair_value_overvalued_gap_pct", 2.5)),
+            )
         except Exception as e:
-            log.warning(f"Companion load failed for {companion_symbol}/{interval}: {e}")
-            continue
-        if companion is None or companion.empty:
-            continue
-
-        comp = companion.sort_values("date").reset_index(drop=True).copy()
-        rename_map = {
-            "open": f"{prefix}_open",
-            "high": f"{prefix}_high",
-            "low": f"{prefix}_low",
-            "close": f"{prefix}_close",
-            "volume": f"{prefix}_volume",
-        }
-        comp = comp.rename(columns=rename_map)
-        keep_cols = ["date", *rename_map.values()]
-        enriched = pd.merge_asof(
-            enriched.sort_values("date"),
-            comp[keep_cols].sort_values("date"),
-            on="date",
-            direction="backward",
-            tolerance=tolerance,
-        )
+            log.warning(f"Derived GLD fair-value context failed: {e}")
 
     return enriched.reset_index(drop=True)
 

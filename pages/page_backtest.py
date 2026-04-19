@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from config.settings import settings
-from data.fair_value import compute_gld_fair_value_diagnostics
+from data.fair_value import compute_gld_fair_value_diagnostics, fair_value_cache_fingerprint
 from data.ingestion import prepare_strategy_data
 from reporting.backtest import BacktestEngine
 from risk.manager import RiskManager
@@ -27,6 +27,7 @@ _RED = "#ef5350"
 _BLUE = "#4a9eff"
 _GOLD = "#ffd54f"
 _ORANGE = "#ff9800"
+_PURPLE = "#ab47bc"
 _AXIS = dict(
     gridColor="#2a2d3e",
     labelColor="#d0d4f0",
@@ -293,7 +294,7 @@ def _comparison_report(prices, trades) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl, show_sig):
+def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl, show_trail, show_sig):
     base = alt.Chart(prices).mark_line(color=_BLUE, strokeWidth=1.2).encode(
         x=alt.X("date:T", title="Date / Time", axis=alt.Axis(**_AXIS)),
         y=alt.Y("close:Q", title="Price", scale=alt.Scale(zero=False), axis=alt.Axis(**_AXIS)),
@@ -345,6 +346,7 @@ def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl
         ]
         tp_ex = exit_df[exit_df["outcome"] == "TP hit"]
         sl_ex = exit_df[exit_df["outcome"] == "SL hit"]
+        trail_ex = exit_df[exit_df["outcome"] == "Trail stop"]
         sig_ex = exit_df[exit_df["outcome"].apply(_is_signal_exit)]
         if show_tp and not tp_ex.empty:
             layers.append(
@@ -356,6 +358,12 @@ def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl
             layers.append(
                 alt.Chart(sl_ex)
                 .mark_point(shape="cross", size=110, strokeWidth=2.5, color=_RED)
+                .encode(x="date:T", y="price:Q", tooltip=tt_x)
+            )
+        if show_trail and not trail_ex.empty:
+            layers.append(
+                alt.Chart(trail_ex)
+                .mark_point(shape="diamond", size=100, filled=True, color=_PURPLE)
                 .encode(x="date:T", y="price:Q", tooltip=tt_x)
             )
         if show_sig and not sig_ex.empty:
@@ -373,7 +381,7 @@ def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl
     )
 
 
-def _rsi_chart(prices, trades, period, buy_levels, sell_levels, symbol, show_long, show_short, show_tp, show_sl, show_sig):
+def _rsi_chart(prices, trades, period, buy_levels, sell_levels, symbol, show_long, show_short, show_tp, show_sl, show_trail, show_sig):
     rsi_s = _calc_rsi(prices["close"], period).rename("rsi")
     df = pd.concat([prices[["date"]], rsi_s], axis=1).dropna()
     rsi_line = alt.Chart(df).mark_line(color=_GOLD, strokeWidth=1.8).encode(
@@ -421,11 +429,14 @@ def _rsi_chart(prices, trades, period, buy_levels, sell_levels, symbol, show_lon
             exit_df[["rsi_val", "date"]] = pd.DataFrame([_snap(r) for r in exit_df["date"]], columns=["rsi_val", "date"])
             tp_ex = exit_df[exit_df["outcome"] == "TP hit"]
             sl_ex = exit_df[exit_df["outcome"] == "SL hit"]
+            trail_ex = exit_df[exit_df["outcome"] == "Trail stop"]
             sig_ex = exit_df[exit_df["outcome"].apply(_is_signal_exit)]
             if show_tp and not tp_ex.empty:
                 layers.append(alt.Chart(tp_ex).mark_point(shape="cross", size=90, strokeWidth=2.5, color=_GREEN).encode(x="date:T", y="rsi_val:Q", tooltip=tt))
             if show_sl and not sl_ex.empty:
                 layers.append(alt.Chart(sl_ex).mark_point(shape="cross", size=90, strokeWidth=2.5, color=_RED).encode(x="date:T", y="rsi_val:Q", tooltip=tt))
+            if show_trail and not trail_ex.empty:
+                layers.append(alt.Chart(trail_ex).mark_point(shape="diamond", size=80, filled=True, color=_PURPLE).encode(x="date:T", y="rsi_val:Q", tooltip=tt))
             if show_sig and not sig_ex.empty:
                 layers.append(alt.Chart(sig_ex).mark_point(shape="cross", size=90, strokeWidth=2.5, color=_ORANGE).encode(x="date:T", y="rsi_val:Q", tooltip=tt))
     return (
@@ -451,7 +462,7 @@ def _equity_chart(equity_curve: pd.DataFrame, symbol: str):
 
 
 @st.cache_data(show_spinner=False)
-def _cached_gld_fair_value(start: str | None, end: str | None):
+def _cached_gld_fair_value(start: str | None, end: str | None, cache_fingerprint: str):
     diagnostics = compute_gld_fair_value_diagnostics(start=start, end=end)
     if diagnostics is None:
         return None
@@ -465,14 +476,21 @@ def _cached_gld_fair_value(start: str | None, end: str | None):
 
 def _fair_value_chart(frame: pd.DataFrame, symbol: str):
     plot_df = frame.copy()
+    value_cols = ["actual", "fair_value"]
+    if "structural_fair_value" in plot_df.columns and plot_df["structural_fair_value"].notna().any():
+        value_cols.append("structural_fair_value")
     value_df = plot_df.melt(
         id_vars=["date"],
-        value_vars=["actual", "fair_value"],
+        value_vars=value_cols,
         var_name="series",
         value_name="price",
     )
     value_df["series"] = value_df["series"].map(
-        {"actual": f"{symbol} actual", "fair_value": f"{symbol} fair value"}
+        {
+            "actual": f"{symbol} actual",
+            "fair_value": f"{symbol} fair value",
+            "structural_fair_value": f"{symbol} structural fair value",
+        }
     )
     return (
         alt.Chart(value_df)
@@ -483,14 +501,14 @@ def _fair_value_chart(frame: pd.DataFrame, symbol: str):
             color=alt.Color(
                 "series:N",
                 scale=alt.Scale(
-                    domain=[f"{symbol} actual", f"{symbol} fair value"],
-                    range=[_BLUE, _GOLD],
+                    domain=[f"{symbol} actual", f"{symbol} fair value", f"{symbol} structural fair value"],
+                    range=[_BLUE, _GOLD, _ORANGE],
                 ),
                 legend=alt.Legend(title=None, labelColor="#d0d4f0"),
             ),
             tooltip=["date:T", "series:N", alt.Tooltip("price:Q", format=".2f")],
         )
-        .properties(title=alt.TitleParams(f"{symbol} – Actual vs Fair Value (slow macro fit)", **_TITLE), height=320)
+        .properties(title=alt.TitleParams(f"{symbol} – Actual vs Fair Value (optimized slow macro fit)", **_TITLE), height=320)
         .configure_view(strokeOpacity=0)
         .configure_axis(**_AXIS)
         .configure_title(**_TITLE)
@@ -623,16 +641,16 @@ def render() -> None:
             slippage_pct=float(slippage_pct),
             commission_per_trade=float(commission),
         )
-        prepared_prices = prepare_strategy_data(
-            prices,
-            strategy,
-            primary_symbol=symbol,
-            source=st.session_state.get("loaded_source"),
-            interval=st.session_state.get("loaded_interval"),
-            start=st.session_state.get("loaded_start"),
-            end=st.session_state.get("loaded_end"),
-        )
-        with st.spinner(f"Running backtest on {len(prices):,} bars…"):
+        with st.spinner(f"Preparing context and running backtest on {len(prices):,} bars…"):
+            prepared_prices = prepare_strategy_data(
+                prices,
+                strategy,
+                primary_symbol=symbol,
+                source=st.session_state.get("loaded_source"),
+                interval=st.session_state.get("loaded_interval"),
+                start=st.session_state.get("loaded_start"),
+                end=st.session_state.get("loaded_end"),
+            )
             result = engine.run(
                 data=prepared_prices,
                 symbol=symbol,
@@ -708,32 +726,33 @@ def _show_results() -> None:
             f"+ commission {commission_used:.2f} dollars/trade = approx. "
             f"{deducted_cost:,.2f} dollars deducted from gross closed-trade PnL."
         )
-    st.caption("📖 **PnL ($)** = dollar profit/loss · **Return %** = leveraged return on capital · **TP hit** = price target reached · **SL hit** = stop hit · **RSI exits** = RSI threshold crossed")
+    st.caption("📖 **PnL ($)** = dollar profit/loss · **Return %** = leveraged return on capital · **TP hit** = price target reached · **SL hit** = stop hit · **Trail stop** = trailing stop exit · **RSI exits** = RSI threshold crossed")
     if closed:
         st.subheader("🧪 Spike Comparison Report")
         st.caption("This table compares the full backtest with the two key UVXY spike windows, shows the defined start/peak/end dates for each spike, counts long/short trades before and after the peak, and reports how much of the raw spike move the strategy captured.")
         st.dataframe(_comparison_report(prices_r, result.trades), use_container_width=True, hide_index=True)
     st.divider()
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
     show_long = c1.checkbox("▲ Long entries", value=True, key="show_long")
     show_short = c2.checkbox("▼ Short entries", value=True, key="show_short")
     show_tp = c3.checkbox("✕ TP exits", value=True, key="show_tp_x")
     show_sl = c4.checkbox("✕ SL exits", value=True, key="show_sl_x")
-    show_sig = c5.checkbox("✕ Signal exits", value=True, key="show_sig_x")
+    show_trail = c5.checkbox("◆ Trail exits", value=True, key="show_trail_x")
+    show_sig = c6.checkbox("✕ Signal exits", value=True, key="show_sig_x")
 
     if prices_r is not None:
         prices_plot = _downsample(prices_r)
         n_bars = len(prices_r)
         label_extra = f"  ·  *{len(prices_plot):,} of {n_bars:,} bars shown*" if len(prices_plot) < n_bars else ""
         st.markdown(f"#### 📈 Price{label_extra}")
-        st.altair_chart(_price_chart(prices_plot, result.trades, symbol_r, show_long, show_short, show_tp, show_sl, show_sig), use_container_width=True)
+        st.altair_chart(_price_chart(prices_plot, result.trades, symbol_r, show_long, show_short, show_tp, show_sl, show_trail, show_sig), use_container_width=True)
         if selected_id_r in ("rsi_threshold", "atr_rsi", "vwap_rsi", "bollinger_rsi", "ema_trend_rsi"):
             period = int(params_r.get("rsi_period", 9))
             buy_levels = _parse_levels(params_r.get("buy_levels", "30"))
             sell_levels = _parse_levels(params_r.get("sell_levels", "70"))
             st.markdown(f"#### 📉 RSI ({period})")
-            st.altair_chart(_rsi_chart(prices_plot, result.trades, period, buy_levels, sell_levels, symbol_r, show_long, show_short, show_tp, show_sl, show_sig), use_container_width=True)
+            st.altair_chart(_rsi_chart(prices_plot, result.trades, period, buy_levels, sell_levels, symbol_r, show_long, show_short, show_tp, show_sl, show_trail, show_sig), use_container_width=True)
     else:
         st.info("ℹ️ Price chart not available — reload data to see charts.")
 
@@ -748,6 +767,7 @@ def _show_results() -> None:
                     "symbol": t.symbol,
                     "regime": _trade_regime(t),
                     "direction": t.direction.value,
+                    "capital_allocated": t.capital_allocated,
                     "entry_price": t.entry_price,
                     "exit_price": t.exit_price,
                     "outcome": t.outcome.value if t.outcome else None,
@@ -764,7 +784,13 @@ def _show_results() -> None:
         st.altair_chart(pnl_distribution(trades_df), use_container_width=True)
         with st.expander("📋 Trade Log", expanded=False):
             st.dataframe(
-                trades_df.rename(columns={"leveraged_return_pct": "return_pct (%)", "pnl": "PnL ($)"}).sort_values("entry_time", ascending=False),
+                trades_df.rename(
+                    columns={
+                        "capital_allocated": "capital_allocated ($)",
+                        "leveraged_return_pct": "return_pct (%)",
+                        "pnl": "PnL ($)",
+                    }
+                ).sort_values("entry_time", ascending=False),
                 use_container_width=True,
             )
 
@@ -774,7 +800,7 @@ def _show_results() -> None:
     if symbol_r.upper() == "GLD":
         st.markdown("#### 🪙 Macro Fair Value")
         st.caption(
-            "This is a slow diagnostic model for GLD only. It fits a daily fair-value proxy from cached macro and peer series, "
+            "This is a slow diagnostic model for GLD only. It fits an optimized monthly fair-value proxy from cached macro and peer series, "
             "so we can judge the macro layer by fit quality before using it for trading bias."
         )
         trigger_key = "bt_gld_fair_value_visible"
@@ -785,6 +811,7 @@ def _show_results() -> None:
                 fair_payload = _cached_gld_fair_value(
                     str(st.session_state.get("loaded_start")) if st.session_state.get("loaded_start") is not None else None,
                     str(st.session_state.get("loaded_end")) if st.session_state.get("loaded_end") is not None else None,
+                    fair_value_cache_fingerprint(),
                 )
             if fair_payload:
                 fair_stats = fair_payload["stats"]
@@ -798,12 +825,30 @@ def _show_results() -> None:
                         "Direction Hit": f"{fair_stats['directional_hit'] * 100:.1f}%",
                     }
                 )
-                st.caption(
-                    "Daily slow fair-value proxy optimized on cached macro and peer series. "
-                    f"Best fit: feature set `{model['feature_set']}`, z-window `{model['z_window']}` days, "
-                    f"fit window `{model['fit_window']}` days, ridge α `{model['ridge_alpha']:.2f}`, "
-                    f"smoothing span `{model['smooth_span']}` days."
-                )
+                if model.get("model_type") == "two_layer":
+                    st.caption(
+                        "Monthly slow fair-value proxy optimized as a structural layer plus a market-adjustment layer. "
+                        f"Best fit: structural set `{model['structural_set']}`, market set `{model['market_set']}`, "
+                        f"z-window `{model['z_window']}` months, structural fit window `{model['structural_fit_window']}` months, "
+                        f"market fit window `{model['market_fit_window']}` months, ridge α `{model['ridge_alpha']:.2f}`, "
+                        f"smoothing span `{model['smooth_span']}` months."
+                    )
+                else:
+                    st.caption(
+                        "Monthly slow fair-value proxy optimized as a blended macro-plus-market fit. "
+                        f"Best fit: feature set `{model['feature_set']}`, z-window `{model['z_window']}` months, "
+                        f"fit window `{model['fit_window']}` months, ridge α `{model['ridge_alpha']:.2f}`, "
+                        f"smoothing span `{model['smooth_span']}` months."
+                    )
+                optional_sources = model.get("optional_sources") or {}
+                if optional_sources:
+                    pretty_sources = ", ".join(f"`{k}` from `{v}`" for k, v in sorted(optional_sources.items()))
+                    st.caption(f"Optional proxy inputs currently available: {pretty_sources}.")
+                else:
+                    st.caption(
+                        "Optional official ETF / central-bank proxy files are not loaded yet. "
+                        "Current fit is using only the cached macro and market proxies."
+                    )
                 st.altair_chart(_fair_value_chart(fair_payload["frame"], symbol_r), use_container_width=True)
                 st.altair_chart(_fair_gap_chart(fair_payload["frame"], symbol_r), use_container_width=True)
             else:

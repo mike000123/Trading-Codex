@@ -458,14 +458,14 @@ class BacktestEngine:
         losses = [t for t in closed if (t.leveraged_return_pct or 0) <= 0]
 
         eq_df = pd.DataFrame(equity_curve)
-        if len(eq_df) > 2000:
-            step = len(eq_df) // 2000
-            eq_df = (
-                pd.concat([eq_df.iloc[::step], eq_df.iloc[[-1]]])
-                .drop_duplicates("date")
-                .sort_values("date")
-                .reset_index(drop=True)
-            )
+        if not eq_df.empty:
+            # Preserve exact jump timing while dropping redundant repeated flat points.
+            # Keeping both the start and end of each flat run is effectively lossless
+            # for the realized-equity line and avoids the misleading shift introduced
+            # by coarse downsampling.
+            equity_s = pd.to_numeric(eq_df["equity"], errors="coerce")
+            keep_mask = equity_s.ne(equity_s.shift()) | equity_s.ne(equity_s.shift(-1))
+            eq_df = eq_df.loc[keep_mask].reset_index(drop=True)
 
         final_eq = float(eq_df["equity"].iloc[-1]) if not eq_df.empty else starting_equity
         total_ret = ((final_eq - starting_equity) / starting_equity * 100 if starting_equity else 0)

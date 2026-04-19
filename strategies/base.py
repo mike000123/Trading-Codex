@@ -168,3 +168,21 @@ class BaseStrategy(ABC):
         primary ticker's symbol profile.
         """
         return []
+
+    def derived_contexts(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Optional derived context datasets built locally by the data pipeline.
+
+        Example:
+            ["gold_fair_value"]
+
+        Unlike companion contexts, these do not map to another tradable symbol.
+        They are locally derived features or model outputs merged onto the
+        primary dataset before the strategy runs.
+        """
+        return []
