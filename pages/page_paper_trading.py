@@ -76,6 +76,8 @@ _CLOCK   = "pt_alpaca_clock"        # dict — Alpaca market-clock snapshot
 _KS_CONF = "pt_kill_switch_confirm" # bool — confirmation-step flag for the kill button
 _RESTORE = "pt_restored_from_config"
 _RUNS_CFG_KEY = "paper_trading_runs_v1"
+_SIGNALS_CFG_KEY = "paper_trading_signals_v1"
+_MAX_PERSISTED_SIGNALS = 500
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -106,6 +108,30 @@ def _persist_runs_config() -> None:
         _db().save_config(_RUNS_CFG_KEY, payload)
     except Exception as exc:
         log.warning(f"Paper runs config save failed: {exc}")
+
+
+def _json_safe(value):
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    return value
+
+
+def _persist_signals_config() -> None:
+    signals = st.session_state.get(_SIGNALS) or []
+    payload = {
+        "signals": [_json_safe(s) for s in signals[-_MAX_PERSISTED_SIGNALS:]],
+        "saved_at": datetime.utcnow().isoformat(timespec="seconds"),
+    }
+    try:
+        _db().save_config(_SIGNALS_CFG_KEY, payload)
+    except Exception as exc:
+        log.warning(f"Paper signals config save failed: {exc}")
 
 
 def _restore_runs_config() -> bool:
@@ -141,6 +167,21 @@ def _restore_runs_config() -> bool:
         return False
 
     st.session_state[_RUNS] = restored
+    return True
+
+
+def _restore_signals_config() -> bool:
+    if st.session_state.get(_SIGNALS):
+        return False
+    try:
+        payload = _db().load_config(_SIGNALS_CFG_KEY) or {}
+    except Exception as exc:
+        log.warning(f"Paper signals config load failed: {exc}")
+        return False
+    signals = payload.get("signals") or []
+    if not isinstance(signals, list) or not signals:
+        return False
+    st.session_state[_SIGNALS] = signals[-_MAX_PERSISTED_SIGNALS:]
     return True
 
 
@@ -1017,6 +1058,8 @@ def _run_tick(symbol: str, run: dict) -> None:
         "entry_price": float(latest["close"]),
         "timestamp":   str(_to_local(latest_ts)),
     }
+    _persist_runs_config()
+    _persist_signals_config()
 
     # ── 3a) Counter-signal exit (mirror backtest) ────────────────────────────
     # If an open non-spike trade exists and the new signal is the opposite
@@ -1075,6 +1118,7 @@ def _run_tick(symbol: str, run: dict) -> None:
             run["_last_signal"]["skipped_reason"] = (
                 "🛑 Kill switch tripped — entry blocked."
             )
+            _persist_runs_config()
             return
     except Exception:
         # Fail-open on DB hiccups: we don't want a transient read error to
@@ -1101,6 +1145,7 @@ def _run_tick(symbol: str, run: dict) -> None:
         requested_capital = min(float(run["capital"]), available_equity)
         if requested_capital <= 0:
             run["_last_signal"]["skipped_reason"] = "Equity depleted — entry skipped."
+            _persist_runs_config()
             return
 
     # ── 3d) RiskManager state: real portfolio equity + open positions ────────
@@ -1152,11 +1197,13 @@ def _run_tick(symbol: str, run: dict) -> None:
     decision = policy.evaluate(_ctx)
     if not decision.allowed:
         run["_last_signal"]["skipped_reason"] = decision.skip_reason
+        _persist_runs_config()
         return
     if decision.adjusted_capital is not None:
         requested_capital = float(decision.adjusted_capital)
     if decision.notes_prefix:
         run["_last_signal"]["notes"] = decision.notes_prefix
+        _persist_runs_config()
 
     risk = RiskManager(settings.risk)
     risk.update_portfolio_state(
@@ -1187,6 +1234,7 @@ def _run_tick(symbol: str, run: dict) -> None:
     _db().save_trade(trade)
 
     if "REJECTED" in (trade.notes or ""):
+        _persist_runs_config()
         return
 
     # ── 3e) Shadow mode: mirror the entry to Alpaca's paper endpoint ────────
@@ -1218,6 +1266,7 @@ def _run_tick(symbol: str, run: dict) -> None:
             )
         except Exception as exc:
             run["_last_signal"]["shadow_status"] = f"error: {exc}"
+    _persist_runs_config()
 
     eff_sl = trade.stop_loss
     trail_state = None
@@ -1587,6 +1636,7 @@ def _any_open_positions() -> bool:
 def render() -> None:
     _init_state()
     _restored_runs = _restore_runs_config()
+    _restored_signals = _restore_signals_config()
     render_mode_banner()
 
     # Pre-flight banner + kill switch sit above everything else so the user
@@ -1610,6 +1660,8 @@ def render() -> None:
     )
     if _restored_runs:
         st.caption("Restored active paper-trading symbols from saved server state after reconnect/refresh.")
+    elif _restored_signals:
+        st.caption("Restored recent paper-trading signals from saved server state after reconnect/refresh.")
     st.divider()
 
     # ── Add new ticker run ───────────────────────────────────────────────────
@@ -1827,6 +1879,7 @@ def render() -> None:
         for k in [_RUNS, _CACHE, _SIGNALS, _TRAIL]:
             st.session_state[k] = {} if isinstance(st.session_state[k], dict) else []
         _persist_runs_config()
+        _persist_signals_config()
         st.rerun()
 
     if refresh_all or auto:
@@ -2123,7 +2176,12 @@ def render() -> None:
             if c4.button(f"🗑️ Remove {symbol}", key=f"pt_remove_{symbol}"):
                 del st.session_state[_RUNS][symbol]
                 st.session_state[_CACHE].pop(symbol, None)
+                st.session_state[_SIGNALS] = [
+                    s for s in st.session_state[_SIGNALS]
+                    if s.get("symbol") != symbol
+                ]
                 _persist_runs_config()
+                _persist_signals_config()
                 st.rerun()
 
             if prices is None or prices.empty:
