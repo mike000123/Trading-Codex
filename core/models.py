@@ -86,7 +86,7 @@ class TradeRecord:
     leverage: float
     capital_allocated: float
     entry_time: datetime
-    mode: str                                  # "paper" | "live" | "backtest"
+    mode: str                                  # "paper" | "alpaca_paper" | "live" | "backtest"
     strategy_id: str
     exit_price: Optional[float] = None
     exit_time: Optional[datetime] = None
@@ -94,6 +94,17 @@ class TradeRecord:
     leveraged_return_pct: Optional[float] = None
     pnl: Optional[float] = None               # absolute $ P&L
     notes: str = ""
+
+    # ── Broker-order lifecycle (populated only for alpaca_paper / live) ───
+    # These mirror what Alpaca's Order object returns so we can reconcile
+    # our internal trade_id with the broker's view.
+    broker_order_id:     Optional[str]      = None  # Alpaca order UUID
+    broker_status:       Optional[str]      = None  # new / accepted / filled / canceled / …
+    broker_submitted_at: Optional[datetime] = None  # when we submitted to the broker
+    filled_qty:          Optional[float]    = None  # actual filled qty (may differ from requested)
+    filled_avg_price:    Optional[float]    = None  # avg fill price (reality)
+    filled_at:           Optional[datetime] = None  # last fill timestamp
+    last_synced_at:      Optional[datetime] = None  # when we last polled the broker
 
 
 @dataclass

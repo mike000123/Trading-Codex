@@ -8,10 +8,18 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from config.strategy_presets.bollinger_rsi.gld_candidates import get_candidate
 from config.settings import settings
+from data.fair_value import compute_gld_fair_value_diagnostics, fair_value_cache_fingerprint
+from data.ingestion import prepare_strategy_data
 from reporting.backtest import BacktestEngine
 from risk.manager import RiskManager
 from strategies import get_strategy, list_strategies
+from execution.entry_policy_base import available_policies
+# Importing the concrete policies registers them with the factory so the
+# dropdown sees both entries.
+import execution.entry_policy_classic  # noqa: F401
+import execution.entry_policy_alpaca   # noqa: F401
 from ui.charts import pnl_distribution
 from ui.components import (
     render_data_source_selector,
@@ -25,6 +33,7 @@ _RED = "#ef5350"
 _BLUE = "#4a9eff"
 _GOLD = "#ffd54f"
 _ORANGE = "#ff9800"
+_PURPLE = "#ab47bc"
 _AXIS = dict(
     gridColor="#2a2d3e",
     labelColor="#d0d4f0",
@@ -34,6 +43,17 @@ _AXIS = dict(
 )
 _TITLE = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
 _MAX_CHART_PTS = 5_000
+
+
+def _resolve_gld_candidate_for_leverage(leverage: float) -> tuple[str | None, dict]:
+    lev = round(float(leverage), 4)
+    if lev == 1.0:
+        name = "gld_best_1x_sweep_20260419"
+    elif lev == 5.0:
+        name = "gld_best_leverage_5x_tuned_20260419"
+    else:
+        return None, {}
+    return name, get_candidate(name)
 
 
 def _downsample(df: pd.DataFrame, max_pts: int = _MAX_CHART_PTS) -> pd.DataFrame:
@@ -71,7 +91,19 @@ def _parse_levels(raw) -> list[float]:
 def _bar_label(prices: pd.DataFrame) -> str:
     if len(prices) < 2:
         return "bars"
-    delta = (prices["date"].iloc[1] - prices["date"].iloc[0]).total_seconds()
+
+    # Use the dominant spacing, not the first two rows. Intraday data can start
+    # with a missing/opening gap, which made 1-min caches display as "4-min".
+    dates = pd.to_datetime(prices["date"], errors="coerce").dropna().sort_values()
+    if len(dates) < 2:
+        return "bars"
+    diffs = dates.diff().dropna().dt.total_seconds()
+    diffs = diffs[diffs > 0]
+    if diffs.empty:
+        return "bars"
+
+    mode = diffs.mode()
+    delta = int(round(float(mode.iloc[0] if not mode.empty else diffs.median())))
     return {
         60: "1-min",
         300: "5-min",
@@ -79,7 +111,7 @@ def _bar_label(prices: pd.DataFrame) -> str:
         1800: "30-min",
         3600: "1-hour",
         86400: "1-day",
-    }.get(int(delta), f"{int(delta // 60)}-min")
+    }.get(delta, f"{max(1, int(round(delta / 60)))}-min")
 
 
 def _trade_regime_from_notes(notes: str) -> str:
@@ -279,7 +311,7 @@ def _comparison_report(prices, trades) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl, show_sig):
+def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl, show_trail, show_sig):
     base = alt.Chart(prices).mark_line(color=_BLUE, strokeWidth=1.2).encode(
         x=alt.X("date:T", title="Date / Time", axis=alt.Axis(**_AXIS)),
         y=alt.Y("close:Q", title="Price", scale=alt.Scale(zero=False), axis=alt.Axis(**_AXIS)),
@@ -331,6 +363,7 @@ def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl
         ]
         tp_ex = exit_df[exit_df["outcome"] == "TP hit"]
         sl_ex = exit_df[exit_df["outcome"] == "SL hit"]
+        trail_ex = exit_df[exit_df["outcome"] == "Trail stop"]
         sig_ex = exit_df[exit_df["outcome"].apply(_is_signal_exit)]
         if show_tp and not tp_ex.empty:
             layers.append(
@@ -342,6 +375,12 @@ def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl
             layers.append(
                 alt.Chart(sl_ex)
                 .mark_point(shape="cross", size=110, strokeWidth=2.5, color=_RED)
+                .encode(x="date:T", y="price:Q", tooltip=tt_x)
+            )
+        if show_trail and not trail_ex.empty:
+            layers.append(
+                alt.Chart(trail_ex)
+                .mark_point(shape="diamond", size=100, filled=True, color=_PURPLE)
                 .encode(x="date:T", y="price:Q", tooltip=tt_x)
             )
         if show_sig and not sig_ex.empty:
@@ -359,7 +398,7 @@ def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl
     )
 
 
-def _rsi_chart(prices, trades, period, buy_levels, sell_levels, symbol, show_long, show_short, show_tp, show_sl, show_sig):
+def _rsi_chart(prices, trades, period, buy_levels, sell_levels, symbol, show_long, show_short, show_tp, show_sl, show_trail, show_sig):
     rsi_s = _calc_rsi(prices["close"], period).rename("rsi")
     df = pd.concat([prices[["date"]], rsi_s], axis=1).dropna()
     rsi_line = alt.Chart(df).mark_line(color=_GOLD, strokeWidth=1.8).encode(
@@ -407,11 +446,14 @@ def _rsi_chart(prices, trades, period, buy_levels, sell_levels, symbol, show_lon
             exit_df[["rsi_val", "date"]] = pd.DataFrame([_snap(r) for r in exit_df["date"]], columns=["rsi_val", "date"])
             tp_ex = exit_df[exit_df["outcome"] == "TP hit"]
             sl_ex = exit_df[exit_df["outcome"] == "SL hit"]
+            trail_ex = exit_df[exit_df["outcome"] == "Trail stop"]
             sig_ex = exit_df[exit_df["outcome"].apply(_is_signal_exit)]
             if show_tp and not tp_ex.empty:
                 layers.append(alt.Chart(tp_ex).mark_point(shape="cross", size=90, strokeWidth=2.5, color=_GREEN).encode(x="date:T", y="rsi_val:Q", tooltip=tt))
             if show_sl and not sl_ex.empty:
                 layers.append(alt.Chart(sl_ex).mark_point(shape="cross", size=90, strokeWidth=2.5, color=_RED).encode(x="date:T", y="rsi_val:Q", tooltip=tt))
+            if show_trail and not trail_ex.empty:
+                layers.append(alt.Chart(trail_ex).mark_point(shape="diamond", size=80, filled=True, color=_PURPLE).encode(x="date:T", y="rsi_val:Q", tooltip=tt))
             if show_sig and not sig_ex.empty:
                 layers.append(alt.Chart(sig_ex).mark_point(shape="cross", size=90, strokeWidth=2.5, color=_ORANGE).encode(x="date:T", y="rsi_val:Q", tooltip=tt))
     return (
@@ -436,9 +478,96 @@ def _equity_chart(equity_curve: pd.DataFrame, symbol: str):
     return alt.layer(line).properties(title=alt.TitleParams(f"{symbol} – Portfolio Equity", **_TITLE), height=300).configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE)
 
 
+@st.cache_data(show_spinner=False)
+def _cached_gld_fair_value(start: str | None, end: str | None, cache_fingerprint: str):
+    diagnostics = compute_gld_fair_value_diagnostics(start=start, end=end)
+    if diagnostics is None:
+        return None
+    return {
+        "frame": diagnostics.frame,
+        "stats": diagnostics.stats,
+        "model": diagnostics.model,
+        "symbol": diagnostics.symbol,
+    }
+
+
+def _fair_value_chart(frame: pd.DataFrame, symbol: str):
+    plot_df = frame.copy()
+    value_cols = ["actual", "fair_value"]
+    if "structural_fair_value" in plot_df.columns and plot_df["structural_fair_value"].notna().any():
+        value_cols.append("structural_fair_value")
+    value_df = plot_df.melt(
+        id_vars=["date"],
+        value_vars=value_cols,
+        var_name="series",
+        value_name="price",
+    )
+    value_df["series"] = value_df["series"].map(
+        {
+            "actual": f"{symbol} actual",
+            "fair_value": f"{symbol} fair value",
+            "structural_fair_value": f"{symbol} structural fair value",
+        }
+    )
+    return (
+        alt.Chart(value_df)
+        .mark_line(strokeWidth=2)
+        .encode(
+            x=alt.X("date:T", title="Date", axis=alt.Axis(**_AXIS)),
+            y=alt.Y("price:Q", title="Price", scale=alt.Scale(zero=False), axis=alt.Axis(**_AXIS)),
+            color=alt.Color(
+                "series:N",
+                scale=alt.Scale(
+                    domain=[f"{symbol} actual", f"{symbol} fair value", f"{symbol} structural fair value"],
+                    range=[_BLUE, _GOLD, _ORANGE],
+                ),
+                legend=alt.Legend(title=None, labelColor="#d0d4f0"),
+            ),
+            tooltip=["date:T", "series:N", alt.Tooltip("price:Q", format=".2f")],
+        )
+        .properties(title=alt.TitleParams(f"{symbol} – Actual vs Fair Value (optimized slow macro fit)", **_TITLE), height=320)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(**_AXIS)
+        .configure_title(**_TITLE)
+    )
+
+
+def _fair_gap_chart(frame: pd.DataFrame, symbol: str):
+    plot_df = frame.copy()
+    plot_df["gap_sign"] = plot_df["fair_gap_pct"].apply(lambda x: "Undervalued" if x > 0 else "Overvalued")
+    bars = (
+        alt.Chart(plot_df)
+        .mark_bar(opacity=0.75)
+        .encode(
+            x=alt.X("date:T", title="Date", axis=alt.Axis(**_AXIS)),
+            y=alt.Y("fair_gap_pct:Q", title="Fair Gap %", axis=alt.Axis(**_AXIS)),
+            color=alt.Color(
+                "gap_sign:N",
+                scale=alt.Scale(domain=["Undervalued", "Overvalued"], range=[_GREEN, _RED]),
+                legend=alt.Legend(title=None, labelColor="#d0d4f0"),
+            ),
+            tooltip=[
+                "date:T",
+                alt.Tooltip("fair_gap_pct:Q", format=".2f", title="Gap %"),
+                alt.Tooltip("actual:Q", format=".2f", title=f"{symbol} actual"),
+                alt.Tooltip("fair_value:Q", format=".2f", title="Fair value"),
+            ],
+        )
+    )
+    zero = alt.Chart(pd.DataFrame({"y": [0]})).mark_rule(color="#cfd8dc", opacity=0.5).encode(y="y:Q")
+    return (
+        alt.layer(bars, zero)
+        .properties(title=alt.TitleParams(f"{symbol} – Fair Value Gap", **_TITLE), height=180)
+        .configure_view(strokeOpacity=0)
+        .configure_axis(**_AXIS)
+        .configure_title(**_TITLE)
+    )
+
+
 def render() -> None:
     render_mode_banner()
     st.title("⏪ Backtester")
+    st.session_state.setdefault("bt_strategy", "Bollinger + RSI (Spike-Aware)")
     prices = render_data_source_selector()
     if prices is not None:
         st.session_state["bt_prices_live"] = prices
@@ -460,15 +589,38 @@ def render() -> None:
     strat_names = {s["name"]: s["id"] for s in strategies}
     strategy_names = list(strat_names.keys())
     default_strategy_name = "Bollinger + RSI (Spike-Aware)"
-    default_strategy_index = strategy_names.index(default_strategy_name) if default_strategy_name in strategy_names else 0
+    if st.session_state.get("bt_strategy") not in strategy_names:
+        st.session_state["bt_strategy"] = (
+            default_strategy_name if default_strategy_name in strategy_names else strategy_names[0]
+        )
     col_cfg, col_risk = st.columns(2)
     with col_cfg:
-        selected_name = st.selectbox("Strategy", strategy_names, index=default_strategy_index, key="bt_strategy")
+        selected_name = st.selectbox("Strategy", strategy_names, key="bt_strategy")
         selected_id = strat_names[selected_name]
         leverage = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="bt_lev")
         capital_per_trade = st.number_input("Capital per trade ($)", 100.0, value=1000.0, key="bt_cap")
         starting_equity = st.number_input("Starting equity ($)", 1000.0, value=1000.0, key="bt_equity")
         direction_filter = st.selectbox("Direction filter", ["Both", "Long only", "Short only"], key="bt_dir")
+        show_gld_candidates = selected_id == "bollinger_rsi" and str(symbol).upper() == "GLD"
+        candidate_name, candidate_payload = _resolve_gld_candidate_for_leverage(leverage) if show_gld_candidates else (None, {})
+        candidate_param_overrides = {
+            k: v for k, v in candidate_payload.items() if k not in {"leverage", "risk_max_loss_pct_of_capital"}
+        }
+        if show_gld_candidates and candidate_payload:
+            desired_risk_cap = int(round(float(candidate_payload.get("risk_max_loss_pct_of_capital", 50.0))))
+            desired_sig = (candidate_name, round(float(leverage), 4), desired_risk_cap)
+            if st.session_state.get("bt_gld_auto_risk_sig") != desired_sig:
+                st.session_state["bt_maxloss"] = desired_risk_cap
+                st.session_state["bt_gld_auto_risk_sig"] = desired_sig
+        else:
+            st.session_state.pop("bt_gld_auto_risk_sig", None)
+        if show_gld_candidates:
+            if candidate_name == "gld_best_1x_sweep_20260419":
+                st.caption("Auto-applied GLD preset: optimized `1x` research candidate.")
+            elif candidate_name == "gld_best_leverage_5x_tuned_20260419":
+                st.caption("Auto-applied GLD preset: optimized `5x` tuned research candidate.")
+            else:
+                st.caption("No stored GLD leverage-specific preset for this leverage yet. Current GLD default stays active.")
     with col_risk:
         st.markdown("**Risk Controls**")
         use_risk = st.checkbox("Apply risk manager", value=True, key="bt_risk")
@@ -487,8 +639,83 @@ def render() -> None:
         slippage_pct = st.number_input("Slippage % (round-trip)", 0.0, 2.0, 0.02, step=0.01, format="%.2f", key="bt_slip")
         commission = st.number_input("Commission per trade ($)", 0.0, 10.0, 0.0, step=0.10, format="%.2f", key="bt_comm")
 
+        st.markdown("---")
+        st.markdown("**Execution logic**")
+        _bt_policy_opts = available_policies()            # [(name, label), ...]
+        _bt_policy_labels = [lbl for _, lbl in _bt_policy_opts]
+        _bt_policy_names = [nm for nm, _ in _bt_policy_opts]
+        _bt_default_idx = _bt_policy_names.index("alpaca") if "alpaca" in _bt_policy_names else 0
+        _bt_chosen_label = st.selectbox(
+            "Entry-gate policy",
+            _bt_policy_labels,
+            index=_bt_default_idx,
+            key="bt_exec_logic",
+            help=(
+                "Classic = the unconstrained logic we had before Alpaca gates were "
+                "added. Alpaca-realistic = RTH / PDT / SSR / fractional / fill-"
+                "diagnostic applied at entry so backtest numbers track what Alpaca "
+                "would actually fill."
+            ),
+        )
+        execution_logic = _bt_policy_names[_bt_policy_labels.index(_bt_chosen_label)]
+        _is_alpaca_bt = execution_logic == "alpaca"
+        if _is_alpaca_bt:
+            bt_ac1, bt_ac2, bt_ac3 = st.columns(3)
+            with bt_ac1:
+                bt_enforce_rth = st.checkbox(
+                    "RTH only", value=True, key="bt_rth",
+                    help="Skip entries outside NYSE RTH (09:30-16:00 ET) and on holidays.",
+                )
+                bt_extended_hours = st.checkbox(
+                    "Extended hours", value=False, key="bt_ext_hrs",
+                    help="Also accept 04:00-20:00 ET on trading days.",
+                )
+            with bt_ac2:
+                bt_enforce_pdt = st.checkbox(
+                    "PDT (<$25k)", value=True, key="bt_pdt",
+                    help="Block 4th day-trade in 5 days when equity < $25k.",
+                )
+                bt_enforce_ssr = st.checkbox(
+                    "SSR (shorts)", value=True, key="bt_ssr",
+                    help="Skip short entries on ≥10% gap-down vs prior close.",
+                )
+            with bt_ac3:
+                bt_enforce_frac = st.checkbox(
+                    "Fractional rule", value=True, key="bt_frac",
+                    help="Shorts need integer qty ≥ 1 (Alpaca rule).",
+                )
+                bt_fill_diag = st.checkbox(
+                    "Fill-timing diag", value=True, key="bt_fill_diag",
+                    help="Attach bar H/L/range to each entry's notes.",
+                )
+        else:
+            st.caption(
+                "Classic mode — no Alpaca gates applied. Useful as an "
+                "unconstrained baseline for comparing vs Alpaca-realistic runs."
+            )
+            bt_enforce_rth = False
+            bt_extended_hours = False
+            bt_enforce_pdt = False
+            bt_enforce_ssr = False
+            bt_enforce_frac = False
+            bt_fill_diag = False
+
+        if show_gld_candidates and candidate_payload:
+            st.caption(
+                f"Preset risk note: leverage `{float(candidate_payload.get('leverage', leverage)):.1f}x`, "
+                f"max capital loss cap `{float(candidate_payload.get('risk_max_loss_pct_of_capital', max_loss)):.0f}%`."
+            )
+
     st.divider()
-    params = render_strategy_params(selected_id, leverage=leverage, max_capital_loss_pct=float(max_loss))
+    params = render_strategy_params(
+        selected_id,
+        leverage=leverage,
+        max_capital_loss_pct=float(max_loss),
+        symbol=symbol,
+        source=st.session_state.get("loaded_source"),
+        interval=st.session_state.get("loaded_interval"),
+        base_overrides=candidate_param_overrides if show_gld_candidates else None,
+    )
     run_clicked = st.button("▶ Run Backtest", type="primary", key="bt_run")
     if "bt_result" in st.session_state:
         st.divider()
@@ -525,10 +752,25 @@ def render() -> None:
             spread_pct=float(spread_pct),
             slippage_pct=float(slippage_pct),
             commission_per_trade=float(commission),
+            enforce_rth=bool(bt_enforce_rth),
+            extended_hours=bool(bt_extended_hours),
+            enforce_pdt=bool(bt_enforce_pdt),
+            enforce_ssr=bool(bt_enforce_ssr),
+            enforce_fractional=bool(bt_enforce_frac),
+            fill_diagnostic=bool(bt_fill_diag),
         )
-        with st.spinner(f"Running backtest on {len(prices):,} bars…"):
+        with st.spinner(f"Preparing context and running backtest on {len(prices):,} bars…"):
+            prepared_prices = prepare_strategy_data(
+                prices,
+                strategy,
+                primary_symbol=symbol,
+                source=st.session_state.get("loaded_source"),
+                interval=st.session_state.get("loaded_interval"),
+                start=st.session_state.get("loaded_start"),
+                end=st.session_state.get("loaded_end"),
+            )
             result = engine.run(
-                data=prices,
+                data=prepared_prices,
                 symbol=symbol,
                 leverage=leverage,
                 capital_per_trade=capital_per_trade,
@@ -540,6 +782,13 @@ def render() -> None:
         st.session_state["bt_selected_id"] = selected_id
         st.session_state["bt_params"] = dict(params)
         st.session_state["bt_starting_equity"] = float(starting_equity)
+        st.session_state["bt_cost_settings"] = {
+            "spread_pct": float(spread_pct),
+            "slippage_pct": float(slippage_pct),
+            "commission": float(commission),
+        }
+        st.session_state["bt_execution_logic"] = execution_logic
+        st.session_state["bt_execution_label"] = _bt_chosen_label
         try:
             from db.database import Database
 
@@ -549,7 +798,9 @@ def render() -> None:
             st.session_state["bt_db_msg"] = f"✓ {len(result.trades)} trades saved."
         except Exception as e:
             st.session_state["bt_db_msg"] = f"DB save skipped: {e}"
-        st.rerun()
+        st.divider()
+        _show_results()
+        return
 
 
 def _show_results() -> None:
@@ -559,6 +810,7 @@ def _show_results() -> None:
     symbol_r = st.session_state.get("bt_symbol", "DATA")
     selected_id_r = st.session_state.get("bt_selected_id", "")
     params_r = st.session_state.get("bt_params", {})
+    costs_r = st.session_state.get("bt_cost_settings", {})
     prices_r = st.session_state.get("bt_prices_live")
     closed = [t for t in result.trades if t.leveraged_return_pct is not None]
 
@@ -583,38 +835,57 @@ def _show_results() -> None:
         cols = st.columns(min(len(outcome_counts), 5))
         for col, (label, cnt) in zip(cols, sorted(outcome_counts.items())):
             col.metric(label, cnt)
-    st.caption("📖 **PnL ($)** = dollar profit/loss · **Return %** = leveraged return on capital · **TP hit** = price target reached · **SL hit** = stop hit · **RSI exits** = RSI threshold crossed")
+        gross_pnl = sum((t.capital_allocated or 0) * ((t.leveraged_return_pct or 0) / 100.0) for t in closed)
+        net_pnl = sum((t.pnl or 0) for t in closed)
+        deducted_cost = gross_pnl - net_pnl
+        spread_used = float(costs_r.get("spread_pct", 0.0) or 0.0)
+        slippage_used = float(costs_r.get("slippage_pct", 0.0) or 0.0)
+        commission_used = float(costs_r.get("commission", 0.0) or 0.0)
+        st.caption(
+            f"Applied costs: spread {spread_used:.2f}% + slippage {slippage_used:.2f}% "
+            f"+ commission {commission_used:.2f} dollars/trade = approx. "
+            f"{deducted_cost:,.2f} dollars deducted from gross closed-trade PnL."
+        )
+        _exec_label = st.session_state.get(
+            "bt_execution_label",
+            "Alpaca-realistic (RTH / PDT / SSR / fractional)"
+            if st.session_state.get("bt_execution_logic", "alpaca") == "alpaca"
+            else "Classic (pre-Alpaca gates)",
+        )
+        st.caption(f"Execution logic: **{_exec_label}**")
+    st.caption("📖 **PnL ($)** = dollar profit/loss · **Return %** = leveraged return on capital · **TP hit** = price target reached · **SL hit** = stop hit · **Trail stop** = trailing stop exit · **RSI exits** = RSI threshold crossed")
     if closed:
         st.subheader("🧪 Spike Comparison Report")
         st.caption("This table compares the full backtest with the two key UVXY spike windows, shows the defined start/peak/end dates for each spike, counts long/short trades before and after the peak, and reports how much of the raw spike move the strategy captured.")
-        st.dataframe(_comparison_report(prices_r, result.trades), use_container_width=True, hide_index=True)
+        st.dataframe(_comparison_report(prices_r, result.trades), width='stretch', hide_index=True)
     st.divider()
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
     show_long = c1.checkbox("▲ Long entries", value=True, key="show_long")
     show_short = c2.checkbox("▼ Short entries", value=True, key="show_short")
     show_tp = c3.checkbox("✕ TP exits", value=True, key="show_tp_x")
     show_sl = c4.checkbox("✕ SL exits", value=True, key="show_sl_x")
-    show_sig = c5.checkbox("✕ Signal exits", value=True, key="show_sig_x")
+    show_trail = c5.checkbox("◆ Trail exits", value=True, key="show_trail_x")
+    show_sig = c6.checkbox("✕ Signal exits", value=True, key="show_sig_x")
 
     if prices_r is not None:
         prices_plot = _downsample(prices_r)
         n_bars = len(prices_r)
         label_extra = f"  ·  *{len(prices_plot):,} of {n_bars:,} bars shown*" if len(prices_plot) < n_bars else ""
         st.markdown(f"#### 📈 Price{label_extra}")
-        st.altair_chart(_price_chart(prices_plot, result.trades, symbol_r, show_long, show_short, show_tp, show_sl, show_sig), use_container_width=True)
+        st.altair_chart(_price_chart(prices_plot, result.trades, symbol_r, show_long, show_short, show_tp, show_sl, show_trail, show_sig), width='stretch')
         if selected_id_r in ("rsi_threshold", "atr_rsi", "vwap_rsi", "bollinger_rsi", "ema_trend_rsi"):
             period = int(params_r.get("rsi_period", 9))
             buy_levels = _parse_levels(params_r.get("buy_levels", "30"))
             sell_levels = _parse_levels(params_r.get("sell_levels", "70"))
             st.markdown(f"#### 📉 RSI ({period})")
-            st.altair_chart(_rsi_chart(prices_plot, result.trades, period, buy_levels, sell_levels, symbol_r, show_long, show_short, show_tp, show_sl, show_sig), use_container_width=True)
+            st.altair_chart(_rsi_chart(prices_plot, result.trades, period, buy_levels, sell_levels, symbol_r, show_long, show_short, show_tp, show_sl, show_trail, show_sig), width='stretch')
     else:
         st.info("ℹ️ Price chart not available — reload data to see charts.")
 
     if closed:
         st.markdown("#### 💰 Equity Curve")
-        st.altair_chart(_equity_chart(result.equity_curve, symbol_r), use_container_width=True)
+        st.altair_chart(_equity_chart(result.equity_curve, symbol_r), width='stretch')
 
     if closed:
         trades_df = pd.DataFrame(
@@ -623,6 +894,7 @@ def _show_results() -> None:
                     "symbol": t.symbol,
                     "regime": _trade_regime(t),
                     "direction": t.direction.value,
+                    "capital_allocated": t.capital_allocated,
                     "entry_price": t.entry_price,
                     "exit_price": t.exit_price,
                     "outcome": t.outcome.value if t.outcome else None,
@@ -636,12 +908,75 @@ def _show_results() -> None:
             ]
         )
         st.markdown("#### 📊 Per-Trade Return")
-        st.altair_chart(pnl_distribution(trades_df), use_container_width=True)
+        st.altair_chart(pnl_distribution(trades_df), width='stretch')
         with st.expander("📋 Trade Log", expanded=False):
             st.dataframe(
-                trades_df.rename(columns={"leveraged_return_pct": "return_pct (%)", "pnl": "PnL ($)"}).sort_values("entry_time", ascending=False),
-                use_container_width=True,
+                trades_df.rename(
+                    columns={
+                        "capital_allocated": "capital_allocated ($)",
+                        "leveraged_return_pct": "return_pct (%)",
+                        "pnl": "PnL ($)",
+                    }
+                ).sort_values("entry_time", ascending=False),
+                width='stretch',
             )
 
     if "bt_db_msg" in st.session_state:
         st.caption(st.session_state["bt_db_msg"])
+
+    if symbol_r.upper() == "GLD":
+        st.markdown("#### 🪙 Macro Fair Value")
+        st.caption(
+            "This is a slow diagnostic model for GLD only. It fits an optimized monthly fair-value proxy from cached macro and peer series, "
+            "so we can judge the macro layer by fit quality before using it for trading bias."
+        )
+        trigger_key = "bt_gld_fair_value_visible"
+        if st.button("Build / Refresh Fair Value Diagnostics", key="bt_gld_fair_value_btn"):
+            st.session_state[trigger_key] = True
+        if st.session_state.get(trigger_key):
+            with st.spinner("Fitting GLD fair-value curve from cached slow macro data…"):
+                fair_payload = _cached_gld_fair_value(
+                    str(st.session_state.get("loaded_start")) if st.session_state.get("loaded_start") is not None else None,
+                    str(st.session_state.get("loaded_end")) if st.session_state.get("loaded_end") is not None else None,
+                    fair_value_cache_fingerprint(),
+                )
+            if fair_payload:
+                fair_stats = fair_payload["stats"]
+                model = fair_payload["model"]
+                render_metrics_row(
+                    {
+                        "Correlation": f"{fair_stats['corr']:.3f}",
+                        "R²": f"{fair_stats['r2']:.3f}",
+                        "MAE Gap": f"{fair_stats['mae_pct']:.2f}%",
+                        "RMSE Gap": f"{fair_stats['rmse_pct']:.2f}%",
+                        "Direction Hit": f"{fair_stats['directional_hit'] * 100:.1f}%",
+                    }
+                )
+                if model.get("model_type") == "two_layer":
+                    st.caption(
+                        "Monthly slow fair-value proxy optimized as a structural layer plus a market-adjustment layer. "
+                        f"Best fit: structural set `{model['structural_set']}`, market set `{model['market_set']}`, "
+                        f"z-window `{model['z_window']}` months, structural fit window `{model['structural_fit_window']}` months, "
+                        f"market fit window `{model['market_fit_window']}` months, ridge α `{model['ridge_alpha']:.2f}`, "
+                        f"smoothing span `{model['smooth_span']}` months."
+                    )
+                else:
+                    st.caption(
+                        "Monthly slow fair-value proxy optimized as a blended macro-plus-market fit. "
+                        f"Best fit: feature set `{model['feature_set']}`, z-window `{model['z_window']}` months, "
+                        f"fit window `{model['fit_window']}` months, ridge α `{model['ridge_alpha']:.2f}`, "
+                        f"smoothing span `{model['smooth_span']}` months."
+                    )
+                optional_sources = model.get("optional_sources") or {}
+                if optional_sources:
+                    pretty_sources = ", ".join(f"`{k}` from `{v}`" for k, v in sorted(optional_sources.items()))
+                    st.caption(f"Optional proxy inputs currently available: {pretty_sources}.")
+                else:
+                    st.caption(
+                        "Optional official ETF / central-bank proxy files are not loaded yet. "
+                        "Current fit is using only the cached macro and market proxies."
+                    )
+                st.altair_chart(_fair_value_chart(fair_payload["frame"], symbol_r), width='stretch')
+                st.altair_chart(_fair_gap_chart(fair_payload["frame"], symbol_r), width='stretch')
+            else:
+                st.warning("Could not build GLD fair-value diagnostics from the cached slow datasets.")

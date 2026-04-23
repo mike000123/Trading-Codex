@@ -53,6 +53,15 @@ class TradeRow(Base):
     notes = Column(Text, default="")
     created_at = Column(String, default=lambda: datetime.utcnow().isoformat())
 
+    # ── Broker-order lifecycle (NULL for local-sim rows) ────────────────
+    broker_order_id     = Column(String, nullable=True, index=True)
+    broker_status       = Column(String, nullable=True)
+    broker_submitted_at = Column(String, nullable=True)
+    filled_qty          = Column(Float,  nullable=True)
+    filled_avg_price    = Column(Float,  nullable=True)
+    filled_at           = Column(String, nullable=True)
+    last_synced_at      = Column(String, nullable=True)
+
 
 class SignalRow(Base):
     __tablename__ = "signals"
@@ -101,8 +110,41 @@ class Database:
             connect_args={"check_same_thread": False},
         )
         Base.metadata.create_all(self._engine)
+        # Light-weight forward migration: add any columns that the live model
+        # declares but the on-disk table is missing. SQLite only supports
+        # ADD COLUMN, which is all we need here — this is a pure append.
+        self._migrate_schema()
         self._Session = sessionmaker(bind=self._engine, expire_on_commit=False)
         log.info(f"Database ready: {db_path}")
+
+    def _migrate_schema(self) -> None:
+        """
+        Idempotent column additions for long-lived SQLite files created before
+        a schema field was added. Safe to run on every startup.
+        """
+        expected_new_cols = {
+            # column name → SQL type
+            "broker_order_id":     "TEXT",
+            "broker_status":       "TEXT",
+            "broker_submitted_at": "TEXT",
+            "filled_qty":          "REAL",
+            "filled_avg_price":    "REAL",
+            "filled_at":           "TEXT",
+            "last_synced_at":      "TEXT",
+        }
+        with self._engine.begin() as conn:
+            existing = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(trades)"))
+            }
+            for col, sql_type in expected_new_cols.items():
+                if col not in existing:
+                    conn.execute(text(f"ALTER TABLE trades ADD COLUMN {col} {sql_type}"))
+                    log.info(f"DB migration: added trades.{col} ({sql_type})")
+            # Index on broker_order_id for fast reconciliation lookups
+            conn.execute(text(
+                "CREATE INDEX IF NOT EXISTS ix_trades_broker_order_id "
+                "ON trades(broker_order_id)"
+            ))
 
     def session(self) -> Session:
         return self._Session()
@@ -110,7 +152,18 @@ class Database:
     # ── Trades ──────────────────────────────────────────────────────────────
 
     def save_trade(self, trade) -> None:
-        """Upsert a TradeRecord dataclass."""
+        """
+        Upsert a TradeRecord dataclass.
+
+        Broker-lifecycle fields (broker_order_id, broker_status, …) are
+        optional — missing attributes default to None so legacy callers
+        (local-sim, backtest) keep working unchanged.
+        """
+        def _iso(v):
+            if v is None:
+                return None
+            return v.isoformat() if isinstance(v, datetime) else v
+
         with self.session() as s:
             row = s.get(TradeRow, trade.id)
             if row is None:
@@ -123,8 +176,8 @@ class Database:
             row.stop_loss = trade.stop_loss
             row.leverage = trade.leverage
             row.capital_allocated = trade.capital_allocated
-            row.entry_time = trade.entry_time.isoformat() if isinstance(trade.entry_time, datetime) else trade.entry_time
-            row.exit_time = trade.exit_time.isoformat() if isinstance(trade.exit_time, datetime) else trade.exit_time
+            row.entry_time = _iso(trade.entry_time)
+            row.exit_time  = _iso(trade.exit_time)
             row.exit_price = trade.exit_price
             row.outcome = trade.outcome.value if hasattr(trade.outcome, "value") else trade.outcome
             row.leveraged_return_pct = trade.leveraged_return_pct
@@ -132,6 +185,16 @@ class Database:
             row.mode = trade.mode
             row.strategy_id = trade.strategy_id
             row.notes = trade.notes
+
+            # ── Broker-order lifecycle (getattr → safe for legacy stand-ins) ──
+            row.broker_order_id     = getattr(trade, "broker_order_id",     None)
+            row.broker_status       = getattr(trade, "broker_status",       None)
+            row.broker_submitted_at = _iso(getattr(trade, "broker_submitted_at", None))
+            row.filled_qty          = getattr(trade, "filled_qty",          None)
+            row.filled_avg_price    = getattr(trade, "filled_avg_price",    None)
+            row.filled_at           = _iso(getattr(trade, "filled_at",      None))
+            row.last_synced_at      = _iso(getattr(trade, "last_synced_at", None))
+
             s.commit()
 
     def get_trades(

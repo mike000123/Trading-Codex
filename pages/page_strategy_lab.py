@@ -127,7 +127,7 @@ def render() -> None:
             .configure_axis(gridColor="#1e2130", labelColor="#c9d8f5", titleColor="#c9d8f5")
             .configure_title(color="#c9d8f5")
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width='stretch')
 
         if selected_id == "rsi_threshold":
             period = int(params.get("rsi_period", 14))
@@ -140,7 +140,7 @@ def render() -> None:
                 .configure_axis(gridColor="#2a2d3e", labelColor="#d0d4f0",
                                 titleColor="#d0d4f0", labelFontSize=12, titleFontSize=13)
                 .configure_title(color="#e8eaf6", fontSize=14, fontWeight="bold"),
-                use_container_width=True,
+                width='stretch',
             )
 
         with st.expander("📋 All Signals", expanded=False):
@@ -148,7 +148,7 @@ def render() -> None:
             if active.empty:
                 st.info("No BUY/SELL signals generated on this dataset with these parameters.")
             else:
-                st.dataframe(active.sort_values("date", ascending=False), use_container_width=True)
+                st.dataframe(active.sort_values("date", ascending=False), width='stretch')
                 st.caption(
                     f"{len(active)} signals · "
                     f"{len(active[active['action']=='BUY'])} BUY · "

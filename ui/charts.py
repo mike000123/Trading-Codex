@@ -192,6 +192,12 @@ def pnl_distribution(trades_df: pd.DataFrame) -> alt.LayerChart:
         alt.Tooltip("outcome:N",                title="Outcome"),
         alt.Tooltip("direction:N",              title="Direction"),
     ]
+    if "entry_time" in df.columns:
+        df["entry_time"] = pd.to_datetime(df["entry_time"], errors="coerce")
+        tt.append(alt.Tooltip("entry_time:T", title="Entry time"))
+    if "exit_time" in df.columns:
+        df["exit_time"] = pd.to_datetime(df["exit_time"], errors="coerce")
+        tt.append(alt.Tooltip("exit_time:T", title="Exit time"))
     if "entry_price" in df.columns:
         tt += [
             alt.Tooltip("entry_price:Q", title="Entry", format=".4f"),

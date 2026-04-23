@@ -195,7 +195,7 @@ def render() -> None:
 
     with st.expander("📋 Data Preview", expanded=False):
         st.caption(f"{len(prices)} rows total")
-        st.dataframe(prices, use_container_width=True)
+        st.dataframe(prices, width='stretch')
 
     st.divider()
     controls, results = st.columns([1.1, 0.9])
@@ -265,7 +265,7 @@ def render() -> None:
                     stop_loss=eff_sl,
                     title=f"{symbol} – Simulation",
                 )
-                st.altair_chart(fig, use_container_width=True)
+                st.altair_chart(fig, width='stretch')
 
         # ── Mode 2 ──────────────────────────────────────────────────────────
         else:
@@ -300,7 +300,7 @@ def render() -> None:
                     stop_loss=eff_sl if take else None,
                     title=f"{symbol} – Suggested Levels",
                 )
-                st.altair_chart(fig, use_container_width=True)
+                st.altair_chart(fig, width='stretch')
 
 
 # ─── Result display helpers ───────────────────────────────────────────────────

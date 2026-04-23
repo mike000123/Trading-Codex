@@ -3,6 +3,21 @@ reporting/backtest.py
 ─────────────────────
 Walk-forward backtesting engine — optimised for large datasets.
 
+ENTRY SEMANTICS (honest, no-lookahead):
+  Signals emitted on bar i → entry at bar i's CLOSE with the strategy's raw
+  SL/TP. TP/SL and trailing stops are first evaluated on bar i+1 (the entry
+  bar has already closed). This matches paper / forward-test / live semantics
+  exactly — there is no "next-bar open" fill, because in live trading there
+  is no next bar yet when the signal fires. Consequences:
+    • Paper, forward test, and backtest now use the same entry reference, so
+      backtest results are a faithful predictor of live performance (no
+      look-ahead bias from next-bar-open fills).
+    • SL/TP levels from the strategy are consumed unchanged (no re-anchoring),
+      because entry_price == signal_close in this model.
+    • In return for realism, backtest results may shift vs. the old next-bar-
+      open convention (typically slightly worse on trend-following strategies,
+      slightly better on mean-reversion, but direction is strategy-specific).
+
 Key optimisation vs original:
   BEFORE: data.iloc[:i+1].copy() on every bar → O(n²) memory copies
   AFTER:  strategy pre-computes all indicator series once → O(n) total
@@ -43,6 +58,14 @@ from core.models import Direction, Signal, SignalAction, TradeOutcome, TradeReco
 from core.logger import log
 from risk.manager import RiskManager
 from strategies.base import BaseStrategy
+from execution.alpaca_constraints import (
+    is_regular_trading_hour,
+    is_trading_day,
+    pdt_guard,
+    ssr_guard,
+    normalize_qty_for_direction,
+    fill_timing_note,
+)
 import uuid
 
 
@@ -99,6 +122,13 @@ class BacktestEngine:
         spread_pct: float = 0.0,
         slippage_pct: float = 0.0,
         commission_per_trade: float = 0.0,
+        *,
+        enforce_rth: bool = True,
+        extended_hours: bool = False,
+        enforce_pdt: bool = True,
+        enforce_ssr: bool = True,
+        enforce_fractional: bool = True,
+        fill_diagnostic: bool = True,
     ) -> None:
         self.strategy = strategy
         self.risk = risk_manager
@@ -107,6 +137,13 @@ class BacktestEngine:
         self.spread_pct = spread_pct
         self.slippage_pct = slippage_pct
         self.commission_per_trade = commission_per_trade
+        # Alpaca-realistic gates
+        self.enforce_rth = enforce_rth
+        self.extended_hours = extended_hours
+        self.enforce_pdt = enforce_pdt
+        self.enforce_ssr = enforce_ssr
+        self.enforce_fractional = enforce_fractional
+        self.fill_diagnostic = fill_diagnostic
 
     def run(
         self,
@@ -147,7 +184,30 @@ class BacktestEngine:
         atr_arr = _calc_atr_series(data, period=14)
         high_arr = data["high"].to_numpy(dtype=float)
         low_arr = data["low"].to_numpy(dtype=float)
+        close_arr = data["close"].to_numpy(dtype=float)
         dates = data["date"].to_numpy()
+
+        # Pre-compute prior-trading-day close for a fast inline SSR check on SHORTs.
+        # O(n) single pass; avoids re-slicing on every short entry.
+        prior_day_close_arr = np.full(n, np.nan, dtype=float)
+        if self.enforce_ssr and "date" in data.columns:
+            try:
+                _d = pd.to_datetime(data["date"])
+                if getattr(_d.dt, "tz", None) is None:
+                    _d = _d.dt.tz_localize("UTC")
+                _et_dates = _d.dt.tz_convert("America/New_York").dt.date.to_numpy()
+                prev_date = None
+                prev_day_last_close = np.nan
+                last_close_this_day = np.nan
+                for _i in range(n):
+                    _cur_date = _et_dates[_i]
+                    if prev_date is not None and _cur_date != prev_date:
+                        prev_day_last_close = last_close_this_day
+                    prior_day_close_arr[_i] = prev_day_last_close
+                    last_close_this_day = close_arr[_i]
+                    prev_date = _cur_date
+            except Exception:
+                prior_day_close_arr = np.full(n, np.nan, dtype=float)
 
         trades: list[TradeRecord] = []
         equity = starting_equity
@@ -254,109 +314,163 @@ class BacktestEngine:
                     open_trade = None
                     _reset_trail()
 
-            if i > 1:
-                prev_action = actions_s[i - 1]
-                prev_meta = meta_s[i - 1]
-                prev_dir = self._signal_to_direction(prev_action)
-                prev_sl = prev_meta.get("suggested_sl")
-                prev_tp = prev_meta.get("suggested_tp")
+            # ── New entry (signal-bar close, no re-anchor) ──────────────────
+            # Honest "no-lookahead" semantics: if the strategy emits a signal on
+            # this bar, we enter at this bar's CLOSE with the strategy's raw
+            # SL/TP (no translation from signal-close to next-bar-open, because
+            # there is no next bar in live trading). TP/SL are first checked on
+            # the NEXT bar — the entry bar itself has already closed.
+            # Paper mode uses the same convention, so backtest ↔ paper ↔ live
+            # all share the same entry reference.
+            current_sl = meta.get("suggested_sl")
+            current_tp = meta.get("suggested_tp")
+            if open_trade is None and new_direction is not None and current_sl is not None:
+                entry_px = float(bar["close"])
+                adj_sl = current_sl
+                adj_tp = current_tp
 
-                if open_trade is None and prev_dir is not None and prev_sl is not None:
-                    entry_px = float(bar["open"])
-                    signal_close = float(data.iloc[i - 1]["close"])
-                    adj_sl = self._reanchor_level(
-                        direction=prev_dir,
-                        level=prev_sl,
-                        signal_close=signal_close,
-                        entry_price=entry_px,
-                        is_stop=True,
-                    )
-                    adj_tp = self._reanchor_level(
-                        direction=prev_dir,
-                        level=prev_tp,
-                        signal_close=signal_close,
-                        entry_price=entry_px,
-                        is_stop=False,
-                    )
+                # ── Alpaca-realistic gates ──────────────────────────────────
+                # RTH / NYSE holiday gate
+                if self.enforce_rth:
+                    if not is_trading_day(current_date) or not is_regular_trading_hour(
+                        current_date, extended_hours=self.extended_hours
+                    ):
+                        equity_curve.append({"date": current_date, "equity": equity})
+                        continue
 
-                    if self.risk:
-                        check = self.risk.check(
-                            direction=prev_dir,
-                            entry_price=entry_px,
-                            take_profit=adj_tp,
-                            stop_loss=adj_sl,
-                            leverage=leverage,
-                            capital_requested=capital_per_trade,
-                        )
-                        if not check.approved:
+                # SSR: block shorts on ≥10% drop vs prior day close
+                if self.enforce_ssr and new_direction == Direction.SHORT:
+                    pd_close = prior_day_close_arr[i]
+                    if not np.isnan(pd_close) and pd_close > 0:
+                        drop_pct = (close_arr[i] - pd_close) / pd_close * 100.0
+                        if drop_pct <= -10.0:
                             equity_curve.append({"date": current_date, "equity": equity})
                             continue
-                        effective_sl = check.adjusted_sl or adj_sl
-                        effective_capital = check.adjusted_size or capital_per_trade
-                    else:
-                        effective_sl = adj_sl
-                        effective_capital = capital_per_trade
 
-                    prev_sig_meta = prev_meta.get("metadata", {})
-                    prev_regime = prev_sig_meta.get("regime", "normal")
+                available_equity = max(float(equity), 0.0)
+                requested_capital = min(float(capital_per_trade), available_equity)
 
-                    open_trade = TradeRecord(
-                        id=str(uuid.uuid4()),
-                        symbol=symbol,
-                        direction=prev_dir,
+                if requested_capital <= 0:
+                    equity_curve.append({"date": current_date, "equity": equity})
+                    continue
+
+                # PDT: pin the rolling 5-day window to the current bar time so
+                # the backtest evaluates day-trade count against simulated history.
+                if self.enforce_pdt:
+                    allowed, _pdt_reason = pdt_guard(
+                        trades, available_equity, as_of=current_date
+                    )
+                    if not allowed:
+                        equity_curve.append({"date": current_date, "equity": equity})
+                        continue
+
+                # Fractional-share routing: Alpaca rejects fractional short qty.
+                frac_scale = 1.0
+                frac_note = ""
+                if self.enforce_fractional:
+                    _est_qty = (requested_capital * float(leverage)) / entry_px if entry_px > 0 else 0.0
+                    _norm_qty, _norm_reason = normalize_qty_for_direction(_est_qty, new_direction)
+                    if _norm_qty <= 0:
+                        equity_curve.append({"date": current_date, "equity": equity})
+                        continue
+                    if _norm_reason and new_direction == Direction.SHORT and _est_qty > 0:
+                        frac_scale = _norm_qty / _est_qty
+                        requested_capital = requested_capital * frac_scale
+                        frac_note = _norm_reason
+
+                if self.risk:
+                    self.risk.update_portfolio_state(
+                        daily_pnl=0.0,
+                        open_positions=0,  # we just checked: open_trade is None
+                        total_equity=available_equity,
+                    )
+                    check = self.risk.check(
+                        direction=new_direction,
                         entry_price=entry_px,
                         take_profit=adj_tp,
-                        stop_loss=effective_sl,
+                        stop_loss=adj_sl,
                         leverage=leverage,
-                        capital_allocated=effective_capital,
-                        entry_time=current_date if isinstance(current_date, datetime) else pd.Timestamp(current_date).to_pydatetime(),
-                        mode="backtest",
-                        strategy_id=self.strategy.strategy_id,
-                        outcome=TradeOutcome.OPEN,
-                        notes=(
-                            f"Entry: {prev_dir.value} @ {entry_px:.4f} (next-bar open) | "
-                            f"regime={prev_regime} | "
-                            f"SL={effective_sl:.4f} | "
-                            + (f"TP={adj_tp:.4f}" if adj_tp is not None else "TP=none")
-                        ),
+                        capital_requested=requested_capital,
                     )
+                    if not check.approved:
+                        equity_curve.append({"date": current_date, "equity": equity})
+                        continue
+                    effective_sl = check.adjusted_sl or adj_sl
+                    effective_capital = min(check.adjusted_size or requested_capital, available_equity)
+                else:
+                    effective_sl = adj_sl
+                    effective_capital = requested_capital
 
-                    req_atr = prev_sig_meta.get("trailing_atr_mult")
-                    req_pct = prev_sig_meta.get("pct_trail")
-                    req_giveback = prev_sig_meta.get("profit_giveback_frac")
-                    req_giveback_min_pct = prev_sig_meta.get("profit_giveback_min_pct", 0.0)
-                    if req_atr is not None:
-                        trail_mult = float(req_atr)
-                        trail_pct = None
-                        trail_giveback_frac = None
-                        trail_giveback_min_pct = 0.0
-                        trail_best = entry_px
-                        trail_hard_sl = effective_sl
-                        trail_grace = 0
-                        trail_bars = 0
-                        open_trade.notes += f" | trail=atr:{trail_mult:.2f}"
-                    elif req_pct is not None:
-                        trail_mult = None
-                        trail_pct = float(req_pct)
-                        trail_giveback_frac = None
-                        trail_giveback_min_pct = 0.0
-                        trail_best = entry_px
-                        trail_hard_sl = effective_sl
-                        trail_grace = 1
-                        trail_bars = 0
-                        open_trade.notes += f" | trail=pct:{trail_pct:.2f}"
-                    elif req_giveback is not None:
-                        trail_mult = None
-                        trail_pct = None
-                        trail_giveback_frac = float(req_giveback)
-                        trail_giveback_min_pct = float(req_giveback_min_pct or 0.0)
-                        trail_best = entry_px
-                        trail_hard_sl = effective_sl
-                        trail_grace = 1
-                        trail_bars = 0
-                        open_trade.notes += f" | trail=giveback:{trail_giveback_frac:.2f},min:{trail_giveback_min_pct:.2f}"
-                    else:
-                        _reset_trail()
+                sig_meta = meta.get("metadata", {})
+                regime = sig_meta.get("regime", "normal")
+
+                _base_notes = (
+                    f"Entry: {new_direction.value} @ {entry_px:.4f} (signal-bar close) | "
+                    f"regime={regime} | "
+                    f"SL={effective_sl:.4f} | "
+                    + (f"TP={adj_tp:.4f}" if adj_tp is not None else "TP=none")
+                )
+                if frac_note:
+                    _base_notes += f" | {frac_note}"
+                if self.fill_diagnostic:
+                    try:
+                        _diag = fill_timing_note(symbol, bar)
+                        _base_notes += f" | {_diag.as_note_str()}"
+                    except Exception:
+                        pass
+
+                open_trade = TradeRecord(
+                    id=str(uuid.uuid4()),
+                    symbol=symbol,
+                    direction=new_direction,
+                    entry_price=entry_px,
+                    take_profit=adj_tp,
+                    stop_loss=effective_sl,
+                    leverage=leverage,
+                    capital_allocated=effective_capital,
+                    entry_time=current_date if isinstance(current_date, datetime) else pd.Timestamp(current_date).to_pydatetime(),
+                    mode="backtest",
+                    strategy_id=self.strategy.strategy_id,
+                    outcome=TradeOutcome.OPEN,
+                    notes=_base_notes,
+                )
+
+                req_atr = sig_meta.get("trailing_atr_mult")
+                req_pct = sig_meta.get("pct_trail")
+                req_giveback = sig_meta.get("profit_giveback_frac")
+                req_giveback_min_pct = sig_meta.get("profit_giveback_min_pct", 0.0)
+                if req_atr is not None:
+                    trail_mult = float(req_atr)
+                    trail_pct = None
+                    trail_giveback_frac = None
+                    trail_giveback_min_pct = 0.0
+                    trail_best = entry_px
+                    trail_hard_sl = effective_sl
+                    trail_grace = 0
+                    trail_bars = 0
+                    open_trade.notes += f" | trail=atr:{trail_mult:.2f}"
+                elif req_pct is not None:
+                    trail_mult = None
+                    trail_pct = float(req_pct)
+                    trail_giveback_frac = None
+                    trail_giveback_min_pct = 0.0
+                    trail_best = entry_px
+                    trail_hard_sl = effective_sl
+                    trail_grace = 1
+                    trail_bars = 0
+                    open_trade.notes += f" | trail=pct:{trail_pct:.2f}"
+                elif req_giveback is not None:
+                    trail_mult = None
+                    trail_pct = None
+                    trail_giveback_frac = float(req_giveback)
+                    trail_giveback_min_pct = float(req_giveback_min_pct or 0.0)
+                    trail_best = entry_px
+                    trail_hard_sl = effective_sl
+                    trail_grace = 1
+                    trail_bars = 0
+                    open_trade.notes += f" | trail=giveback:{trail_giveback_frac:.2f},min:{trail_giveback_min_pct:.2f}"
+                else:
+                    _reset_trail()
 
             equity_curve.append({"date": current_date, "equity": equity})
 
@@ -372,23 +486,6 @@ class BacktestEngine:
     def _trade_cost(self, capital: float) -> float:
         """Round-trip cost: spread + slippage (% of capital) + flat commission."""
         return capital * (self.spread_pct + self.slippage_pct) / 100.0 + self.commission_per_trade
-
-    @staticmethod
-    def _reanchor_level(
-        *,
-        direction: Direction,
-        level: Optional[float],
-        signal_close: float,
-        entry_price: float,
-        is_stop: bool,
-    ) -> Optional[float]:
-        if level is None or signal_close <= 0 or entry_price <= 0:
-            return level
-        if direction == Direction.LONG:
-            move = ((signal_close - level) / signal_close) if is_stop else ((level - signal_close) / signal_close)
-            return entry_price * (1 - move) if is_stop else entry_price * (1 + move)
-        move = ((level - signal_close) / signal_close) if is_stop else ((signal_close - level) / signal_close)
-        return entry_price * (1 + move) if is_stop else entry_price * (1 - move)
 
     @staticmethod
     def _counter_signal_outcome(
@@ -458,14 +555,14 @@ class BacktestEngine:
         losses = [t for t in closed if (t.leveraged_return_pct or 0) <= 0]
 
         eq_df = pd.DataFrame(equity_curve)
-        if len(eq_df) > 2000:
-            step = len(eq_df) // 2000
-            eq_df = (
-                pd.concat([eq_df.iloc[::step], eq_df.iloc[[-1]]])
-                .drop_duplicates("date")
-                .sort_values("date")
-                .reset_index(drop=True)
-            )
+        if not eq_df.empty:
+            # Preserve exact jump timing while dropping redundant repeated flat points.
+            # Keeping both the start and end of each flat run is effectively lossless
+            # for the realized-equity line and avoids the misleading shift introduced
+            # by coarse downsampling.
+            equity_s = pd.to_numeric(eq_df["equity"], errors="coerce")
+            keep_mask = equity_s.ne(equity_s.shift()) | equity_s.ne(equity_s.shift(-1))
+            eq_df = eq_df.loc[keep_mask].reset_index(drop=True)
 
         final_eq = float(eq_df["equity"].iloc[-1]) if not eq_df.empty else starting_equity
         total_ret = ((final_eq - starting_equity) / starting_equity * 100 if starting_equity else 0)
