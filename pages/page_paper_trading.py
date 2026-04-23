@@ -76,7 +76,6 @@ _CLOCK   = "pt_alpaca_clock"        # dict — Alpaca market-clock snapshot
 _KS_CONF = "pt_kill_switch_confirm" # bool — confirmation-step flag for the kill button
 _RESTORE = "pt_restored_from_config"
 _RUNS_CFG_KEY = "paper_trading_runs_v1"
-_PENDING_PRIME = "pt_pending_prime_symbol"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -92,8 +91,7 @@ def _fmt_price(value) -> str:
 def _init_state() -> None:
     for k, v in [(_RUNS, {}), (_CACHE, {}), (_SIGNALS, []), (_TRAIL, {}),
                   (_SYNC, {}), (_ACCT, {}), (_POS, {}), (_RECON, {}),
-                  (_CLOCK, {}), (_KS_CONF, False), (_RESTORE, False),
-                  (_PENDING_PRIME, None)]:
+                  (_CLOCK, {}), (_KS_CONF, False), (_RESTORE, False)]:
         if k not in st.session_state:
             st.session_state[k] = v
 
@@ -143,8 +141,6 @@ def _restore_runs_config() -> bool:
         return False
 
     st.session_state[_RUNS] = restored
-    if not st.session_state.get(_PENDING_PRIME):
-        st.session_state[_PENDING_PRIME] = next(iter(restored.keys()), None)
     return True
 
 
@@ -1815,25 +1811,13 @@ def render() -> None:
             }
             st.session_state[_RUNS][new_symbol] = run_cfg
             _persist_runs_config()
-            st.session_state[_PENDING_PRIME] = new_symbol
+            _run_tick(new_symbol, run_cfg)   # prime cache + possibly first entry
             st.rerun()
 
     runs = st.session_state[_RUNS]
     if not runs:
         st.info("No active paper trading runs. Add a symbol above to begin.")
         return
-
-    pending_prime = st.session_state.get(_PENDING_PRIME)
-    if pending_prime and pending_prime in runs:
-        try:
-            with st.spinner(f"Priming {pending_prime} paper-trading feed…"):
-                _run_tick(pending_prime, runs[pending_prime])
-        except Exception as exc:
-            st.error(f"Failed to start {pending_prime}: {exc}")
-        finally:
-            st.session_state[_PENDING_PRIME] = None
-            _persist_runs_config()
-        st.rerun()
 
     # ── Global controls ──────────────────────────────────────────────────────
     gcol1, gcol2, gcol3 = st.columns(3)
@@ -1842,7 +1826,6 @@ def render() -> None:
     if gcol3.button("🗑️ Clear All", key="pt_clear_all"):
         for k in [_RUNS, _CACHE, _SIGNALS, _TRAIL]:
             st.session_state[k] = {} if isinstance(st.session_state[k], dict) else []
-        st.session_state[_PENDING_PRIME] = None
         _persist_runs_config()
         st.rerun()
 
@@ -2140,8 +2123,6 @@ def render() -> None:
             if c4.button(f"🗑️ Remove {symbol}", key=f"pt_remove_{symbol}"):
                 del st.session_state[_RUNS][symbol]
                 st.session_state[_CACHE].pop(symbol, None)
-                if st.session_state.get(_PENDING_PRIME) == symbol:
-                    st.session_state[_PENDING_PRIME] = None
                 _persist_runs_config()
                 st.rerun()
 

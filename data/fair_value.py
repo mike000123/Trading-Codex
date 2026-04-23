@@ -841,62 +841,14 @@ def prepare_gld_fair_value_context(
     fair = diagnostics.frame.copy()
     fair["date"] = pd.to_datetime(fair["date"], errors="coerce")
     fair = fair.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
+    fair["fair_slope_pct"] = fair["fair_value"].pct_change().fillna(0.0) * 100.0
+    fair["fair_confidence"] = float(diagnostics.stats.get("directional_hit", np.nan))
 
-    # ── Slope: raw month-over-month, plus a 3-month EMA smoother ───────────
-    # The raw monthly pct-change is noisy — a single outlier month can flip
-    # the regime. A 3-month EMA gives us a stickier direction signal while
-    # still being responsive enough for a regime filter.
-    raw_slope = fair["fair_value"].pct_change().fillna(0.0) * 100.0
-    slope_smooth = raw_slope.ewm(span=3, adjust=False, min_periods=2).mean()
-    fair["fair_slope_pct"] = slope_smooth
-
-    # ── Confidence: rolling 12-month directional hit (Step D) ──────────────
-    # Replaces the previous static whole-sample scalar. Downweights the
-    # regime gate during periods when the model is actually poor — e.g.
-    # macro regime change. We keep a fallback to the aggregate scalar so
-    # the very first months (before 12 obs exist) still have a value.
-    actual_sign = np.sign(fair["actual"].diff())
-    fair_sign = np.sign(fair["fair_value"].diff())
-    per_bar_hit = (actual_sign == fair_sign) & actual_sign.ne(0)
-    rolling_confidence = per_bar_hit.astype(float).rolling(12, min_periods=4).mean()
-    aggregate_confidence = float(diagnostics.stats.get("directional_hit", np.nan))
-    fair["fair_confidence"] = rolling_confidence.fillna(aggregate_confidence)
-
-    # ── Hysteresis regime classifier ───────────────────────────────────────
-    # Enter thresholds are strict (caller-provided). Exit thresholds are
-    # deliberately looser (30% of entry magnitude) so that once a regime is
-    # established it survives noise. Gap vetoes are now *symmetric* — both
-    # bullish and bearish only demand "not deeply contrary to the call"
-    # instead of the previous asymmetric stacking.
-    slope_enter_bull = float(bullish_slope_min)
-    slope_enter_bear = float(bearish_slope_max)
-    slope_exit_bull  = slope_enter_bull * 0.3
-    slope_exit_bear  = slope_enter_bear * 0.3
-    gap_veto_bull    = -float(overvalued_gap_pct)   # must not be deeply overvalued
-    gap_veto_bear    =  float(undervalued_gap_pct)  # must not be deeply undervalued
-
-    slope_arr = slope_smooth.fillna(0.0).to_numpy()
-    gap_arr   = pd.to_numeric(fair["fair_gap_pct"], errors="coerce").fillna(0.0).to_numpy()
-    regime = np.full(len(fair), "neutral", dtype=object)
-    state = "neutral"
-    for i in range(len(fair)):
-        s = float(slope_arr[i])
-        g = float(gap_arr[i])
-        if state == "bullish":
-            # Leave bullish only when slope has clearly faded OR price is far
-            # above fair — otherwise we sit tight through minor wobbles.
-            if s < slope_exit_bull or g < gap_veto_bull:
-                state = "neutral"
-        elif state == "bearish":
-            if s > slope_exit_bear or g > gap_veto_bear:
-                state = "neutral"
-        if state == "neutral":
-            if s >= slope_enter_bull and g >= gap_veto_bull:
-                state = "bullish"
-            elif s <= slope_enter_bear and g <= gap_veto_bear:
-                state = "bearish"
-        regime[i] = state
-    fair["gold_fair_value_regime"] = regime
+    fair["gold_fair_value_regime"] = "neutral"
+    bullish = (fair["fair_slope_pct"] >= bullish_slope_min) & (fair["fair_gap_pct"] >= -undervalued_gap_pct)
+    bearish = (fair["fair_slope_pct"] <= bearish_slope_max) & (fair["fair_gap_pct"] <= -overvalued_gap_pct)
+    fair.loc[bullish, "gold_fair_value_regime"] = "bullish"
+    fair.loc[bearish, "gold_fair_value_regime"] = "bearish"
 
     keep_cols = [
         "date",

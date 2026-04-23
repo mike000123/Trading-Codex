@@ -126,10 +126,7 @@ class BollingerRSIStrategy(BaseStrategy):
         interval: str | None = None,
     ) -> list[str]:
         symbol_u = symbol.strip().upper()
-        if symbol_u != "GLD" or source not in {"alpaca", "yfinance", "forward_blend"}:
-            return []
-        params = self.resolve_params(symbol=symbol, source=source, interval=interval)
-        if bool(params.get("gold_fair_value_regime_enabled", False)):
+        if symbol_u == "GLD" and source in {"alpaca", "yfinance", "forward_blend"}:
             return ["gold_fair_value"]
         return []
 
@@ -842,7 +839,6 @@ class BollingerRSIStrategy(BaseStrategy):
         last_shock_reversal_bar = -shock_reversal_cooldown - 1
         last_cascade_breakdown_bar = -cascade_breakdown_cooldown - 1
         last_shock_rebound_bar = -shock_rebound_cooldown - 1
-        last_gold_context_short_bar = -max(shock_reversal_cooldown, cascade_breakdown_cooldown, intraday_pullback_cooldown) - 1
         last_psshort_bar = -psshort_cooldown - 1
         last_event_target_bar = -psshort_cooldown - 1
         last_decay_bar = -decay_cooldown - 1
@@ -1499,16 +1495,6 @@ class BollingerRSIStrategy(BaseStrategy):
                 and not np.isnan(fair_gap_pct_now)
                 and fair_gap_pct_now <= -gold_fair_value_overvalued_gap_pct
             )
-            # Softer short-side context: price is deeply overvalued relative to the fair-value model
-            # and the regime is not actively bullish. Used by the gold_context_assisted_short branch so
-            # the short companion can fire during mean-reversion windows even when slope hasn't flipped.
-            fair_value_overextended = (
-                fair_value_model_ok
-                and fair_regime_now != "bullish"
-                and not np.isnan(fair_gap_pct_now)
-                and fair_gap_pct_now <= -gold_fair_value_overvalued_gap_pct
-                and (np.isnan(fair_slope_pct_now) or fair_slope_pct_now <= max(0.0, gold_fair_value_bullish_slope_min * 0.5))
-            )
             gold_macro_regime_score = weighted_gold_macro_regime_score(
                 dollar_state=dollar_regime_state,
                 dollar_weight=gold_regime_dollar_weight,
@@ -1553,27 +1539,6 @@ class BollingerRSIStrategy(BaseStrategy):
                 + (gold_riskoff_strength_weight if riskoff_override else 0.0)
             )
             gold_context_effective_score = gold_context_assist_score + (0.5 if gold_macro_bullish else 0.0) + (0.25 if fair_value_bullish else 0.0)
-            # Mirror for shorts: absence of bullish peer/miners/riskoff confirmation counts as short-side support.
-            gold_context_short_assist_score = (
-                (gold_peer_strength_weight if not metal_peer_confirm else 0.0)
-                + (gold_miners_strength_weight if not miners_confirm else 0.0)
-                + (gold_riskoff_strength_weight if not riskoff_override else 0.0)
-            )
-            # Weights tuned so a clean bearish/overextended fair-value signal clears the default
-            # gold_context_assist_min_score (0.5) on its own, without needing peer/miner drop-outs.
-            gold_context_short_effective_score = (
-                gold_context_short_assist_score
-                + (0.5 if gold_macro_bearish else 0.0)
-                + (0.6 if fair_value_bearish else 0.0)
-                + (0.5 if (fair_value_overextended and not fair_value_bearish) else 0.0)
-            )
-            fair_value_short_confirm = (
-                gold_context_assist_enabled
-                and not gold_macro_bullish
-                and not fair_value_bullish
-                and gold_context_short_effective_score >= gold_context_assist_min_score
-                and (gold_macro_bearish or fair_value_bearish or fair_value_overextended)
-            )
             trend_context_score = weighted_trend_context_score(
                 peer_confirm=metal_peer_confirm,
                 peer_weight=trend_peer_strength_weight,
@@ -2146,67 +2111,6 @@ class BollingerRSIStrategy(BaseStrategy):
                     },
                 }
                 last_intraday_pullback_bar = pos
-                continue
-
-            # Companion short path that fires when the fair-value regime confirms the short side.
-            # Mirrors gold_context_assisted_breakout on the long side: relaxed thresholds, uses
-            # shock_reversal sizing (SL / TP / trail), respects existing short cooldowns.
-            _dbg_g1 = fair_value_short_confirm
-            _dbg_g2 = _dbg_g1 and (not in_spike_lockout)
-            _dbg_g3 = _dbg_g2 and (px > low_price_chop_price)
-            _dbg_g4 = _dbg_g3 and (atr_ma_now > 0) and (atr_now >= atr_ma_now * 0.65)
-            _dbg_g5 = _dbg_g4 and (((atr_now / max(px, 1e-9)) * 100) >= max(0.02, shock_reversal_bar_drop_pct * 0.3))
-            _dbg_g6 = _dbg_g5 and (rsi_val <= max(65.0, shock_reversal_max_current_rsi - 5.0))
-            _dbg_g7 = _dbg_g6 and (prev_rsi_val > rsi_val)
-            _dbg_g8 = _dbg_g7 and (
-                drop_from_recent_high_pct >= max(0.3, shock_reversal_drop_pct * 0.5)
-                or (peak_excess_pct >= max(0.5, event_target_min_peak_pct * 0.3) and active_now)
-            )
-            _dbg_g9 = _dbg_g8 and ((pos - last_gold_context_short_bar) >= max(1, min(shock_reversal_cooldown, cascade_breakdown_cooldown, intraday_pullback_cooldown) // 2))
-            _dbg_g10 = _dbg_g9 and (pos - last_shock_reversal_bar) >= shock_reversal_cooldown // 2
-            _dbg_g11 = _dbg_g10 and (pos - last_cascade_breakdown_bar) >= cascade_breakdown_cooldown // 2
-            _dbg_g12 = _dbg_g11 and (pos - last_intraday_pullback_bar) >= intraday_pullback_cooldown // 2
-            try:
-                _GCAS_DBG[0] += int(_dbg_g1); _GCAS_DBG[1] += int(_dbg_g2); _GCAS_DBG[2] += int(_dbg_g3)
-                _GCAS_DBG[3] += int(_dbg_g4); _GCAS_DBG[4] += int(_dbg_g5); _GCAS_DBG[5] += int(_dbg_g6)
-                _GCAS_DBG[6] += int(_dbg_g7); _GCAS_DBG[7] += int(_dbg_g8); _GCAS_DBG[8] += int(_dbg_g9)
-                _GCAS_DBG[9] += int(_dbg_g10); _GCAS_DBG[10] += int(_dbg_g11); _GCAS_DBG[11] += int(_dbg_g12)
-            except NameError:
-                pass
-            gold_context_assisted_short = _dbg_g12
-            if gold_context_assisted_short:
-                tp = px * (1 - shock_reversal_tp_pct / 100)
-                sl = px * (1 + shock_reversal_sl_pct / 100)
-                actions[pos] = SignalAction.SELL
-                metas[pos] = {
-                    "suggested_tp": tp,
-                    "suggested_sl": sl,
-                    "metadata": {
-                        "rsi": round(rsi_val, 2),
-                        "regime": "gold_context_assisted_short",
-                        "spike_type": episode_type,
-                        "pct_trail": shock_reversal_trail_pct,
-                        "prev_rsi": round(float(prev_rsi_val), 2),
-                        "recent_max_rsi": round(float(recent_max_rsi_now), 2),
-                        "drop_from_recent_high_pct": round(float(drop_from_recent_high_pct), 2),
-                        "peak_excess_pct": round(float(peak_excess_pct), 2),
-                        "gold_context_short_assist_score": round(float(gold_context_short_assist_score), 3),
-                        "gold_context_short_effective_score": round(float(gold_context_short_effective_score), 3),
-                        "gold_macro_regime_state": gold_macro_state,
-                        "gold_macro_regime_score": round(float(gold_macro_regime_score), 3),
-                        "gold_fair_value": round(float(fair_value_now), 3) if not np.isnan(fair_value_now) else None,
-                        "gold_fair_gap_pct": round(float(fair_gap_pct_now), 3) if not np.isnan(fair_gap_pct_now) else None,
-                        "gold_fair_slope_pct": round(float(fair_slope_pct_now), 3) if not np.isnan(fair_slope_pct_now) else None,
-                        "gold_fair_regime": fair_regime_now,
-                        "gold_fair_model_ok": bool(fair_value_model_ok),
-                        "fair_value_bearish": bool(fair_value_bearish),
-                        "fair_value_overextended": bool(fair_value_overextended),
-                        "metal_peer_confirm": bool(metal_peer_confirm),
-                        "miners_confirm": bool(miners_confirm),
-                        "riskoff_override": bool(riskoff_override),
-                    },
-                }
-                last_gold_context_short_bar = pos
                 continue
 
             if (

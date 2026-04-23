@@ -121,36 +121,5 @@ with st.sidebar:
     _set_page_query(page_name)
     st.markdown("---")
 
-    # ── Diagnostic: session-state snapshot ────────────────────────────────
-    # Lets us confirm whether in-memory state actually survives page switches.
-    # Uses the same explicit keys each page writes to (pt_*/ft_*/bt_*).
-    with st.expander("🔍 State", expanded=False):
-        _ss          = st.session_state
-        _pt_runs     = _ss.get("pt_active_runs") or {}
-        _ft_runs     = _ss.get("ft_active_runs") or {}
-        _bt_cached   = "bt_result" in _ss
-        _bt_symbol   = _ss.get("bt_symbol", "—") if _bt_cached else "—"
-        _pt_signals  = len(_ss.get("pt_all_signals") or [])
-        _ft_signals  = len(_ss.get("ft_all_signals") or [])
-        _total_keys  = len(list(_ss.keys()))
-
-        st.caption(
-            f"Paper runs: **{len(_pt_runs)}**"
-            + (f"  ·  {', '.join(list(_pt_runs.keys())[:6])}" if _pt_runs else "")
-        )
-        st.caption(
-            f"Forward runs: **{len(_ft_runs)}**"
-            + (f"  ·  {', '.join(list(_ft_runs.keys())[:6])}" if _ft_runs else "")
-        )
-        st.caption(
-            f"Backtest result cached: **{'yes' if _bt_cached else 'no'}**"
-            + (f"  ·  {_bt_symbol}" if _bt_cached else "")
-        )
-        st.caption(
-            f"Signals buffered · paper: **{_pt_signals}**  ·  forward: **{_ft_signals}**"
-        )
-        st.caption(f"Total session keys: **{_total_keys}**")
-    st.markdown("---")
-
 # ── Render selected page ───────────────────────────────────────────────────
 PAGES[page_name].render()
