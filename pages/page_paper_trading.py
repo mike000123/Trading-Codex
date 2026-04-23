@@ -122,10 +122,21 @@ def _json_safe(value):
     return value
 
 
+def _normalize_signal_row(row: dict) -> dict:
+    normalized = dict(row)
+    date_val = normalized.get("date")
+    if date_val is not None:
+        try:
+            normalized["date"] = pd.Timestamp(date_val).isoformat()
+        except Exception:
+            normalized["date"] = str(date_val)
+    return normalized
+
+
 def _persist_signals_config() -> None:
     signals = st.session_state.get(_SIGNALS) or []
     payload = {
-        "signals": [_json_safe(s) for s in signals[-_MAX_PERSISTED_SIGNALS:]],
+        "signals": [_normalize_signal_row(_json_safe(s)) for s in signals[-_MAX_PERSISTED_SIGNALS:]],
         "saved_at": datetime.utcnow().isoformat(timespec="seconds"),
     }
     try:
@@ -181,7 +192,7 @@ def _restore_signals_config() -> bool:
     signals = payload.get("signals") or []
     if not isinstance(signals, list) or not signals:
         return False
-    st.session_state[_SIGNALS] = signals[-_MAX_PERSISTED_SIGNALS:]
+    st.session_state[_SIGNALS] = [_normalize_signal_row(s) for s in signals[-_MAX_PERSISTED_SIGNALS:] if isinstance(s, dict)]
     return True
 
 
@@ -1034,7 +1045,7 @@ def _run_tick(symbol: str, run: dict) -> None:
 
     sig_meta = signal.metadata or {}
     st.session_state[_SIGNALS].append({
-        "date":     _to_local(latest_ts),
+        "date":     pd.Timestamp(_to_local(latest_ts)).isoformat(),
         "symbol":   symbol,
         "action":   signal.action.value,
         "close":    float(latest["close"]),
@@ -2283,10 +2294,11 @@ def render() -> None:
                 sym_sigs = [s for s in st.session_state[_SIGNALS]
                             if s.get("symbol") == symbol]
                 if sym_sigs:
-                    st.dataframe(
-                        pd.DataFrame(sym_sigs).sort_values("date", ascending=False),
-                        width='stretch',
-                    )
+                    sig_df = pd.DataFrame(sym_sigs).copy()
+                    if "date" in sig_df.columns:
+                        sig_df["date"] = pd.to_datetime(sig_df["date"], errors="coerce")
+                        sig_df = sig_df.sort_values("date", ascending=False)
+                    st.dataframe(sig_df, width='stretch')
                 else:
                     st.info("No signals yet — press Refresh.")
 
