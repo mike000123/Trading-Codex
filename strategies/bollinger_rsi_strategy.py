@@ -126,7 +126,10 @@ class BollingerRSIStrategy(BaseStrategy):
         interval: str | None = None,
     ) -> list[str]:
         symbol_u = symbol.strip().upper()
-        if symbol_u == "GLD" and source in {"alpaca", "yfinance", "forward_blend"}:
+        if symbol_u != "GLD" or source not in {"alpaca", "yfinance", "forward_blend"}:
+            return []
+        params = self.resolve_params(symbol=symbol, source=source, interval=interval)
+        if bool(params.get("gold_fair_value_regime_enabled", False)):
             return ["gold_fair_value"]
         return []
 
