@@ -129,6 +129,14 @@ def _persist_page_config(page_name: str) -> None:
     except Exception:
         pass
 
+
+def _persist_current_nav() -> None:
+    page_name = st.session_state.get("nav")
+    if not page_name:
+        return
+    _set_page_query(page_name)
+    _persist_page_config(page_name)
+
 with st.sidebar:
     st.markdown("---")
     st.markdown("### 📈 AlgoTrader Pro")
@@ -136,16 +144,19 @@ with st.sidebar:
     # Allow portfolio nav buttons to redirect here
     nav_target = st.session_state.pop("nav_target", None)
     if nav_target and nav_target in page_keys:
-        default_idx = page_keys.index(nav_target)
+        desired_page = nav_target
     else:
-        default_page = _get_page_from_query() or _get_page_from_config() or "⏪ Backtester"
-        default_idx  = page_keys.index(default_page) if default_page in page_keys else 0
+        desired_page = _get_page_from_query() or _get_page_from_config() or "⏪ Backtester"
+    if desired_page not in page_keys:
+        desired_page = page_keys[0]
+    if st.session_state.get("nav") != desired_page:
+        st.session_state["nav"] = desired_page
     page_name = st.radio(
         "Navigation",
         page_keys,
-        index=default_idx,
         key="nav",
         label_visibility="collapsed",
+        on_change=_persist_current_nav,
     )
     _set_page_query(page_name)
     _persist_page_config(page_name)
@@ -160,6 +171,4 @@ if _prev_page != page_name:
         st.rerun()
 
 # ── Render selected page ───────────────────────────────────────────────────
-_page_root = st.empty()
-with _page_root.container():
-    PAGES[page_name].render()
+PAGES[page_name].render()
