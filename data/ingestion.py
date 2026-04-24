@@ -501,8 +501,24 @@ def prepare_strategy_data(
             return frame
         out = frame.copy()
         out["date"] = pd.to_datetime(out["date"], errors="coerce", utc=True).dt.tz_localize(None)
+        out["date"] = out["date"].astype("datetime64[ns]")
         out = out.dropna(subset=["date"]).sort_values("date").drop_duplicates(subset=["date"], keep="last")
         return out.reset_index(drop=True)
+
+    def _merge_asof_on_date(left: pd.DataFrame, right: pd.DataFrame, tolerance) -> pd.DataFrame:
+        left_m = left.copy()
+        right_m = right.copy()
+        left_m["__merge_ts"] = left_m["date"].astype("int64")
+        right_m["__merge_ts"] = right_m["date"].astype("int64")
+        tol_ns = pd.Timedelta(tolerance).value if tolerance is not None else None
+        merged = pd.merge_asof(
+            left_m.sort_values("__merge_ts"),
+            right_m.sort_values("__merge_ts").drop(columns=["date"], errors="ignore"),
+            on="__merge_ts",
+            direction="backward",
+            tolerance=tol_ns,
+        )
+        return merged.drop(columns=["__merge_ts"], errors="ignore")
 
     companion_requests = _strategy_companion_requests(strategy, primary_symbol, source, interval)
     if not companion_requests or source not in {"alpaca", "yfinance", "forward_blend"}:
@@ -532,13 +548,7 @@ def prepare_strategy_data(
             }
             comp = comp.rename(columns=rename_map)
             keep_cols = ["date", *rename_map.values()]
-            enriched = pd.merge_asof(
-                enriched.sort_values("date"),
-                comp[keep_cols].sort_values("date"),
-                on="date",
-                direction="backward",
-                tolerance=tolerance,
-            )
+            enriched = _merge_asof_on_date(enriched, comp[keep_cols], tolerance)
 
     derived_requests = _strategy_derived_requests(strategy, primary_symbol, source, interval)
     if "gold_fair_value" in derived_requests and primary_symbol.strip().upper() == "GLD":
