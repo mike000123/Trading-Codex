@@ -151,5 +151,13 @@ with st.sidebar:
     _persist_page_config(page_name)
     st.markdown("---")
 
+# Force one clean rerender when the selected page changes so charts/widgets
+# from the previously rendered page do not linger visually after navigation.
+_prev_page = st.session_state.get("_last_rendered_page")
+if _prev_page != page_name:
+    st.session_state["_last_rendered_page"] = page_name
+    if _prev_page is not None:
+        st.rerun()
+
 # ── Render selected page ───────────────────────────────────────────────────
 PAGES[page_name].render()
