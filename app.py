@@ -78,6 +78,7 @@ PAGE_SLUGS = {
 SLUG_TO_PAGE = {slug: label for label, slug in PAGE_SLUGS.items()}
 _APP_PAGE_CFG_KEY = "app_last_page_v1"
 _CURRENT_PAGE_KEY = "current_page"
+_NAV_WIDGET_KEY = "nav_radio"
 
 
 def _db() -> Database:
@@ -150,10 +151,12 @@ with st.sidebar:
     st.markdown("### 📈 AlgoTrader Pro")
     page_keys = list(PAGES.keys())
     desired_page = _resolve_desired_page(page_keys)
+    if st.session_state.get(_NAV_WIDGET_KEY) not in page_keys:
+        st.session_state[_NAV_WIDGET_KEY] = desired_page
     page_name = st.radio(
         "Navigation",
         page_keys,
-        index=page_keys.index(desired_page),
+        key=_NAV_WIDGET_KEY,
         label_visibility="collapsed",
     )
     st.session_state[_CURRENT_PAGE_KEY] = page_name
