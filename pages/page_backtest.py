@@ -397,6 +397,7 @@ def _spike_structure(prices: pd.DataFrame | None, start: str, end: str) -> dict:
             "Start": start,
             "Peak": "—",
             "End": end,
+            "_peak_ts": None,
             "Up Longs": 0,
             "Up Shorts": 0,
             "Post Longs": 0,
@@ -411,6 +412,7 @@ def _spike_structure(prices: pd.DataFrame | None, start: str, end: str) -> dict:
             "Start": start,
             "Peak": "—",
             "End": end,
+            "_peak_ts": None,
             "Up Longs": 0,
             "Up Shorts": 0,
             "Post Longs": 0,
@@ -466,13 +468,17 @@ def _comparison_report(prices, trades) -> pd.DataFrame:
             structure = _spike_structure(prices, start, end)
             start_ts = pd.Timestamp(start)
             end_ts = pd.Timestamp(end) + pd.Timedelta(days=1)
-            peak_ts = structure.pop("_peak_ts")
+            peak_ts = structure.pop("_peak_ts", None)
             subset = [
                 t for t in trades
                 if t.leveraged_return_pct is not None and start_ts <= pd.Timestamp(t.entry_time) < end_ts
             ]
-            up_trades = [t for t in subset if pd.Timestamp(t.entry_time) <= peak_ts]
-            post_trades = [t for t in subset if pd.Timestamp(t.entry_time) > peak_ts]
+            if peak_ts is None:
+                up_trades = []
+                post_trades = []
+            else:
+                up_trades = [t for t in subset if pd.Timestamp(t.entry_time) <= peak_ts]
+                post_trades = [t for t in subset if pd.Timestamp(t.entry_time) > peak_ts]
             _low, move_pct = _window_price_move(prices, start, end)
             row["Spike Move %"] = f"{move_pct:.1f}%" if move_pct is not None else "—"
             row["Capture Eff."] = _capture_efficiency(float(row["PnL ($)"]), move_pct)
