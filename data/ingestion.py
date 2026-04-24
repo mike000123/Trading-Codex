@@ -496,11 +496,19 @@ def prepare_strategy_data(
     if data is None or data.empty:
         return data
 
+    def _normalize_merge_dates(frame: pd.DataFrame) -> pd.DataFrame:
+        if frame is None or frame.empty:
+            return frame
+        out = frame.copy()
+        out["date"] = pd.to_datetime(out["date"], errors="coerce", utc=True).dt.tz_localize(None)
+        out = out.dropna(subset=["date"]).sort_values("date").drop_duplicates(subset=["date"], keep="last")
+        return out.reset_index(drop=True)
+
     companion_requests = _strategy_companion_requests(strategy, primary_symbol, source, interval)
     if not companion_requests or source not in {"alpaca", "yfinance", "forward_blend"}:
-        enriched = data
+        enriched = _normalize_merge_dates(data)
     else:
-        enriched = data.sort_values("date").reset_index(drop=True).copy()
+        enriched = _normalize_merge_dates(data)
         start_ts = pd.Timestamp(start) if start is not None else pd.Timestamp(enriched["date"].min())
         end_ts = pd.Timestamp(end) if end is not None else pd.Timestamp(enriched["date"].max()) + pd.Timedelta(minutes=1)
         tolerance = _merge_tolerance(interval)
@@ -514,7 +522,7 @@ def prepare_strategy_data(
             if companion is None or companion.empty:
                 continue
 
-            comp = companion.sort_values("date").reset_index(drop=True).copy()
+            comp = _normalize_merge_dates(companion)
             rename_map = {
                 "open": f"{prefix}_open",
                 "high": f"{prefix}_high",
