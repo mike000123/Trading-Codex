@@ -78,8 +78,6 @@ PAGE_SLUGS = {
 SLUG_TO_PAGE = {slug: label for label, slug in PAGE_SLUGS.items()}
 _APP_PAGE_CFG_KEY = "app_last_page_v1"
 _CURRENT_PAGE_KEY = "current_page"
-_NAV_WIDGET_KEY = "nav_widget"
-_NAV_CHANGED_FLAG = "_nav_changed"
 
 
 def _db() -> Database:
@@ -133,16 +131,6 @@ def _persist_page_config(page_name: str) -> None:
         pass
 
 
-def _persist_current_nav() -> None:
-    page_name = st.session_state.get(_NAV_WIDGET_KEY)
-    if not page_name:
-        return
-    st.session_state[_CURRENT_PAGE_KEY] = page_name
-    st.session_state[_NAV_CHANGED_FLAG] = True
-    _set_page_query(page_name)
-    _persist_page_config(page_name)
-
-
 def _resolve_desired_page(page_keys: list[str]) -> str:
     nav_target = st.session_state.pop("nav_target", None)
     if nav_target and nav_target in page_keys:
@@ -162,27 +150,16 @@ with st.sidebar:
     st.markdown("### 📈 AlgoTrader Pro")
     page_keys = list(PAGES.keys())
     desired_page = _resolve_desired_page(page_keys)
-    st.session_state[_CURRENT_PAGE_KEY] = desired_page
-    if st.session_state.get(_NAV_WIDGET_KEY) != desired_page:
-        st.session_state[_NAV_WIDGET_KEY] = desired_page
     page_name = st.radio(
         "Navigation",
         page_keys,
-        key=_NAV_WIDGET_KEY,
+        index=page_keys.index(desired_page),
         label_visibility="collapsed",
-        on_change=_persist_current_nav,
     )
+    st.session_state[_CURRENT_PAGE_KEY] = page_name
     _set_page_query(page_name)
     _persist_page_config(page_name)
     st.markdown("---")
-
-st.session_state[_CURRENT_PAGE_KEY] = page_name
-
-# On an actual page change, do one extra rerun. This keeps the new tab as the
-# source of truth for refreshes and gives Streamlit a cleaner handoff between
-# heavy chart pages.
-if st.session_state.pop(_NAV_CHANGED_FLAG, False):
-    st.rerun()
 
 # ── Render selected page ───────────────────────────────────────────────────
 PAGES[page_name].render()
