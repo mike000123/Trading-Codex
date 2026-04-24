@@ -717,7 +717,7 @@ def render() -> None:
         base_overrides=candidate_param_overrides if show_gld_candidates else None,
     )
     run_clicked = st.button("▶ Run Backtest", type="primary", key="bt_run")
-    if "bt_result" in st.session_state:
+    if "bt_result" in st.session_state and not run_clicked:
         st.divider()
         _show_results()
 
