@@ -48,6 +48,7 @@ import execution.entry_policy_classic  # noqa: F401
 import execution.entry_policy_alpaca   # noqa: F401
 from risk.manager import RiskManager
 from strategies import list_strategies, get_strategy
+from ui.autorefresh import render_autorefresh_timer
 from ui.components import render_mode_banner, render_strategy_params
 from ui.charts import rsi_chart
 
@@ -2268,6 +2269,7 @@ def render() -> None:
                     buy_lvls, sell_lvls = [30], [70]
                 st.altair_chart(
                     rsi_chart(prices_local, rsi_p, buy_lvls, sell_lvls)
+                        .properties(title=alt.TitleParams(f"{symbol} – Paper Trading RSI ({rsi_p})", **_TITLE))
                         .configure_view(strokeOpacity=0)
                         .configure_axis(**_AXIS)
                         .configure_title(**_TITLE),
@@ -2287,7 +2289,7 @@ def render() -> None:
                 _sym_anchor = None
             st.altair_chart(
                 _equity_curve_chart(sym_closed, float(run["capital"]),
-                                     title=f"{symbol} – Equity",
+                                     title=f"{symbol} – Paper Trading Equity",
                                      anchor_time=_sym_anchor),
                 width='stretch',
             )
@@ -2326,11 +2328,15 @@ def render() -> None:
             st.info("No closed paper trades yet.")
 
     # ── Auto-refresh loop ────────────────────────────────────────────────────
-    if auto and any(r.get("active") for r in runs.values()):
-        import time
+    auto_enabled = auto and any(r.get("active") for r in runs.values())
+    min_interval = 60
+    if auto_enabled:
         min_interval = min(
             int(_interval_td(r["interval"]).total_seconds())
             for r in runs.values() if r.get("active")
         )
-        time.sleep(max(min_interval, 60))
-        st.rerun()
+    render_autorefresh_timer(
+        auto_enabled,
+        max(min_interval, 60),
+        key="paper_trading_refresh",
+    )

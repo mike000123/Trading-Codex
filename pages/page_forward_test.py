@@ -29,6 +29,7 @@ import execution.entry_policy_classic  # noqa: F401
 import execution.entry_policy_alpaca   # noqa: F401
 from risk.manager import RiskManager
 from strategies import list_strategies, get_strategy
+from ui.autorefresh import render_autorefresh_timer
 from ui.components import render_mode_banner, render_strategy_params, render_metrics_row
 from ui.charts import rsi_chart
 
@@ -948,11 +949,15 @@ def render() -> None:
                         st.info("No closed trades yet.")
 
     # Auto-refresh mechanism
-    if auto and any(r.get("active") for r in runs.values()):
-        import time
+    auto_enabled = auto and any(r.get("active") for r in runs.values())
+    min_interval = 60
+    if auto_enabled:
         min_interval = min(
             int(_interval_td(r["interval"]).total_seconds())
             for r in runs.values() if r.get("active")
         )
-        time.sleep(max(min_interval, 60))
-        st.rerun()
+    render_autorefresh_timer(
+        auto_enabled,
+        max(min_interval, 60),
+        key="forward_test_refresh",
+    )
