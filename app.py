@@ -77,6 +77,9 @@ PAGE_SLUGS = {
 }
 SLUG_TO_PAGE = {slug: label for label, slug in PAGE_SLUGS.items()}
 _APP_PAGE_CFG_KEY = "app_last_page_v1"
+_CURRENT_PAGE_KEY = "current_page"
+_NAV_WIDGET_KEY = "nav_widget"
+_NAV_CHANGED_FLAG = "_nav_changed"
 
 
 def _db() -> Database:
@@ -131,30 +134,41 @@ def _persist_page_config(page_name: str) -> None:
 
 
 def _persist_current_nav() -> None:
-    page_name = st.session_state.get("nav")
+    page_name = st.session_state.get(_NAV_WIDGET_KEY)
     if not page_name:
         return
+    st.session_state[_CURRENT_PAGE_KEY] = page_name
+    st.session_state[_NAV_CHANGED_FLAG] = True
     _set_page_query(page_name)
     _persist_page_config(page_name)
+
+
+def _resolve_desired_page(page_keys: list[str]) -> str:
+    nav_target = st.session_state.pop("nav_target", None)
+    if nav_target and nav_target in page_keys:
+        return nav_target
+    desired = (
+        _get_page_from_query()
+        or _get_page_from_config()
+        or st.session_state.get(_CURRENT_PAGE_KEY)
+        or "⏪ Backtester"
+    )
+    if desired not in page_keys:
+        desired = page_keys[0]
+    return desired
 
 with st.sidebar:
     st.markdown("---")
     st.markdown("### 📈 AlgoTrader Pro")
     page_keys = list(PAGES.keys())
-    # Allow portfolio nav buttons to redirect here
-    nav_target = st.session_state.pop("nav_target", None)
-    if nav_target and nav_target in page_keys:
-        desired_page = nav_target
-    else:
-        desired_page = _get_page_from_query() or _get_page_from_config() or "⏪ Backtester"
-    if desired_page not in page_keys:
-        desired_page = page_keys[0]
-    if st.session_state.get("nav") != desired_page:
-        st.session_state["nav"] = desired_page
+    desired_page = _resolve_desired_page(page_keys)
+    st.session_state[_CURRENT_PAGE_KEY] = desired_page
+    if st.session_state.get(_NAV_WIDGET_KEY) != desired_page:
+        st.session_state[_NAV_WIDGET_KEY] = desired_page
     page_name = st.radio(
         "Navigation",
         page_keys,
-        key="nav",
+        key=_NAV_WIDGET_KEY,
         label_visibility="collapsed",
         on_change=_persist_current_nav,
     )
@@ -162,13 +176,13 @@ with st.sidebar:
     _persist_page_config(page_name)
     st.markdown("---")
 
-# Force one clean rerender when the selected page changes so charts/widgets
-# from the previously rendered page do not linger visually after navigation.
-_prev_page = st.session_state.get("_last_rendered_page")
-if _prev_page != page_name:
-    st.session_state["_last_rendered_page"] = page_name
-    if _prev_page is not None:
-        st.rerun()
+st.session_state[_CURRENT_PAGE_KEY] = page_name
+
+# On an actual page change, do one extra rerun. This keeps the new tab as the
+# source of truth for refreshes and gives Streamlit a cleaner handoff between
+# heavy chart pages.
+if st.session_state.pop(_NAV_CHANGED_FLAG, False):
+    st.rerun()
 
 # ── Render selected page ───────────────────────────────────────────────────
 PAGES[page_name].render()
