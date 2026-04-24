@@ -505,7 +505,12 @@ def _equity_chart(equity_curve: pd.DataFrame, symbol: str):
 
 @st.cache_data(show_spinner=False)
 def _cached_gld_fair_value(start: str | None, end: str | None, cache_fingerprint: str):
-    diagnostics = compute_gld_fair_value_diagnostics(start=start, end=end)
+    try:
+        diagnostics = compute_gld_fair_value_diagnostics(start=start, end=end)
+    except FileNotFoundError as exc:
+        return {"error": str(exc)}
+    except Exception as exc:
+        return {"error": f"{type(exc).__name__}: {exc}"}
     if diagnostics is None:
         return None
     return {
@@ -970,7 +975,7 @@ def _show_results() -> None:
     if symbol_r.upper() == "GLD":
         st.markdown("#### 🪙 Macro Fair Value")
         st.caption(
-            "This is a slow diagnostic model for GLD only. It fits an optimized monthly fair-value proxy from cached macro and peer series, "
+            "This is a slow diagnostic model for GLD only. It fits an optimized fair-value proxy from cached macro and peer series, "
             "so we can judge the macro layer by fit quality before using it for trading bias."
         )
         trigger_key = "bt_gld_fair_value_visible"
@@ -983,9 +988,14 @@ def _show_results() -> None:
                     str(st.session_state.get("loaded_end")) if st.session_state.get("loaded_end") is not None else None,
                     fair_value_cache_fingerprint(),
                 )
-            if fair_payload:
+            if fair_payload and fair_payload.get("error"):
+                st.warning(f"Could not build GLD fair-value diagnostics: {fair_payload['error']}")
+            elif fair_payload:
                 fair_stats = fair_payload["stats"]
                 model = fair_payload["model"]
+                model_tf = str(model.get("data_timeframe", "1M")).upper()
+                tf_label = "daily" if model_tf == "1D" else "monthly"
+                tf_unit = "days" if model_tf == "1D" else "months"
                 render_metrics_row(
                     {
                         "Correlation": f"{fair_stats['corr']:.3f}",
@@ -997,18 +1007,18 @@ def _show_results() -> None:
                 )
                 if model.get("model_type") == "two_layer":
                     st.caption(
-                        "Monthly slow fair-value proxy optimized as a structural layer plus a market-adjustment layer. "
+                        f"{tf_label.capitalize()} slow fair-value proxy optimized as a structural layer plus a market-adjustment layer. "
                         f"Best fit: structural set `{model['structural_set']}`, market set `{model['market_set']}`, "
-                        f"z-window `{model['z_window']}` months, structural fit window `{model['structural_fit_window']}` months, "
-                        f"market fit window `{model['market_fit_window']}` months, ridge α `{model['ridge_alpha']:.2f}`, "
-                        f"smoothing span `{model['smooth_span']}` months."
+                        f"z-window `{model['z_window']}` {tf_unit}, structural fit window `{model['structural_fit_window']}` {tf_unit}, "
+                        f"market fit window `{model['market_fit_window']}` {tf_unit}, ridge α `{model['ridge_alpha']:.2f}`, "
+                        f"smoothing span `{model['smooth_span']}` {tf_unit}, target source `{model.get('target_source', 'unknown')}`."
                     )
                 else:
                     st.caption(
-                        "Monthly slow fair-value proxy optimized as a blended macro-plus-market fit. "
-                        f"Best fit: feature set `{model['feature_set']}`, z-window `{model['z_window']}` months, "
-                        f"fit window `{model['fit_window']}` months, ridge α `{model['ridge_alpha']:.2f}`, "
-                        f"smoothing span `{model['smooth_span']}` months."
+                        f"{tf_label.capitalize()} slow fair-value proxy optimized as a blended macro-plus-market fit. "
+                        f"Best fit: feature set `{model['feature_set']}`, z-window `{model['z_window']}` {tf_unit}, "
+                        f"fit window `{model['fit_window']}` {tf_unit}, ridge α `{model['ridge_alpha']:.2f}`, "
+                        f"smoothing span `{model['smooth_span']}` {tf_unit}, target source `{model.get('target_source', 'unknown')}`."
                     )
                 optional_sources = model.get("optional_sources") or {}
                 if optional_sources:

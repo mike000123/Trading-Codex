@@ -27,7 +27,7 @@ class FairValueDiagnostics:
     model: dict[str, Any]
 
 
-_GLD_FAIR_VALUE_CACHE_VERSION = "gld_fair_value_v2"
+_GLD_FAIR_VALUE_CACHE_VERSION = "gld_fair_value_v4"
 
 
 def _rolling_zscore(series: pd.Series, window: int, min_periods: int | None = None) -> pd.Series:
@@ -85,6 +85,45 @@ def _load_optional_proxy_series(
     return None, None
 
 
+def _parse_numeric_text(series: pd.Series) -> pd.Series:
+    return pd.to_numeric(
+        series.astype(str).str.replace(",", "", regex=False).str.strip(),
+        errors="coerce",
+    )
+
+
+def _load_custom_gld_daily_target(cache_root: Path) -> tuple[pd.Series | None, str | None]:
+    path = cache_root / "custom" / "GLD ETF Stock Price History.csv"
+    if not path.exists():
+        return None, None
+    try:
+        raw = pd.read_csv(path)
+    except Exception:
+        return None, None
+    if "Date" not in raw.columns or "Price" not in raw.columns:
+        return None, None
+    dates = pd.to_datetime(raw["Date"], errors="coerce", format="%m/%d/%Y")
+    close = _parse_numeric_text(raw["Price"])
+    series = pd.Series(close.to_numpy(), index=dates, name="GLD").dropna()
+    if series.empty:
+        return None, None
+    series = series[~series.index.duplicated(keep="last")].sort_index()
+    return series, f"custom:{path.name}"
+
+
+def _load_gld_target_series(cache_root: Path, timeframe: str) -> tuple[pd.Series | None, str | None]:
+    cache = DataCache(root=cache_root)
+    tf_u = timeframe.upper()
+    if tf_u == "1D":
+        custom, source_tag = _load_custom_gld_daily_target(cache_root)
+        if custom is not None and not custom.empty:
+            return custom, source_tag
+    derived = _load_close_series(cache, "derived", "GLD", timeframe)
+    if derived is not None and not derived.empty:
+        return derived.rename("GLD"), f"derived:GLD:{timeframe}"
+    return None, None
+
+
 def _derive_gld_etf_proxies(cache_root: Path, timeframe: str = "1M") -> dict[str, pd.Series]:
     cache = DataCache(root=cache_root)
     daily = _load_frame(cache, "derived", "GLD", "1D")
@@ -128,37 +167,44 @@ def _derive_gld_etf_proxies(cache_root: Path, timeframe: str = "1M") -> dict[str
 
 def _aligned_dataset(cache_root: Path, timeframe: str = "1M") -> pd.DataFrame:
     cache = DataCache(root=cache_root)
-    required = {
-        "GLD": ("derived", "GLD", timeframe),
-        "UUP": ("derived", "UUP", timeframe),
-        "IEF": ("derived", "IEF", timeframe),
-        "SLV": ("derived", "SLV", timeframe),
-        "GDX": ("derived", "GDX", timeframe),
-        "VIXY": ("derived", "VIXY", timeframe),
-        "CPIAUCSL": ("fred", "CPIAUCSL", timeframe),
-        "DFII10": ("fred", "DFII10", timeframe),
-        "WALCL": ("fred", "WALCL", timeframe),
-        "M2SL": ("fred", "M2SL", timeframe),
-        "VIXCLS": ("fred", "VIXCLS", timeframe),
-    }
+    tf_u = timeframe.upper()
+    target_series, target_source = _load_gld_target_series(cache_root, tf_u)
+    if target_series is None:
+        raise FileNotFoundError(f"Missing cached GLD fair-value target series for timeframe {tf_u}")
 
-    series_map: dict[str, pd.Series] = {}
-    for label, (source, symbol, timeframe) in required.items():
-        series = _load_close_series(cache, source, symbol, timeframe)
+    companion_specs = {
+        "UUP": ("derived", "UUP", tf_u),
+        "IEF": ("derived", "IEF", tf_u),
+        "SLV": ("derived", "SLV", tf_u),
+        "GDX": ("derived", "GDX", tf_u),
+        "VIXY": ("derived", "VIXY", tf_u),
+        "CPIAUCSL": ("fred", "CPIAUCSL", tf_u),
+        "DFII10": ("fred", "DFII10", tf_u),
+        "WALCL": ("fred", "WALCL", tf_u),
+        "M2SL": ("fred", "M2SL", tf_u),
+        "VIXCLS": ("fred", "VIXCLS", tf_u),
+    }
+    must_have = {"CPIAUCSL", "DFII10", "WALCL", "M2SL", "VIXCLS"}
+
+    series_map: dict[str, pd.Series] = {"GLD": target_series.rename("GLD")}
+    for label, (source, symbol, tf_req) in companion_specs.items():
+        series = _load_close_series(cache, source, symbol, tf_req)
         if series is None:
-            raise FileNotFoundError(f"Missing cached slow dataset: {source}/{symbol}/{timeframe}")
+            if label in must_have:
+                raise FileNotFoundError(f"Missing cached slow dataset: {source}/{symbol}/{tf_req}")
+            continue
         series_map[label] = series.rename(label)
 
     optional = {
         "ETF_OFFICIAL": [
-            ("custom", "GLD_ETF_PROXY", timeframe),
-            ("custom", "GLD_HOLDINGS_PROXY", timeframe),
-            ("custom", "GLD_ETF_HOLDINGS", timeframe),
+            ("custom", "GLD_ETF_PROXY", tf_u),
+            ("custom", "GLD_HOLDINGS_PROXY", tf_u),
+            ("custom", "GLD_ETF_HOLDINGS", tf_u),
         ],
         "CB_OFFICIAL": [
-            ("custom", "GLD_CB_PROXY", timeframe),
-            ("custom", "GOLD_CB_PROXY", timeframe),
-            ("custom", "GOLD_CENTRAL_BANK_PROXY", timeframe),
+            ("custom", "GLD_CB_PROXY", tf_u),
+            ("custom", "GOLD_CB_PROXY", tf_u),
+            ("custom", "GOLD_CENTRAL_BANK_PROXY", tf_u),
         ],
     }
     optional_sources: dict[str, str] = {}
@@ -168,16 +214,29 @@ def _aligned_dataset(cache_root: Path, timeframe: str = "1M") -> pd.DataFrame:
             series_map[label] = series.rename(label)
             optional_sources[label] = source_tag or label
 
-    for label, series in _derive_gld_etf_proxies(cache_root, timeframe=timeframe).items():
+    for label, series in _derive_gld_etf_proxies(cache_root, timeframe=tf_u).items():
         series_map[label] = series.rename(label)
         optional_sources[label] = "derived:GLD:1D"
 
     base_index = series_map["GLD"].index
     df = pd.DataFrame(index=base_index)
-    for label, series in series_map.items():
-        df[label] = series.reindex(base_index).ffill()
+    for label in [
+        "GLD",
+        *companion_specs.keys(),
+        "ETF_OFFICIAL",
+        "CB_OFFICIAL",
+        "GLD_ETF_OBV_PROXY",
+        "GLD_ETF_TURNOVER_PROXY",
+    ]:
+        series = series_map.get(label)
+        if series is None:
+            df[label] = np.nan
+        else:
+            df[label] = series.reindex(base_index).ffill()
     out = df.dropna(subset=["GLD"]).copy()
     out.attrs["optional_sources"] = optional_sources
+    out.attrs["target_source"] = target_source or "unknown"
+    out.attrs["data_timeframe"] = tf_u
     return out
 
 
@@ -426,15 +485,69 @@ def _fit_stats(frame: pd.DataFrame) -> dict[str, float]:
     }
 
 
+def _selection_score(
+    frame: pd.DataFrame,
+    stats: dict[str, float],
+    *,
+    raw_index: pd.Index,
+    is_monthly: bool,
+) -> dict[str, float]:
+    if frame.empty or raw_index.empty:
+        return {
+            "coverage_ratio": 0.0,
+            "history_span_ratio": 0.0,
+            "selection_score": -np.inf,
+        }
+
+    coverage_ratio = float(len(frame) / max(len(raw_index), 1))
+    raw_start = pd.to_datetime(raw_index.min(), errors="coerce")
+    raw_end = pd.to_datetime(raw_index.max(), errors="coerce")
+    fit_start = pd.to_datetime(frame["date"].min(), errors="coerce")
+    fit_end = pd.to_datetime(frame["date"].max(), errors="coerce")
+    raw_span_days = max(float((raw_end - raw_start).days), 1.0)
+    fit_span_days = max(float((fit_end - fit_start).days), 0.0)
+    history_span_ratio = min(1.0, fit_span_days / raw_span_days)
+
+    if is_monthly:
+        coverage_weight = 0.03
+        span_weight = 0.02
+    else:
+        coverage_weight = 0.08
+        span_weight = 0.04
+
+    selection_score = float(
+        stats["fit_score"]
+        + coverage_weight * coverage_ratio
+        + span_weight * history_span_ratio
+    )
+    return {
+        "coverage_ratio": coverage_ratio,
+        "history_span_ratio": history_span_ratio,
+        "selection_score": selection_score,
+    }
+
+
 def fair_value_cache_fingerprint(cache_root: str | Path = "data_cache") -> str:
     root = Path(cache_root)
-    watched = [
+    watched: list[Path] = [
+        root / "custom" / "GLD ETF Stock Price History.csv",
+        root / "custom" / "GLD_ETF_PROXY" / "1D.csv",
         root / "custom" / "GLD_ETF_PROXY" / "1M.csv",
+        root / "custom" / "GLD_CB_PROXY" / "1D.csv",
         root / "custom" / "GLD_CB_PROXY" / "1M.csv",
+        root / "custom" / "GLD_HOLDINGS_PROXY" / "1D.csv",
         root / "custom" / "GLD_HOLDINGS_PROXY" / "1M.csv",
+        root / "custom" / "GOLD_CB_PROXY" / "1D.csv",
         root / "custom" / "GOLD_CB_PROXY" / "1M.csv",
+        root / "custom" / "GOLD_CENTRAL_BANK_PROXY" / "1D.csv",
         root / "custom" / "GOLD_CENTRAL_BANK_PROXY" / "1M.csv",
     ]
+    for symbol in ["GLD", "UUP", "IEF", "SLV", "GDX", "VIXY"]:
+        watched.append(root / "derived" / symbol / "1D.csv")
+        watched.append(root / "derived" / symbol / "1M.csv")
+    for series in ["CPIAUCSL", "DFII10", "WALCL", "M2SL", "VIXCLS"]:
+        watched.append(root / "fred" / series / "1D.csv")
+        watched.append(root / "fred" / series / "1M.csv")
     bits: list[str] = []
     for path in watched:
         if path.exists():
@@ -508,94 +621,11 @@ def _store_cached_gld_fair_value_base(
     ).to_json(meta_path)
 
 
-def compute_gld_fair_value_diagnostics(
-    *,
-    cache_root: str | Path = "data_cache",
-    start: str | pd.Timestamp | None = None,
-    end: str | pd.Timestamp | None = None,
-) -> FairValueDiagnostics | None:
-    best = _compute_gld_fair_value_base(str(Path(cache_root)), fair_value_cache_fingerprint(cache_root))
-    if best is None:
-        return None
-
-    frame = best.frame.copy()
-    if start is not None:
-        frame = frame[frame["date"] >= pd.Timestamp(start)]
-    if end is not None:
-        frame = frame[frame["date"] <= pd.Timestamp(end)]
-    if frame.empty:
-        return None
-
-    frame = frame.reset_index(drop=True)
-    return FairValueDiagnostics(
-        symbol=best.symbol,
-        frame=frame,
-        stats=_fit_stats(frame),
-        model=best.model,
-    )
-
-
-@lru_cache(maxsize=4)
-def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> FairValueDiagnostics | None:
-    cached = _load_cached_gld_fair_value_base(cache_root, cache_fingerprint)
-    if cached is not None:
-        return cached
-
-    raw = _aligned_dataset(Path(cache_root), timeframe="1M")
-    is_monthly = True
-    optional_sources = dict(raw.attrs.get("optional_sources", {}))
+def _search_space_for_timeframe(is_monthly: bool) -> dict[str, Any]:
     one_layer_sets = {
         "macro_core": ["real_yield", "usd", "inflation", "liquidity", "stress"],
-        "macro_core_lag1": ["real_yield_lag1", "usd_lag1", "inflation_lag1", "liquidity_lag1", "stress_lag1"],
-        "macro_core_lag2": ["real_yield_lag2", "usd_lag2", "inflation_lag2", "liquidity_lag2", "stress_lag2"],
+        "macro_core_no_usd": ["real_yield", "inflation", "liquidity", "stress", "money"],
         "macro_plus_market": ["real_yield", "usd", "inflation", "liquidity", "stress", "peer", "miners"],
-        "macro_plus_market_lag1": [
-            "real_yield_lag1",
-            "usd_lag1",
-            "inflation_lag1",
-            "liquidity_lag1",
-            "stress_lag1",
-            "peer",
-            "miners",
-        ],
-        "macro_plus_market_lag2": [
-            "real_yield_lag2",
-            "usd_lag2",
-            "inflation_lag2",
-            "liquidity_lag2",
-            "stress_lag2",
-            "peer",
-            "miners",
-        ],
-        "macro_hybrid_lag1": [
-            "real_yield_lag1",
-            "usd_lag1",
-            "inflation_lag1",
-            "liquidity_lag1",
-            "stress",
-            "peer",
-            "miners",
-        ],
-        "macro_plus_market_etf": [
-            "real_yield",
-            "usd",
-            "inflation",
-            "liquidity",
-            "stress",
-            "peer",
-            "miners",
-            "etf_proxy",
-        ],
-        "macro_plus_market_turnover": [
-            "real_yield",
-            "usd",
-            "inflation",
-            "liquidity",
-            "stress",
-            "peer",
-            "miners",
-            "etf_turnover_proxy",
-        ],
         "macro_plus_market_official": [
             "real_yield",
             "usd",
@@ -624,6 +654,15 @@ def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> Fai
             "rates_proxy",
             "momentum",
         ],
+        "macro_structural_official_no_usd": [
+            "real_yield",
+            "inflation",
+            "liquidity",
+            "stress",
+            "money",
+            "etf_official",
+            "cb_official",
+        ],
         "full_with_trends": [
             "real_yield",
             "real_yield_trend",
@@ -647,8 +686,7 @@ def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> Fai
     }
     structural_sets = {
         "structural_core": ["real_yield", "usd", "inflation", "liquidity", "stress"],
-        "structural_core_lag1": ["real_yield_lag1", "usd_lag1", "inflation_lag1", "liquidity_lag1", "stress_lag1"],
-        "structural_core_lag2": ["real_yield_lag2", "usd_lag2", "inflation_lag2", "liquidity_lag2", "stress_lag2"],
+        "structural_core_no_usd": ["real_yield", "inflation", "liquidity", "stress", "money"],
         "structural_plus_money": [
             "real_yield",
             "real_yield_trend",
@@ -673,16 +711,16 @@ def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> Fai
             "etf_official",
             "cb_official",
         ],
-        "structural_plus_money_lag1": [
-            "real_yield_lag1",
+        "structural_plus_money_official_no_usd": [
+            "real_yield",
             "real_yield_trend",
-            "usd_lag1",
-            "usd_trend",
-            "inflation_lag1",
-            "liquidity_lag1",
+            "inflation",
+            "liquidity",
             "liquidity_trend",
-            "money_lag1",
-            "stress_lag1",
+            "money",
+            "stress",
+            "etf_official",
+            "cb_official",
         ],
     }
     market_sets = {
@@ -702,22 +740,132 @@ def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> Fai
             "momentum_trend",
         ],
     }
-    z_windows = (12, 18, 24)
-    structural_fit_windows = (12, 18, 24, 30)
-    market_fit_windows = (12, 18)
-    ridge_alphas = (0.0, 0.5, 1.5)
-    smooth_spans = (2, 3, 4)
+    if is_monthly:
+        one_layer_sets = {
+            **one_layer_sets,
+            "macro_core_lag1": ["real_yield_lag1", "usd_lag1", "inflation_lag1", "liquidity_lag1", "stress_lag1"],
+            "macro_core_lag2": ["real_yield_lag2", "usd_lag2", "inflation_lag2", "liquidity_lag2", "stress_lag2"],
+            "macro_plus_market_lag1": [
+                "real_yield_lag1",
+                "usd_lag1",
+                "inflation_lag1",
+                "liquidity_lag1",
+                "stress_lag1",
+                "peer",
+                "miners",
+            ],
+            "macro_plus_market_lag2": [
+                "real_yield_lag2",
+                "usd_lag2",
+                "inflation_lag2",
+                "liquidity_lag2",
+                "stress_lag2",
+                "peer",
+                "miners",
+            ],
+            "macro_hybrid_lag1": [
+                "real_yield_lag1",
+                "usd_lag1",
+                "inflation_lag1",
+                "liquidity_lag1",
+                "stress",
+                "peer",
+                "miners",
+            ],
+            "macro_plus_market_etf": [
+                "real_yield",
+                "usd",
+                "inflation",
+                "liquidity",
+                "stress",
+                "peer",
+                "miners",
+                "etf_proxy",
+            ],
+            "macro_plus_market_turnover": [
+                "real_yield",
+                "usd",
+                "inflation",
+                "liquidity",
+                "stress",
+                "peer",
+                "miners",
+                "etf_turnover_proxy",
+            ],
+        }
+        structural_sets = {
+            **structural_sets,
+            "structural_core_lag1": [
+                "real_yield_lag1",
+                "usd_lag1",
+                "inflation_lag1",
+                "liquidity_lag1",
+                "stress_lag1",
+            ],
+            "structural_core_lag2": [
+                "real_yield_lag2",
+                "usd_lag2",
+                "inflation_lag2",
+                "liquidity_lag2",
+                "stress_lag2",
+            ],
+            "structural_plus_money_lag1": [
+                "real_yield_lag1",
+                "real_yield_trend",
+                "usd_lag1",
+                "usd_trend",
+                "inflation_lag1",
+                "liquidity_lag1",
+                "liquidity_trend",
+                "money_lag1",
+                "stress_lag1",
+            ],
+        }
+        return {
+            "one_layer_sets": one_layer_sets,
+            "structural_sets": structural_sets,
+            "market_sets": market_sets,
+            "z_windows": (12, 18, 24),
+            "structural_fit_windows": (12, 18, 24, 30),
+            "market_fit_windows": (12, 18),
+            "ridge_alphas": (0.0, 0.5, 1.5),
+            "smooth_spans": (2, 3, 4),
+        }
+    return {
+        "one_layer_sets": one_layer_sets,
+        "structural_sets": structural_sets,
+        "market_sets": market_sets,
+        "z_windows": (126, 252),
+        "structural_fit_windows": (252, 504),
+        "market_fit_windows": (126, 252),
+        "ridge_alphas": (0.5, 1.5),
+        "smooth_spans": (5, 10, 21),
+    }
 
+
+def _search_best_fair_value_model(
+    raw: pd.DataFrame,
+    *,
+    is_monthly: bool,
+    data_timeframe: str,
+    optional_sources: dict[str, str],
+    target_source: str,
+) -> FairValueDiagnostics | None:
+    search = _search_space_for_timeframe(is_monthly)
     best: FairValueDiagnostics | None = None
-    best_score = -np.inf
-    for z_window in z_windows:
+    best_selection_score = -np.inf
+    raw_index = raw.index
+
+    for z_window in search["z_windows"]:
         features = _build_feature_frame(raw, z_window=z_window, is_monthly=is_monthly)
-        for set_name, cols in one_layer_sets.items():
+        for set_name, cols in search["one_layer_sets"].items():
             available_cols = [col for col in cols if col in features.columns]
-            for fit_window in structural_fit_windows:
+            if not available_cols:
+                continue
+            for fit_window in search["structural_fit_windows"]:
                 min_fit_obs = max(8, fit_window // 2)
-                for ridge_alpha in ridge_alphas:
-                    for smooth_span in smooth_spans:
+                for ridge_alpha in search["ridge_alphas"]:
+                    for smooth_span in search["smooth_spans"]:
                         fair_value, betas = _rolling_fair_value(
                             features,
                             feature_cols=available_cols,
@@ -739,15 +887,25 @@ def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> Fai
                             frame["fair_value"] / frame["actual"].replace(0.0, np.nan) - 1.0
                         ) * 100.0
                         stats = _fit_stats(frame)
-                        if stats["fit_score"] <= best_score:
+                        stats.update(
+                            _selection_score(
+                                frame,
+                                stats,
+                                raw_index=raw_index,
+                                is_monthly=is_monthly,
+                            )
+                        )
+                        if stats["selection_score"] <= best_selection_score:
                             continue
-                        best_score = stats["fit_score"]
+                        best_selection_score = stats["selection_score"]
                         best = FairValueDiagnostics(
                             symbol="GLD",
                             frame=frame.reset_index(drop=True),
                             stats=stats,
                             model={
                                 "model_type": "one_layer",
+                                "data_timeframe": data_timeframe,
+                                "target_source": target_source,
                                 "feature_set": set_name,
                                 "features": tuple(available_cols),
                                 "z_window": int(z_window),
@@ -758,16 +916,18 @@ def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> Fai
                                 "optional_sources": optional_sources,
                             },
                         )
-        for struct_name, structural_cols in structural_sets.items():
+        for struct_name, structural_cols in search["structural_sets"].items():
             available_structural = [col for col in structural_cols if col in features.columns]
-            for market_name, market_cols in market_sets.items():
+            if not available_structural:
+                continue
+            for market_name, market_cols in search["market_sets"].items():
                 available_market = [col for col in market_cols if col in features.columns]
-                for structural_fit_window in structural_fit_windows:
+                for structural_fit_window in search["structural_fit_windows"]:
                     min_struct_obs = max(10, structural_fit_window // 2)
-                    for market_fit_window in market_fit_windows:
+                    for market_fit_window in search["market_fit_windows"]:
                         min_market_obs = max(8, market_fit_window // 2)
-                        for ridge_alpha in ridge_alphas:
-                            for smooth_span in smooth_spans:
+                        for ridge_alpha in search["ridge_alphas"]:
+                            for smooth_span in search["smooth_spans"]:
                                 fair_value, structural_only, market_adjustment, betas = _two_layer_fair_value(
                                     features,
                                     structural_cols=available_structural,
@@ -794,15 +954,25 @@ def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> Fai
                                     frame["fair_value"] / frame["actual"].replace(0.0, np.nan) - 1.0
                                 ) * 100.0
                                 stats = _fit_stats(frame)
-                                if stats["fit_score"] <= best_score:
+                                stats.update(
+                                    _selection_score(
+                                        frame,
+                                        stats,
+                                        raw_index=raw_index,
+                                        is_monthly=is_monthly,
+                                    )
+                                )
+                                if stats["selection_score"] <= best_selection_score:
                                     continue
-                                best_score = stats["fit_score"]
+                                best_selection_score = stats["selection_score"]
                                 best = FairValueDiagnostics(
                                     symbol="GLD",
                                     frame=frame.reset_index(drop=True),
                                     stats=stats,
                                     model={
                                         "model_type": "two_layer",
+                                        "data_timeframe": data_timeframe,
+                                        "target_source": target_source,
                                         "structural_set": struct_name,
                                         "market_set": market_name,
                                         "structural_features": tuple(available_structural),
@@ -816,6 +986,65 @@ def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> Fai
                                         "optional_sources": optional_sources,
                                     },
                                 )
+    return best
+
+
+def compute_gld_fair_value_diagnostics(
+    *,
+    cache_root: str | Path = "data_cache",
+    start: str | pd.Timestamp | None = None,
+    end: str | pd.Timestamp | None = None,
+) -> FairValueDiagnostics | None:
+    try:
+        best = _compute_gld_fair_value_base(str(Path(cache_root)), fair_value_cache_fingerprint(cache_root))
+    except FileNotFoundError:
+        return None
+    if best is None:
+        return None
+
+    frame = best.frame.copy()
+    if start is not None:
+        frame = frame[frame["date"] >= pd.Timestamp(start)]
+    if end is not None:
+        frame = frame[frame["date"] <= pd.Timestamp(end)]
+    if frame.empty:
+        return None
+
+    frame = frame.reset_index(drop=True)
+    return FairValueDiagnostics(
+        symbol=best.symbol,
+        frame=frame,
+        stats=_fit_stats(frame),
+        model=best.model,
+    )
+
+
+@lru_cache(maxsize=4)
+def _compute_gld_fair_value_base(cache_root: str, cache_fingerprint: str) -> FairValueDiagnostics | None:
+    cached = _load_cached_gld_fair_value_base(cache_root, cache_fingerprint)
+    if cached is not None:
+        return cached
+
+    best: FairValueDiagnostics | None = None
+    best_score = -np.inf
+    for timeframe in ("1D", "1M"):
+        try:
+            raw = _aligned_dataset(Path(cache_root), timeframe=timeframe)
+        except FileNotFoundError:
+            continue
+        candidate = _search_best_fair_value_model(
+            raw,
+            is_monthly=(timeframe == "1M"),
+            data_timeframe=timeframe,
+            optional_sources=dict(raw.attrs.get("optional_sources", {})),
+            target_source=str(raw.attrs.get("target_source", "unknown")),
+        )
+        if candidate is None:
+            continue
+        if candidate.stats["fit_score"] <= best_score:
+            continue
+        best_score = candidate.stats["fit_score"]
+        best = candidate
 
     if best is not None:
         _store_cached_gld_fair_value_base(best, cache_root, cache_fingerprint)
@@ -833,7 +1062,7 @@ def prepare_gld_fair_value_context(
     undervalued_gap_pct: float = 2.5,
     overvalued_gap_pct: float = 2.5,
 ) -> pd.DataFrame:
-    diagnostics = compute_gld_fair_value_diagnostics(cache_root=cache_root, start=start, end=end)
+    diagnostics = compute_gld_fair_value_diagnostics(cache_root=cache_root)
     enriched = data.copy()
     if diagnostics is None or diagnostics.frame.empty or "date" not in enriched.columns:
         return enriched
@@ -841,14 +1070,123 @@ def prepare_gld_fair_value_context(
     fair = diagnostics.frame.copy()
     fair["date"] = pd.to_datetime(fair["date"], errors="coerce")
     fair = fair.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
-    fair["fair_slope_pct"] = fair["fair_value"].pct_change().fillna(0.0) * 100.0
-    fair["fair_confidence"] = float(diagnostics.stats.get("directional_hit", np.nan))
+    data_timeframe = str(diagnostics.model.get("data_timeframe", "1M")).upper()
+    is_daily = data_timeframe == "1D"
+    slope_smooth_span = 63 if is_daily else 3
+    slope_lookback = 21 if is_daily else 1
+    confidence_window = 252 if is_daily else 12
+    slope_norm_window = 252 if is_daily else 12
+    tolerance = pd.Timedelta(days=10 if is_daily else 45)
 
-    fair["gold_fair_value_regime"] = "neutral"
-    bullish = (fair["fair_slope_pct"] >= bullish_slope_min) & (fair["fair_gap_pct"] >= -undervalued_gap_pct)
-    bearish = (fair["fair_slope_pct"] <= bearish_slope_max) & (fair["fair_gap_pct"] <= -overvalued_gap_pct)
-    fair.loc[bullish, "gold_fair_value_regime"] = "bullish"
-    fair.loc[bearish, "gold_fair_value_regime"] = "bearish"
+    fair_smoothed = fair["fair_value"].ewm(
+        span=slope_smooth_span,
+        adjust=False,
+        min_periods=max(2, slope_smooth_span // 4),
+    ).mean()
+    fair["fair_slope_pct"] = fair_smoothed.pct_change(slope_lookback).fillna(0.0) * 100.0
+    fair_slope_mean = fair["fair_slope_pct"].rolling(
+        slope_norm_window,
+        min_periods=max(6, slope_norm_window // 4),
+    ).mean()
+    fair_slope_std = fair["fair_slope_pct"].rolling(
+        slope_norm_window,
+        min_periods=max(6, slope_norm_window // 4),
+    ).std()
+    fair["fair_slope_z"] = (
+        (fair["fair_slope_pct"] - fair_slope_mean)
+        / fair_slope_std.replace(0.0, np.nan)
+    )
+
+    actual_dir = np.sign(fair["actual"].pct_change(slope_lookback).fillna(0.0))
+    fair_dir = np.sign(fair_smoothed.pct_change(slope_lookback).fillna(0.0))
+    fair["fair_confidence"] = (
+        (actual_dir == fair_dir)
+        .astype(float)
+        .rolling(confidence_window, min_periods=max(6, confidence_window // 4))
+        .mean()
+    )
+
+    regime_confidence_min = max(0.35, min(0.85, float(np.nanmedian(fair["fair_confidence"])) if fair["fair_confidence"].notna().any() else 0.5))
+    hold_confidence_min = max(0.30, regime_confidence_min - 0.08)
+    bullish_hold_slope_min = max(0.25, bullish_slope_min * 0.3)
+    bearish_hold_slope_max = min(-0.25, bearish_slope_max * 0.3)
+    bullish_hold_gap_floor = -(undervalued_gap_pct * 0.5)
+    bearish_hold_gap_cap = overvalued_gap_pct * 1.5
+    bullish_entry_slope_z_min = 0.0
+    bullish_hold_slope_z_min = -0.35
+    bearish_entry_slope_z_max = -0.75 if is_daily else -0.5
+    bearish_hold_slope_z_max = -0.25
+
+    regime: list[str] = []
+    current = "neutral"
+    for _, row in fair.iterrows():
+        slope = float(row["fair_slope_pct"]) if not pd.isna(row["fair_slope_pct"]) else np.nan
+        slope_z = float(row["fair_slope_z"]) if not pd.isna(row["fair_slope_z"]) else np.nan
+        gap = float(row["fair_gap_pct"]) if not pd.isna(row["fair_gap_pct"]) else np.nan
+        confidence = float(row["fair_confidence"]) if not pd.isna(row["fair_confidence"]) else np.nan
+
+        bullish_entry = (
+            not np.isnan(confidence)
+            and confidence >= regime_confidence_min
+            and not np.isnan(slope)
+            and slope >= bullish_slope_min
+            and not np.isnan(slope_z)
+            and slope_z >= bullish_entry_slope_z_min
+            and (np.isnan(gap) or gap >= 0.0)
+        )
+        bearish_entry = (
+            not np.isnan(confidence)
+            and confidence >= regime_confidence_min
+            and (
+                (not np.isnan(slope) and slope <= bearish_slope_max)
+                or (not np.isnan(slope_z) and slope_z <= bearish_entry_slope_z_max)
+            )
+            and (np.isnan(gap) or gap <= overvalued_gap_pct)
+        )
+        bullish_hold = (
+            not np.isnan(confidence)
+            and confidence >= hold_confidence_min
+            and not np.isnan(slope)
+            and slope >= bullish_hold_slope_min
+            and not np.isnan(slope_z)
+            and slope_z >= bullish_hold_slope_z_min
+            and (np.isnan(gap) or gap >= bullish_hold_gap_floor)
+        )
+        bearish_hold = (
+            not np.isnan(confidence)
+            and confidence >= hold_confidence_min
+            and (
+                (not np.isnan(slope) and slope <= bearish_hold_slope_max)
+                or (not np.isnan(slope_z) and slope_z <= bearish_hold_slope_z_max)
+            )
+            and (np.isnan(gap) or gap <= bearish_hold_gap_cap)
+        )
+
+        if current == "bullish":
+            if bullish_hold:
+                regime.append("bullish")
+                continue
+            current = "neutral"
+        elif current == "bearish":
+            if bearish_hold:
+                regime.append("bearish")
+                continue
+            current = "neutral"
+
+        if bullish_entry and not bearish_entry:
+            current = "bullish"
+        elif bearish_entry and not bullish_entry:
+            current = "bearish"
+        else:
+            current = "neutral"
+        regime.append(current)
+
+    fair["gold_fair_value_regime"] = regime
+    fair["fair_short_boost"] = (
+        fair["fair_confidence"].ge(regime_confidence_min)
+        & fair["fair_gap_pct"].le(-overvalued_gap_pct)
+        & fair["fair_slope_z"].le(bearish_hold_slope_z_max)
+    ).astype(float)
 
     keep_cols = [
         "date",
@@ -857,6 +1195,7 @@ def prepare_gld_fair_value_context(
         "fair_slope_pct",
         "fair_confidence",
         "gold_fair_value_regime",
+        "fair_short_boost",
     ]
     primary = enriched.copy()
     primary["date"] = pd.to_datetime(primary["date"], errors="coerce")
@@ -865,6 +1204,6 @@ def prepare_gld_fair_value_context(
         fair[keep_cols].sort_values("date"),
         on="date",
         direction="backward",
-        tolerance=pd.Timedelta(days=45),
+        tolerance=tolerance,
     )
     return merged.reset_index(drop=True)

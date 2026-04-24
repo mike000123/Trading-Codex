@@ -151,11 +151,10 @@ with st.sidebar:
     st.markdown("### 📈 AlgoTrader Pro")
     page_keys = list(PAGES.keys())
     desired_page = _resolve_desired_page(page_keys)
-    if st.session_state.get(_NAV_WIDGET_KEY) not in page_keys:
-        st.session_state[_NAV_WIDGET_KEY] = desired_page
     page_name = st.radio(
         "Navigation",
         page_keys,
+        index=page_keys.index(desired_page),
         key=_NAV_WIDGET_KEY,
         label_visibility="collapsed",
     )

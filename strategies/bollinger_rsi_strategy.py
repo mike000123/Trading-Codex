@@ -991,6 +991,11 @@ class BollingerRSIStrategy(BaseStrategy):
         fair_slope_pct_arr = pd.to_numeric(data.get("fair_slope_pct"), errors="coerce").to_numpy(dtype=float) if "fair_slope_pct" in data.columns else np.full(n, np.nan)
         fair_confidence_arr = pd.to_numeric(data.get("fair_confidence"), errors="coerce").to_numpy(dtype=float) if "fair_confidence" in data.columns else np.full(n, np.nan)
         fair_regime_raw = data["gold_fair_value_regime"].astype(str).to_numpy() if "gold_fair_value_regime" in data.columns else np.array(["neutral"] * n, dtype=object)
+        fair_short_boost_arr = (
+            pd.to_numeric(data.get("fair_short_boost"), errors="coerce").to_numpy(dtype=float)
+            if "fair_short_boost" in data.columns
+            else np.zeros(n, dtype=float)
+        )
 
         def _uptrend_risk_score(
             close_value: float,
@@ -1485,7 +1490,7 @@ class BollingerRSIStrategy(BaseStrategy):
                 and fair_regime_now == "bullish"
                 and not np.isnan(fair_slope_pct_now)
                 and fair_slope_pct_now >= gold_fair_value_bullish_slope_min
-                and (np.isnan(fair_gap_pct_now) or fair_gap_pct_now >= -gold_fair_value_undervalued_gap_pct)
+                and (np.isnan(fair_gap_pct_now) or fair_gap_pct_now >= 0.0)
             )
             fair_value_bearish = (
                 fair_value_model_ok
@@ -1493,8 +1498,22 @@ class BollingerRSIStrategy(BaseStrategy):
                 and not np.isnan(fair_slope_pct_now)
                 and fair_slope_pct_now <= gold_fair_value_bearish_slope_max
                 and not np.isnan(fair_gap_pct_now)
-                and fair_gap_pct_now <= -gold_fair_value_overvalued_gap_pct
+                and fair_gap_pct_now <= gold_fair_value_overvalued_gap_pct
             )
+            fair_value_short_boost = (
+                fair_value_model_ok
+                and (
+                    (pos < len(fair_short_boost_arr) and fair_short_boost_arr[pos] >= 0.5)
+                    or (
+                        fair_regime_now == "bearish"
+                        and not np.isnan(fair_gap_pct_now)
+                        and fair_gap_pct_now <= -gold_fair_value_overvalued_gap_pct
+                    )
+                )
+            )
+            short_trigger_relax_mult = 0.75 if fair_value_short_boost else 1.0
+            short_rsi_trigger_bonus = 5.0 if fair_value_short_boost else 0.0
+            short_max_current_rsi_bonus = 5.0 if fair_value_short_boost else 0.0
             gold_macro_regime_score = weighted_gold_macro_regime_score(
                 dollar_state=dollar_regime_state,
                 dollar_weight=gold_regime_dollar_weight,
@@ -1539,6 +1558,7 @@ class BollingerRSIStrategy(BaseStrategy):
                 + (gold_riskoff_strength_weight if riskoff_override else 0.0)
             )
             gold_context_effective_score = gold_context_assist_score + (0.5 if gold_macro_bullish else 0.0) + (0.25 if fair_value_bullish else 0.0)
+            short_context_effective_score = (0.5 if gold_macro_bearish else 0.0) + (0.75 if fair_value_short_boost else 0.0)
             trend_context_score = weighted_trend_context_score(
                 peer_confirm=metal_peer_confirm,
                 peer_weight=trend_peer_strength_weight,
@@ -1702,9 +1722,9 @@ class BollingerRSIStrategy(BaseStrategy):
                 and not gold_macro_bullish
                 and event_short_ready(
                     event_setup,
-                    min_peak_pct=event_target_min_peak_pct,
+                    min_peak_pct=event_target_min_peak_pct * max(0.85, short_trigger_relax_mult),
                     max_rise_bars=event_target_max_rise_bars,
-                    confirm_drop_pct=event_confirm_drop_req,
+                    confirm_drop_pct=event_confirm_drop_req * max(0.85, short_trigger_relax_mult),
                 )
                 and event_target_entries < 1
                 and (pos - last_event_target_bar) >= psshort_cooldown
@@ -1736,6 +1756,7 @@ class BollingerRSIStrategy(BaseStrategy):
                             "gold_fair_slope_pct": round(float(fair_slope_pct_now), 3) if not np.isnan(fair_slope_pct_now) else None,
                             "gold_fair_regime": fair_regime_now,
                             "gold_fair_model_ok": bool(fair_value_model_ok),
+                            "gold_fair_short_boost": bool(fair_value_short_boost),
                         },
                     }
                     event_target_entries += 1
@@ -1952,15 +1973,15 @@ class BollingerRSIStrategy(BaseStrategy):
                 breakout_still_valid=breakout_spike_long,
                 recent_max_rsi=recent_max_rsi_now,
                 current_rsi=rsi_val,
-                rsi_trigger=intraday_pullback_rsi_trigger,
-                min_rsi_fade_points=intraday_pullback_rsi_fade_pts,
+                rsi_trigger=max(30.0, intraday_pullback_rsi_trigger - short_rsi_trigger_bonus),
+                min_rsi_fade_points=intraday_pullback_rsi_fade_pts * short_trigger_relax_mult,
                 drop_from_recent_high_pct=drop_from_recent_high_pct,
-                min_drop_pct=intraday_pullback_drop_pct,
+                min_drop_pct=intraday_pullback_drop_pct * short_trigger_relax_mult,
                 recent_upper_band_rejection=bool(short_bb.iloc[pos] or (pos > 0 and bool(short_bb.iloc[pos - 1]))),
                 price_below_fast_ema=(not np.isnan(fast_now) and px < fast_now),
                 down_bar=(px < prev_px),
                 atr_pct=atr_pct_now,
-                min_atr_pct=intraday_pullback_min_atr_pct,
+                min_atr_pct=intraday_pullback_min_atr_pct * max(0.75, short_trigger_relax_mult),
             )
             prev_rsi_val = float(rsi_arr[pos - 1]) if pos > 0 and not np.isnan(rsi_arr[pos - 1]) else rsi_val
             shock_reversal_ready = shock_reversal_short_ready(
@@ -1970,12 +1991,12 @@ class BollingerRSIStrategy(BaseStrategy):
                 prev_rsi=prev_rsi_val,
                 recent_max_rsi=recent_max_rsi_now,
                 current_rsi=rsi_val,
-                rsi_trigger=shock_reversal_rsi_trigger,
-                max_current_rsi=shock_reversal_max_current_rsi,
+                rsi_trigger=max(35.0, shock_reversal_rsi_trigger - short_rsi_trigger_bonus),
+                max_current_rsi=shock_reversal_max_current_rsi + short_max_current_rsi_bonus,
                 current_bar_pct=bar_pct,
-                min_bar_drop_pct=shock_reversal_bar_drop_pct,
+                min_bar_drop_pct=shock_reversal_bar_drop_pct * short_trigger_relax_mult,
                 drop_from_recent_high_pct=drop_from_recent_high_pct,
-                min_drop_from_high_pct=shock_reversal_drop_pct,
+                min_drop_from_high_pct=shock_reversal_drop_pct * short_trigger_relax_mult,
                 recent_upper_band_rejection=bool(short_bb.iloc[pos] or (pos > 0 and bool(short_bb.iloc[pos - 1]))),
                 price_below_fast_ema=(not np.isnan(fast_now) and px < fast_now),
             )
@@ -1988,12 +2009,12 @@ class BollingerRSIStrategy(BaseStrategy):
                 peak_rsi=cascade_peak_rsi,
                 rebound_rsi=cascade_rebound_rsi,
                 current_rsi=rsi_val,
-                rsi_trigger=cascade_breakdown_rsi_trigger,
-                min_rebound_rsi_fade_pts=cascade_breakdown_rebound_rsi_fade_pts,
+                rsi_trigger=max(35.0, cascade_breakdown_rsi_trigger - short_rsi_trigger_bonus),
+                min_rebound_rsi_fade_pts=cascade_breakdown_rebound_rsi_fade_pts * short_trigger_relax_mult,
                 rebound_high=cascade_rebound_high,
                 current_price=px,
                 prev_price=prev_px,
-                breakdown_drop_pct=cascade_breakdown_break_pct,
+                breakdown_drop_pct=cascade_breakdown_break_pct * short_trigger_relax_mult,
             )
             shock_rebound_ready = shock_rebound_long_ready(
                 episode_phase=episode_phase,
@@ -2041,6 +2062,7 @@ class BollingerRSIStrategy(BaseStrategy):
                         "gold_macro_regime_score": round(float(gold_macro_regime_score), 3),
                         "gold_fair_regime": fair_regime_now,
                         "gold_fair_gap_pct": round(float(fair_gap_pct_now), 3) if not np.isnan(fair_gap_pct_now) else None,
+                        "gold_fair_short_boost": bool(fair_value_short_boost),
                     },
                 }
                 last_shock_reversal_bar = pos
@@ -2072,6 +2094,7 @@ class BollingerRSIStrategy(BaseStrategy):
                         "gold_macro_regime_score": round(float(gold_macro_regime_score), 3),
                         "gold_fair_regime": fair_regime_now,
                         "gold_fair_gap_pct": round(float(fair_gap_pct_now), 3) if not np.isnan(fair_gap_pct_now) else None,
+                        "gold_fair_short_boost": bool(fair_value_short_boost),
                     },
                 }
                 last_cascade_breakdown_bar = pos
@@ -2108,6 +2131,7 @@ class BollingerRSIStrategy(BaseStrategy):
                         "gold_macro_regime_score": round(float(gold_macro_regime_score), 3),
                         "gold_fair_regime": fair_regime_now,
                         "gold_fair_gap_pct": round(float(fair_gap_pct_now), 3) if not np.isnan(fair_gap_pct_now) else None,
+                        "gold_fair_short_boost": bool(fair_value_short_boost),
                     },
                 }
                 last_intraday_pullback_bar = pos
@@ -2298,6 +2322,8 @@ class BollingerRSIStrategy(BaseStrategy):
                     "gold_fair_slope_pct": round(float(fair_slope_pct_now), 3) if not np.isnan(fair_slope_pct_now) else None,
                     "gold_fair_regime": fair_regime_now,
                     "gold_fair_model_ok": bool(fair_value_model_ok),
+                    "fair_value_short_boost": bool(fair_value_short_boost),
+                    "short_context_effective_score": round(float(short_context_effective_score), 3),
                     "breakout_spike_long": bool(breakout_spike_long),
                     "spy_assisted_breakout": bool(spy_assisted_breakout),
                     "spy_rebound_risk": bool(spy_rebound_risk),
