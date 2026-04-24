@@ -51,6 +51,9 @@ _OPEN     = "ft_open_trades"
 _SIGNALS  = "ft_all_signals"
 _CACHE    = "ft_prices_cache"
 _EQUITY   = "ft_equity"   # dict[symbol → list[{time, equity, pnl}]]
+_RESTORE  = "ft_restored_from_config"
+_STATE_CFG_KEY = "forward_test_state_v1"
+_MAX_PERSISTED_SIGNALS = 500
 
 
 def _db() -> Database:
@@ -59,9 +62,66 @@ def _db() -> Database:
 
 def _init_state() -> None:
     for k, v in [(_RUNS, {}), (_OPEN, {}), (_SIGNALS, []),
-                  (_CACHE, {}), (_EQUITY, {})]:
+                  (_CACHE, {}), (_EQUITY, {}), (_RESTORE, False)]:
         if k not in st.session_state:
             st.session_state[k] = v
+
+
+def _json_safe(value):
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    return value
+
+
+def _normalize_signal_row(row: dict) -> dict:
+    normalized = dict(row)
+    date_val = normalized.get("date")
+    if date_val is not None:
+        try:
+            normalized["date"] = pd.Timestamp(date_val).isoformat()
+        except Exception:
+            normalized["date"] = str(date_val)
+    return normalized
+
+
+def _persist_state_config() -> None:
+    payload = {
+        "runs": _json_safe(st.session_state.get(_RUNS) or {}),
+        "open": _json_safe(st.session_state.get(_OPEN) or {}),
+        "signals": [_normalize_signal_row(_json_safe(s)) for s in (st.session_state.get(_SIGNALS) or [])[-_MAX_PERSISTED_SIGNALS:]],
+        "equity": _json_safe(st.session_state.get(_EQUITY) or {}),
+        "saved_at": datetime.utcnow().isoformat(timespec="seconds"),
+    }
+    try:
+        _db().save_config(_STATE_CFG_KEY, payload)
+    except Exception:
+        pass
+
+
+def _restore_state_config() -> bool:
+    if st.session_state.get(_RESTORE):
+        return False
+    st.session_state[_RESTORE] = True
+    if st.session_state.get(_RUNS):
+        return False
+    try:
+        payload = _db().load_config(_STATE_CFG_KEY) or {}
+    except Exception:
+        return False
+    runs = payload.get("runs") or {}
+    if not isinstance(runs, dict) or not runs:
+        return False
+    st.session_state[_RUNS] = {str(k).upper(): dict(v) for k, v in runs.items() if isinstance(v, dict)}
+    st.session_state[_OPEN] = {str(k).upper(): v for k, v in (payload.get("open") or {}).items() if isinstance(v, dict) or v is None}
+    st.session_state[_SIGNALS] = [_normalize_signal_row(s) for s in (payload.get("signals") or []) if isinstance(s, dict)]
+    st.session_state[_EQUITY] = payload.get("equity") or {}
+    return True
 
 
 def _interval_td(interval: str) -> timedelta:
@@ -354,6 +414,7 @@ def _run_tick(symbol: str, run: dict, closed_trades_acc: list) -> None:
                 {"time": latest_ts, "equity": round(prev_eq + pnl, 2), "pnl": round(pnl, 2)})
             st.session_state[_OPEN][symbol] = None
             open_trade = None
+            _persist_state_config()
 
     # Generate signal
     if open_trade is None:
@@ -390,7 +451,7 @@ def _run_tick(symbol: str, run: dict, closed_trades_acc: list) -> None:
             "verdict_reason": signal_meta.get("verdict_reason"),
             "gates": signal_meta.get("gate_summary"),
         }
-        st.session_state[_SIGNALS].append(sig_row)
+        st.session_state[_SIGNALS].append(_normalize_signal_row(sig_row))
 
         if signal.action != SignalAction.HOLD and signal.suggested_sl is not None:
             risk = RiskManager(settings.risk)
@@ -514,12 +575,14 @@ def _run_tick(symbol: str, run: dict, closed_trades_acc: list) -> None:
                         "trail_bars": 0,
                     })
                 st.session_state[_OPEN][symbol] = new_trade
+        _persist_state_config()
 
 
 # ── Page ─────────────────────────────────────────────────────────────────────
 
 def render() -> None:
     _init_state()
+    restored = _restore_state_config()
     render_mode_banner()
 
     st.title("🔭 Forward Test")
@@ -532,6 +595,8 @@ def render() -> None:
         "**Flow:** Backtester → **Forward Test** ← you are here → Paper Trading → Live  \n"
         "Forward Test = real-time data + local simulation. No orders sent anywhere."
     )
+    if restored:
+        st.caption("Restored active Forward Test runs from saved state.")
     st.divider()
 
     # ── Add new ticker run ────────────────────────────────────────────────────
@@ -659,6 +724,7 @@ def render() -> None:
             st.session_state[_RUNS][new_symbol]  = run_cfg
             st.session_state[_OPEN][new_symbol]  = None
             st.session_state[_EQUITY][new_symbol] = []
+            _persist_state_config()
             st.rerun()
 
     # ── Active runs ───────────────────────────────────────────────────────────
@@ -674,6 +740,7 @@ def render() -> None:
     if gcol3.button("🗑️ Clear All", key="ft_clear"):
         for k in [_RUNS, _OPEN, _SIGNALS, _CACHE, _EQUITY]:
             st.session_state[k] = {} if isinstance(st.session_state[k], dict) else []
+        _persist_state_config()
         st.rerun()
 
     # ── Collect all closed trades from DB for this session ────────────────────
@@ -749,6 +816,7 @@ def render() -> None:
                 if c2.button(f"{'⏸ Pause' if run.get('active') else '▶ Resume'}",
                               key=f"ft_toggle_{symbol}"):
                     st.session_state[_RUNS][symbol]["active"] = not run.get("active", True)
+                    _persist_state_config()
                     st.rerun()
                 if c3.button(f"❌ Close Open Trade",
                               key=f"ft_close_{symbol}",
@@ -774,12 +842,18 @@ def render() -> None:
                         closed_this_session.append(open_t)
                         _save_trade_to_db(open_t, symbol, run["strategy_id"])
                         st.session_state[_OPEN][symbol] = None
+                        _persist_state_config()
                         st.rerun()
                 if c4.button(f"🗑️ Remove {symbol}", key=f"ft_remove_{symbol}"):
                     del st.session_state[_RUNS][symbol]
                     st.session_state[_OPEN].pop(symbol, None)
                     st.session_state[_CACHE].pop(symbol, None)
                     st.session_state[_EQUITY].pop(symbol, None)
+                    st.session_state[_SIGNALS] = [
+                        s for s in st.session_state[_SIGNALS]
+                        if s.get("symbol") != symbol
+                    ]
+                    _persist_state_config()
                     st.rerun()
 
                 if prices is None:
@@ -857,9 +931,11 @@ def render() -> None:
                     sym_sigs = [s for s in st.session_state[_SIGNALS]
                                 if s.get("symbol") == symbol]
                     if sym_sigs:
-                        st.dataframe(pd.DataFrame(sym_sigs)
-                                     .sort_values("date", ascending=False),
-                                     width='stretch')
+                        sig_df = pd.DataFrame(sym_sigs).copy()
+                        if "date" in sig_df.columns:
+                            sig_df["date"] = pd.to_datetime(sig_df["date"], errors="coerce")
+                            sig_df = sig_df.sort_values("date", ascending=False)
+                        st.dataframe(sig_df, width='stretch')
                     else:
                         st.info("No signals yet.")
 

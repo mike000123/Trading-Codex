@@ -160,4 +160,6 @@ if _prev_page != page_name:
         st.rerun()
 
 # ── Render selected page ───────────────────────────────────────────────────
-PAGES[page_name].render()
+_page_root = st.empty()
+with _page_root.container():
+    PAGES[page_name].render()
