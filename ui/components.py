@@ -10,8 +10,112 @@ import streamlit as st
 
 from config.symbol_profiles import context_label, resolve_context_symbol
 from config.settings import settings
+from db.database import Database
 from strategies import get_strategy, list_strategies
 from ui.themes import mode_badge
+
+_LOADED_DATA_CFG_KEY = "ui_loaded_dataset_v1"
+
+
+def _db() -> Database:
+    return Database(settings.db_path)
+
+
+def _save_loaded_dataset_config(payload: dict) -> None:
+    try:
+        _db().save_config(_LOADED_DATA_CFG_KEY, payload)
+    except Exception:
+        pass
+
+
+def _load_loaded_dataset_config() -> dict:
+    try:
+        return _db().load_config(_LOADED_DATA_CFG_KEY) or {}
+    except Exception:
+        return {}
+
+
+def _persist_loaded_dataset(
+    *,
+    source_ui: str,
+    loaded_source: str,
+    symbol: str,
+    interval: str | None,
+    start: pd.Timestamp | None,
+    end: pd.Timestamp | None,
+) -> None:
+    payload = {
+        "source_ui": source_ui,
+        "loaded_source": loaded_source,
+        "symbol": str(symbol).upper(),
+        "interval": interval,
+        "start": pd.Timestamp(start).isoformat() if start is not None else None,
+        "end": pd.Timestamp(end).isoformat() if end is not None else None,
+    }
+    _save_loaded_dataset_config(payload)
+
+
+def _restore_loaded_dataset_state() -> None:
+    payload = _load_loaded_dataset_config()
+    if not payload:
+        return
+
+    source_ui = payload.get("source_ui")
+    loaded_source = payload.get("loaded_source")
+    symbol = str(payload.get("symbol") or "").upper()
+    interval = payload.get("interval")
+    start_raw = payload.get("start")
+    end_raw = payload.get("end")
+    start_ts = pd.Timestamp(start_raw) if start_raw else None
+    end_ts = pd.Timestamp(end_raw) if end_raw else None
+
+    if source_ui and "data_source" not in st.session_state:
+        st.session_state["data_source"] = source_ui
+
+    if source_ui == "Yahoo Finance":
+        if symbol and "yf_ticker" not in st.session_state:
+            st.session_state["yf_ticker"] = symbol
+        if interval and "yf_interval" not in st.session_state:
+            st.session_state["yf_interval"] = interval
+        if start_ts is not None and "yf_start" not in st.session_state:
+            st.session_state["yf_start"] = start_ts.date()
+        if end_ts is not None and "yf_end" not in st.session_state:
+            st.session_state["yf_end"] = end_ts.date()
+    elif source_ui == "Alpaca":
+        if symbol and "alp_symbol" not in st.session_state:
+            st.session_state["alp_symbol"] = symbol
+        if interval and "alp_tf" not in st.session_state:
+            st.session_state["alp_tf"] = interval
+        if start_ts is not None and "alp_start" not in st.session_state:
+            st.session_state["alp_start"] = start_ts.date()
+        if end_ts is not None and "alp_end" not in st.session_state:
+            st.session_state["alp_end"] = end_ts.date()
+
+    if st.session_state.get("loaded_data") is not None:
+        return
+    if not symbol or not loaded_source:
+        return
+
+    from data.cache import DataCache
+
+    cache = DataCache()
+    if loaded_source in {"yfinance", "alpaca"} and interval:
+        cached_df = cache.load(loaded_source, symbol, interval)
+        if cached_df is None or cached_df.empty:
+            return
+        if start_ts is not None and end_ts is not None:
+            mask = (cached_df["date"] >= start_ts) & (cached_df["date"] <= end_ts)
+            restored = cached_df.loc[mask].reset_index(drop=True)
+        else:
+            restored = cached_df.reset_index(drop=True)
+        if restored.empty:
+            return
+        st.session_state["loaded_data"] = restored
+        st.session_state["loaded_symbol"] = symbol
+        st.session_state["loaded_source"] = loaded_source
+        st.session_state["loaded_interval"] = interval
+        st.session_state["loaded_start"] = pd.Timestamp(restored["date"].min())
+        st.session_state["loaded_end"] = pd.Timestamp(restored["date"].max())
 
 
 def render_mode_banner() -> None:
@@ -103,6 +207,7 @@ def _alpaca_safe_request_end(end_exclusive: pd.Timestamp, interval: str | None) 
 
 
 def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.DataFrame]:
+    _restore_loaded_dataset_state()
     st.sidebar.subheader("📡 Data Source")
     source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], index=2, key="data_source")
     data: Optional[pd.DataFrame] = None
@@ -134,6 +239,14 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                     st.session_state["loaded_interval"] = interval
                     st.session_state["loaded_start"] = start_ts
                     st.session_state["loaded_end"] = pd.Timestamp(in_range["date"].max())
+                    _persist_loaded_dataset(
+                        source_ui="Yahoo Finance",
+                        loaded_source="yfinance",
+                        symbol=ticker.upper(),
+                        interval=interval,
+                        start=start_ts,
+                        end=pd.Timestamp(in_range["date"].max()),
+                    )
                     st.session_state[_yf_key] = True
                     st.sidebar.success(f"✓ {len(in_range):,} bars from cache")
 
@@ -149,6 +262,14 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                     st.session_state["loaded_interval"] = interval
                     st.session_state["loaded_start"] = start_ts
                     st.session_state["loaded_end"] = pd.Timestamp(data["date"].max()) if not data.empty else end_exclusive
+                    _persist_loaded_dataset(
+                        source_ui="Yahoo Finance",
+                        loaded_source="yfinance",
+                        symbol=ticker.upper(),
+                        interval=interval,
+                        start=start_ts,
+                        end=pd.Timestamp(data["date"].max()) if not data.empty else end_exclusive,
+                    )
                     for k in list(st.session_state.keys()):
                         if k.startswith(f"yf_loaded_{ticker}_{interval}"):
                             del st.session_state[k]
@@ -179,6 +300,14 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                 st.session_state["loaded_interval"] = None
                 st.session_state["loaded_start"] = pd.Timestamp(data["date"].min()) if not data.empty else None
                 st.session_state["loaded_end"] = pd.Timestamp(data["date"].max()) if not data.empty else None
+                _persist_loaded_dataset(
+                    source_ui="CSV Upload",
+                    loaded_source="csv",
+                    symbol=uploaded.name.split(".")[0].upper(),
+                    interval=None,
+                    start=pd.Timestamp(data["date"].min()) if not data.empty else None,
+                    end=pd.Timestamp(data["date"].max()) if not data.empty else None,
+                )
             except Exception as e:
                 st.sidebar.error(str(e))
 
@@ -218,6 +347,14 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                         st.session_state["loaded_interval"] = tf
                         st.session_state["loaded_start"] = start_ts
                         st.session_state["loaded_end"] = pd.Timestamp(in_range["date"].max())
+                        _persist_loaded_dataset(
+                            source_ui="Alpaca",
+                            loaded_source="alpaca",
+                            symbol=symbol.upper(),
+                            interval=tf,
+                            start=start_ts,
+                            end=pd.Timestamp(in_range["date"].max()),
+                        )
                         st.session_state[_cache_key] = True
                         st.sidebar.success(
                             f"✓ Loaded {len(in_range):,} bars from local cache  \n"
@@ -270,6 +407,14 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                         st.session_state["loaded_interval"] = tf
                         st.session_state["loaded_start"] = start_ts
                         st.session_state["loaded_end"] = pd.Timestamp(data["date"].max()) if not data.empty else request_end
+                        _persist_loaded_dataset(
+                            source_ui="Alpaca",
+                            loaded_source="alpaca",
+                            symbol=symbol.upper(),
+                            interval=tf,
+                            start=start_ts,
+                            end=pd.Timestamp(data["date"].max()) if not data.empty else request_end,
+                        )
                         for k in list(st.session_state.keys()):
                             if k.startswith(f"alp_loaded_{symbol}_{tf}"):
                                 del st.session_state[k]

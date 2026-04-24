@@ -39,6 +39,9 @@ with st.sidebar:
 
 apply_theme(st.session_state["theme"])
 
+from config.settings import settings
+from db.database import Database
+
 # ── Page registry ──────────────────────────────────────────────────────────
 from pages import (
     page_simulator,
@@ -73,6 +76,11 @@ PAGE_SLUGS = {
     "⚙️ Settings": "settings",
 }
 SLUG_TO_PAGE = {slug: label for label, slug in PAGE_SLUGS.items()}
+_APP_PAGE_CFG_KEY = "app_last_page_v1"
+
+
+def _db() -> Database:
+    return Database(settings.db_path)
 
 
 def _get_page_from_query() -> str | None:
@@ -82,6 +90,17 @@ def _get_page_from_query() -> str | None:
         return None
     if isinstance(page_slug, list):
         page_slug = page_slug[0] if page_slug else None
+    if not page_slug:
+        return None
+    return SLUG_TO_PAGE.get(str(page_slug))
+
+
+def _get_page_from_config() -> str | None:
+    try:
+        payload = _db().load_config(_APP_PAGE_CFG_KEY) or {}
+    except Exception:
+        return None
+    page_slug = payload.get("page")
     if not page_slug:
         return None
     return SLUG_TO_PAGE.get(str(page_slug))
@@ -100,6 +119,16 @@ def _set_page_query(page_name: str) -> None:
     except Exception:
         pass
 
+
+def _persist_page_config(page_name: str) -> None:
+    slug = PAGE_SLUGS.get(page_name)
+    if not slug:
+        return
+    try:
+        _db().save_config(_APP_PAGE_CFG_KEY, {"page": slug})
+    except Exception:
+        pass
+
 with st.sidebar:
     st.markdown("---")
     st.markdown("### 📈 AlgoTrader Pro")
@@ -109,7 +138,7 @@ with st.sidebar:
     if nav_target and nav_target in page_keys:
         default_idx = page_keys.index(nav_target)
     else:
-        default_page = _get_page_from_query() or "⏪ Backtester"
+        default_page = _get_page_from_query() or _get_page_from_config() or "⏪ Backtester"
         default_idx  = page_keys.index(default_page) if default_page in page_keys else 0
     page_name = st.radio(
         "Navigation",
@@ -119,6 +148,7 @@ with st.sidebar:
         label_visibility="collapsed",
     )
     _set_page_query(page_name)
+    _persist_page_config(page_name)
     st.markdown("---")
 
 # ── Render selected page ───────────────────────────────────────────────────

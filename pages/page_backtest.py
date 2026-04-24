@@ -10,9 +10,11 @@ import streamlit as st
 
 from config.strategy_presets.bollinger_rsi.gld_candidates import get_candidate
 from config.settings import settings
+from core.models import Direction, TradeOutcome, TradeRecord
 from data.fair_value import compute_gld_fair_value_diagnostics, fair_value_cache_fingerprint
 from data.ingestion import prepare_strategy_data
-from reporting.backtest import BacktestEngine
+from db.database import Database
+from reporting.backtest import BacktestEngine, BacktestResult
 from risk.manager import RiskManager
 from strategies import get_strategy, list_strategies
 from execution.entry_policy_base import available_policies
@@ -43,6 +45,183 @@ _AXIS = dict(
 )
 _TITLE = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
 _MAX_CHART_PTS = 5_000
+_BT_RESULT_CFG_KEY = "backtester_last_result_v1"
+
+
+def _db() -> Database:
+    return Database(settings.db_path)
+
+
+def _iso(v) -> str | None:
+    if v is None:
+        return None
+    return pd.Timestamp(v).isoformat()
+
+
+def _selection_snapshot(symbol: str) -> dict:
+    return {
+        "symbol": symbol,
+        "source": st.session_state.get("loaded_source"),
+        "interval": st.session_state.get("loaded_interval"),
+        "start": _iso(st.session_state.get("loaded_start")),
+        "end": _iso(st.session_state.get("loaded_end")),
+    }
+
+
+def _serialize_trade(t: TradeRecord) -> dict:
+    return {
+        "id": t.id,
+        "symbol": t.symbol,
+        "direction": t.direction.value if hasattr(t.direction, "value") else str(t.direction),
+        "entry_price": t.entry_price,
+        "take_profit": t.take_profit,
+        "stop_loss": t.stop_loss,
+        "leverage": t.leverage,
+        "capital_allocated": t.capital_allocated,
+        "entry_time": _iso(t.entry_time),
+        "mode": t.mode,
+        "strategy_id": t.strategy_id,
+        "exit_price": t.exit_price,
+        "exit_time": _iso(t.exit_time),
+        "outcome": t.outcome.value if hasattr(t.outcome, "value") and t.outcome is not None else t.outcome,
+        "leveraged_return_pct": t.leveraged_return_pct,
+        "pnl": t.pnl,
+        "notes": t.notes,
+        "broker_order_id": getattr(t, "broker_order_id", None),
+        "broker_status": getattr(t, "broker_status", None),
+        "broker_submitted_at": _iso(getattr(t, "broker_submitted_at", None)),
+        "filled_qty": getattr(t, "filled_qty", None),
+        "filled_avg_price": getattr(t, "filled_avg_price", None),
+        "filled_at": _iso(getattr(t, "filled_at", None)),
+        "last_synced_at": _iso(getattr(t, "last_synced_at", None)),
+    }
+
+
+def _deserialize_trade(raw: dict) -> TradeRecord:
+    return TradeRecord(
+        id=raw["id"],
+        symbol=raw["symbol"],
+        direction=Direction(raw["direction"]),
+        entry_price=float(raw["entry_price"]),
+        take_profit=raw.get("take_profit"),
+        stop_loss=raw.get("stop_loss"),
+        leverage=float(raw["leverage"]),
+        capital_allocated=float(raw["capital_allocated"]),
+        entry_time=pd.Timestamp(raw["entry_time"]).to_pydatetime(),
+        mode=raw["mode"],
+        strategy_id=raw["strategy_id"],
+        exit_price=raw.get("exit_price"),
+        exit_time=pd.Timestamp(raw["exit_time"]).to_pydatetime() if raw.get("exit_time") else None,
+        outcome=TradeOutcome(raw["outcome"]) if raw.get("outcome") else None,
+        leveraged_return_pct=raw.get("leveraged_return_pct"),
+        pnl=raw.get("pnl"),
+        notes=raw.get("notes", ""),
+        broker_order_id=raw.get("broker_order_id"),
+        broker_status=raw.get("broker_status"),
+        broker_submitted_at=pd.Timestamp(raw["broker_submitted_at"]).to_pydatetime() if raw.get("broker_submitted_at") else None,
+        filled_qty=raw.get("filled_qty"),
+        filled_avg_price=raw.get("filled_avg_price"),
+        filled_at=pd.Timestamp(raw["filled_at"]).to_pydatetime() if raw.get("filled_at") else None,
+        last_synced_at=pd.Timestamp(raw["last_synced_at"]).to_pydatetime() if raw.get("last_synced_at") else None,
+    )
+
+
+def _serialize_backtest_result(
+    result: BacktestResult,
+    *,
+    symbol: str,
+    bar_label: str,
+    selected_id: str,
+    params: dict,
+    starting_equity: float,
+    costs: dict,
+    execution_logic: str,
+    execution_label: str,
+) -> dict:
+    eq = result.equity_curve.copy()
+    if not eq.empty:
+        eq = eq.copy()
+        eq["date"] = pd.to_datetime(eq["date"], errors="coerce").dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eq["date"] = eq["date"].fillna("")
+    return {
+        "selection": _selection_snapshot(symbol),
+        "symbol": symbol,
+        "bar_label": bar_label,
+        "selected_id": selected_id,
+        "params": params,
+        "starting_equity": float(starting_equity),
+        "costs": costs,
+        "execution_logic": execution_logic,
+        "execution_label": execution_label,
+        "result": {
+            "trades": [_serialize_trade(t) for t in result.trades],
+            "equity_curve": eq.to_dict("records"),
+            "total_return_pct": result.total_return_pct,
+            "win_rate_pct": result.win_rate_pct,
+            "max_drawdown_pct": result.max_drawdown_pct,
+            "sharpe_ratio": result.sharpe_ratio,
+            "total_trades": result.total_trades,
+            "winning_trades": result.winning_trades,
+            "losing_trades": result.losing_trades,
+            "avg_win_pct": result.avg_win_pct,
+            "avg_loss_pct": result.avg_loss_pct,
+        },
+    }
+
+
+def _deserialize_backtest_result(payload: dict) -> BacktestResult:
+    raw = payload["result"]
+    eq_df = pd.DataFrame(raw.get("equity_curve", []))
+    if not eq_df.empty and "date" in eq_df.columns:
+        eq_df["date"] = pd.to_datetime(eq_df["date"], errors="coerce")
+    return BacktestResult(
+        trades=[_deserialize_trade(t) for t in raw.get("trades", [])],
+        equity_curve=eq_df,
+        total_return_pct=float(raw.get("total_return_pct", 0.0)),
+        win_rate_pct=float(raw.get("win_rate_pct", 0.0)),
+        max_drawdown_pct=float(raw.get("max_drawdown_pct", 0.0)),
+        sharpe_ratio=float(raw.get("sharpe_ratio", 0.0)),
+        total_trades=int(raw.get("total_trades", 0)),
+        winning_trades=int(raw.get("winning_trades", 0)),
+        losing_trades=int(raw.get("losing_trades", 0)),
+        avg_win_pct=float(raw.get("avg_win_pct", 0.0)),
+        avg_loss_pct=float(raw.get("avg_loss_pct", 0.0)),
+    )
+
+
+def _persist_backtest_snapshot(payload: dict) -> None:
+    try:
+        _db().save_config(_BT_RESULT_CFG_KEY, payload)
+    except Exception:
+        pass
+
+
+def _restore_backtest_snapshot() -> None:
+    if "bt_result" in st.session_state:
+        return
+    try:
+        payload = _db().load_config(_BT_RESULT_CFG_KEY) or {}
+    except Exception:
+        payload = {}
+    if not payload:
+        return
+    current_sel = _selection_snapshot(str(st.session_state.get("loaded_symbol", "")))
+    saved_sel = payload.get("selection", {})
+    if current_sel != saved_sel:
+        return
+    try:
+        st.session_state["bt_result"] = _deserialize_backtest_result(payload)
+        st.session_state["bt_symbol"] = payload.get("symbol", current_sel.get("symbol", "DATA"))
+        st.session_state["bt_bar_label"] = payload.get("bar_label", "bars")
+        st.session_state["bt_selected_id"] = payload.get("selected_id", "")
+        st.session_state["bt_params"] = payload.get("params", {})
+        st.session_state["bt_starting_equity"] = float(payload.get("starting_equity", 1000.0))
+        st.session_state["bt_cost_settings"] = payload.get("costs", {})
+        st.session_state["bt_execution_logic"] = payload.get("execution_logic", "alpaca")
+        st.session_state["bt_execution_label"] = payload.get("execution_label", "Alpaca-realistic")
+        st.session_state["bt_restored_msg"] = "Restored the last backtest result for this dataset."
+    except Exception:
+        pass
 
 
 def _resolve_gld_candidate_for_leverage(leverage: float) -> tuple[str | None, dict]:
@@ -580,6 +759,11 @@ def render() -> None:
             _show_results()
         return
 
+    _restore_backtest_snapshot()
+    restored_msg = st.session_state.pop("bt_restored_msg", None)
+    if restored_msg:
+        st.caption(restored_msg)
+
     symbol = st.session_state.get("bt_symbol_live", "DATA")
     bar_label = _bar_label(prices)
     st.success(f"**{symbol}** — {len(prices):,} bars · bar size: **{bar_label}**")
@@ -789,6 +973,23 @@ def render() -> None:
         }
         st.session_state["bt_execution_logic"] = execution_logic
         st.session_state["bt_execution_label"] = _bt_chosen_label
+        _persist_backtest_snapshot(
+            _serialize_backtest_result(
+                result,
+                symbol=symbol,
+                bar_label=bar_label,
+                selected_id=selected_id,
+                params=dict(params),
+                starting_equity=float(starting_equity),
+                costs={
+                    "spread_pct": float(spread_pct),
+                    "slippage_pct": float(slippage_pct),
+                    "commission": float(commission),
+                },
+                execution_logic=execution_logic,
+                execution_label=_bt_chosen_label,
+            )
+        )
         try:
             from db.database import Database
 
