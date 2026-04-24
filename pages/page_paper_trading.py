@@ -2241,6 +2241,9 @@ def render() -> None:
             prices_local = prices.copy()
             prices_local["date"] = _to_local_series(prices_local["date"])
 
+            st.markdown(f"#### Live Charts · {symbol}")
+            st.caption("These charts belong to Paper Trading for the active symbol and are independent from the Backtester.")
+
             # ── Live price chart ─────────────────────────────────────────────
             st.altair_chart(
                 _paper_price_chart(prices_local, symbol,
