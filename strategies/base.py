@@ -99,6 +99,90 @@ class BaseStrategy(ABC):
         """Return {param_name: default_value} for UI form generation."""
         return {}
 
+    def symbol_param_overrides(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """
+        Optional symbol-specific default overrides.
+
+        Use this for instrument families that benefit from the same strategy
+        architecture but need different baseline thresholds.
+        """
+        return {}
+
+    def effective_default_params(
+        self,
+        symbol: Optional[str] = None,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> dict[str, Any]:
+        params = dict(self.default_params())
+        if symbol:
+            params.update(self.symbol_param_overrides(symbol, source=source, interval=interval))
+        return params
+
+    def resolve_params(
+        self,
+        symbol: Optional[str] = None,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> dict[str, Any]:
+        params = self.effective_default_params(symbol=symbol, source=source, interval=interval)
+        params.update(self.params)
+        return params
+
     def validate_params(self) -> list[str]:
         """Return list of validation error strings (empty = valid)."""
+        return []
+
+    def companion_symbols(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Optional companion symbols required by the strategy.
+
+        The data pipeline can use this to fetch/algn extra market context
+        before the strategy runs in backtests, forward tests, or paper trading.
+        """
+        return []
+
+    def companion_contexts(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Generic context dependencies requested by the strategy.
+
+        Example:
+            ["equity_benchmark"]
+
+        The data pipeline resolves these context types to real symbols using the
+        primary ticker's symbol profile.
+        """
+        return []
+
+    def derived_contexts(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Optional derived context datasets built locally by the data pipeline.
+
+        Example:
+            ["gold_fair_value"]
+
+        Unlike companion contexts, these do not map to another tradable symbol.
+        They are locally derived features or model outputs merged onto the
+        primary dataset before the strategy runs.
+        """
         return []

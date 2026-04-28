@@ -19,8 +19,11 @@ from typing import Optional
 import pandas as pd
 import yfinance as yf
 
+from config.symbol_profiles import context_label, context_prefix, resolve_context_symbol
+from config.settings import settings
 from core.logger import log
 from data.cache import DataCache
+from data.fair_value import prepare_gld_fair_value_context
 
 _cache = DataCache()
 
@@ -328,3 +331,281 @@ def load_from_alpaca_history(
         return merged[mask].reset_index(drop=True)
 
     return new_data
+
+
+def _alpaca_timeframe_from_yfinance_interval(interval: str | None) -> str | None:
+    if not interval:
+        return None
+    mapping = {
+        "1m": "1Min",
+        "2m": "2Min",
+        "5m": "5Min",
+        "15m": "15Min",
+        "30m": "30Min",
+        "1h": "1Hour",
+        "1d": "1Day",
+    }
+    return mapping.get(str(interval).lower())
+
+
+def load_forward_blended_data(
+    symbol: str,
+    interval: str,
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+    lookback: int | None = None,
+) -> pd.DataFrame:
+    """
+    Forward-test helper: combine older Alpaca cache with recent Yahoo bars.
+
+    Alpaca gives us the dense historical warm-up cache, while Yahoo can provide
+    recent 1-minute bars when Alpaca SIP access is delayed. This function does
+    not call Alpaca's API; it only reads the local Alpaca cache and appends the
+    cache-aware Yahoo fetch, preferring Yahoo rows on overlapping timestamps.
+    """
+    symbol = symbol.strip().upper()
+    start_ts = pd.Timestamp(start)
+    end_ts = pd.Timestamp(end)
+    frames: list[pd.DataFrame] = []
+
+    alpaca_tf = _alpaca_timeframe_from_yfinance_interval(interval)
+    if alpaca_tf:
+        cached = _cache.load("alpaca", symbol, alpaca_tf)
+        if cached is not None and not cached.empty:
+            mask = (cached["date"] >= start_ts) & (cached["date"] <= end_ts)
+            frames.append(cached.loc[mask].copy())
+
+    try:
+        yahoo = load_from_ticker(symbol, interval, start_ts, end_ts, use_cache=True)
+        if yahoo is not None and not yahoo.empty:
+            frames.append(yahoo.copy())
+    except Exception as e:
+        log.warning(f"Forward Yahoo refresh failed for {symbol}/{interval}: {e}")
+
+    if not frames:
+        raise ValueError(f"No forward data available for {symbol}/{interval}.")
+
+    merged = (
+        pd.concat(frames, ignore_index=True)
+        .assign(date=lambda df: pd.to_datetime(df["date"], errors="coerce"))
+        .dropna(subset=["date"])
+        .sort_values("date")
+        .drop_duplicates(subset=["date"], keep="last")
+        .reset_index(drop=True)
+    )
+    if lookback is not None and lookback > 0:
+        merged = merged.tail(int(lookback)).reset_index(drop=True)
+    return merged
+
+
+def _merge_tolerance(interval: str | None) -> pd.Timedelta:
+    if not interval:
+        return pd.Timedelta(minutes=10)
+    key = interval.lower()
+    mapping = {
+        "1m": pd.Timedelta(minutes=10),
+        "1min": pd.Timedelta(minutes=10),
+        "5m": pd.Timedelta(minutes=20),
+        "5min": pd.Timedelta(minutes=20),
+        "15m": pd.Timedelta(minutes=45),
+        "15min": pd.Timedelta(minutes=45),
+        "30m": pd.Timedelta(minutes=90),
+        "30min": pd.Timedelta(minutes=90),
+        "1h": pd.Timedelta(hours=3),
+        "1hour": pd.Timedelta(hours=3),
+        "1d": pd.Timedelta(days=3),
+        "1day": pd.Timedelta(days=3),
+        "1wk": pd.Timedelta(days=10),
+    }
+    return mapping.get(key, pd.Timedelta(minutes=10))
+
+
+def _symbol_prefix(symbol: str) -> str:
+    return "".join(ch for ch in symbol.lower() if ch.isalnum())
+
+
+def _load_companion_data(
+    source: str,
+    symbol: str,
+    interval: str | None,
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+) -> pd.DataFrame | None:
+    if source == "alpaca":
+        creds = settings.alpaca
+        key_ = creds.paper_api_key if not settings.is_live() else creds.live_api_key
+        sec_ = creds.paper_secret_key if not settings.is_live() else creds.live_secret_key
+        if not key_ or not sec_ or not interval:
+            return None
+        return load_from_alpaca_history(symbol, interval, start, end, key_, sec_, paper=not settings.is_live())
+    if source == "yfinance":
+        if not interval:
+            return None
+        return load_from_ticker(symbol, interval, start, end)
+    if source == "forward_blend":
+        if not interval:
+            return None
+        return load_forward_blended_data(symbol, interval, start, end)
+    return None
+
+
+def _strategy_companion_requests(strategy, primary_symbol: str, source: str | None, interval: str | None) -> list[tuple[str, str, str]]:
+    requests: list[tuple[str, str, str]] = []
+    if strategy is None:
+        return requests
+
+    if hasattr(strategy, "companion_contexts"):
+        for context_key in strategy.companion_contexts(primary_symbol, source=source, interval=interval) or []:
+            resolved = resolve_context_symbol(primary_symbol, context_key)
+            if resolved and resolved.strip().upper() != primary_symbol.strip().upper():
+                requests.append((context_key, resolved.strip().upper(), context_prefix(context_key)))
+
+    elif hasattr(strategy, "companion_symbols"):
+        for symbol in strategy.companion_symbols(primary_symbol, source=source, interval=interval) or []:
+            if symbol and symbol.strip().upper() != primary_symbol.strip().upper():
+                sym = symbol.strip().upper()
+                requests.append((sym.lower(), sym, _symbol_prefix(sym)))
+
+    return requests
+
+
+def _strategy_derived_requests(strategy, primary_symbol: str, source: str | None, interval: str | None) -> list[str]:
+    if strategy is None or not hasattr(strategy, "derived_contexts"):
+        return []
+    try:
+        return list(strategy.derived_contexts(primary_symbol, source=source, interval=interval) or [])
+    except Exception as e:
+        log.warning(f"Derived context resolution failed for {primary_symbol}: {e}")
+        return []
+
+
+def prepare_strategy_data(
+    data: pd.DataFrame,
+    strategy,
+    primary_symbol: str,
+    source: str | None,
+    interval: str | None = None,
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    """
+    Enrich a primary OHLCV frame with companion-symbol context declared
+    by the strategy. Companion bars are fetched through the same cache-backed
+    ingestion layer and merged onto the primary timestamps.
+    """
+    if data is None or data.empty:
+        return data
+
+    def _normalize_merge_dates(frame: pd.DataFrame) -> pd.DataFrame:
+        if frame is None or frame.empty:
+            return frame
+        out = frame.copy()
+        out["date"] = pd.to_datetime(out["date"], errors="coerce", utc=True).dt.tz_localize(None)
+        out["date"] = out["date"].astype("datetime64[ns]")
+        out = out.dropna(subset=["date"]).sort_values("date").drop_duplicates(subset=["date"], keep="last")
+        return out.reset_index(drop=True)
+
+    def _merge_asof_on_date(left: pd.DataFrame, right: pd.DataFrame, tolerance) -> pd.DataFrame:
+        left_m = left.copy()
+        right_m = right.copy()
+        left_m["__merge_ts"] = left_m["date"].astype("int64")
+        right_m["__merge_ts"] = right_m["date"].astype("int64")
+        tol_ns = pd.Timedelta(tolerance).value if tolerance is not None else None
+        merged = pd.merge_asof(
+            left_m.sort_values("__merge_ts"),
+            right_m.sort_values("__merge_ts").drop(columns=["date"], errors="ignore"),
+            on="__merge_ts",
+            direction="backward",
+            tolerance=tol_ns,
+        )
+        return merged.drop(columns=["__merge_ts"], errors="ignore")
+
+    companion_requests = _strategy_companion_requests(strategy, primary_symbol, source, interval)
+    if not companion_requests or source not in {"alpaca", "yfinance", "forward_blend"}:
+        enriched = _normalize_merge_dates(data)
+    else:
+        enriched = _normalize_merge_dates(data)
+        start_ts = pd.Timestamp(start) if start is not None else pd.Timestamp(enriched["date"].min())
+        end_ts = pd.Timestamp(end) if end is not None else pd.Timestamp(enriched["date"].max()) + pd.Timedelta(minutes=1)
+        tolerance = _merge_tolerance(interval)
+
+        for _context_key, companion_symbol, prefix in companion_requests:
+            try:
+                companion = _load_companion_data(source, companion_symbol, interval, start_ts, end_ts)
+            except Exception as e:
+                log.warning(f"Companion load failed for {companion_symbol}/{interval}: {e}")
+                continue
+            if companion is None or companion.empty:
+                continue
+
+            comp = _normalize_merge_dates(companion)
+            rename_map = {
+                "open": f"{prefix}_open",
+                "high": f"{prefix}_high",
+                "low": f"{prefix}_low",
+                "close": f"{prefix}_close",
+                "volume": f"{prefix}_volume",
+            }
+            comp = comp.rename(columns=rename_map)
+            keep_cols = ["date", *rename_map.values()]
+            enriched = _merge_asof_on_date(enriched, comp[keep_cols], tolerance)
+
+    derived_requests = _strategy_derived_requests(strategy, primary_symbol, source, interval)
+    if "gold_fair_value" in derived_requests and primary_symbol.strip().upper() == "GLD":
+        start_ts = pd.Timestamp(start) if start is not None else pd.Timestamp(enriched["date"].min())
+        end_ts = pd.Timestamp(end) if end is not None else pd.Timestamp(enriched["date"].max())
+        try:
+            resolved = strategy.resolve_params(
+                symbol=primary_symbol,
+                source=source,
+                interval=interval,
+            )
+            enriched = prepare_gld_fair_value_context(
+                enriched,
+                start=start_ts,
+                end=end_ts,
+                bullish_slope_min=float(resolved.get("gold_fair_value_bullish_slope_min", 1.0)),
+                bearish_slope_max=float(resolved.get("gold_fair_value_bearish_slope_max", -1.0)),
+                undervalued_gap_pct=float(resolved.get("gold_fair_value_undervalued_gap_pct", 2.5)),
+                overvalued_gap_pct=float(resolved.get("gold_fair_value_overvalued_gap_pct", 2.5)),
+            )
+        except Exception as e:
+            log.warning(f"Derived GLD fair-value context failed: {e}")
+
+    return enriched.reset_index(drop=True)
+
+
+def prefetch_strategy_companions(
+    strategy,
+    primary_symbol: str,
+    source: str | None,
+    interval: str | None = None,
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> list[str]:
+    """
+    Warm companion-symbol caches for a strategy using the normal cache-aware
+    loaders. Existing cached data is reused and only missing bars are appended.
+    """
+    if strategy is None:
+        return []
+
+    companion_requests = _strategy_companion_requests(strategy, primary_symbol, source, interval)
+    if not companion_requests or source not in {"alpaca", "yfinance", "forward_blend"}:
+        return []
+
+    start_ts = pd.Timestamp(start) if start is not None else None
+    end_ts = pd.Timestamp(end) if end is not None else None
+    if start_ts is None or end_ts is None:
+        return []
+
+    loaded: list[str] = []
+    for context_key, companion_symbol, _prefix in companion_requests:
+        try:
+            companion = _load_companion_data(source, companion_symbol, interval, start_ts, end_ts)
+        except Exception as e:
+            log.warning(f"Companion prefetch failed for {companion_symbol}/{interval}: {e}")
+            continue
+        if companion is not None and not companion.empty:
+            loaded.append(f"{context_label(context_key)}: {companion_symbol}")
+    return loaded

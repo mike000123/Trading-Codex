@@ -15,12 +15,22 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from config.strategy_presets.bollinger_rsi.gld_candidates import get_candidate
 from config.settings import settings
 from core.models import Direction, SignalAction
-from data.ingestion import load_from_ticker
+from data.ingestion import load_forward_blended_data, prepare_strategy_data
 from db.database import Database
+from execution.entry_policy_base import (
+    EntryContext,
+    available_policies,
+    get_policy,
+)
+# Importing these registers both policies with the factory.
+import execution.entry_policy_classic  # noqa: F401
+import execution.entry_policy_alpaca   # noqa: F401
 from risk.manager import RiskManager
 from strategies import list_strategies, get_strategy
+from ui.autorefresh import render_autorefresh_timer
 from ui.components import render_mode_banner, render_strategy_params, render_metrics_row
 from ui.charts import rsi_chart
 
@@ -43,6 +53,9 @@ _OPEN     = "ft_open_trades"
 _SIGNALS  = "ft_all_signals"
 _CACHE    = "ft_prices_cache"
 _EQUITY   = "ft_equity"   # dict[symbol → list[{time, equity, pnl}]]
+_RESTORE  = "ft_restored_from_config"
+_STATE_CFG_KEY = "forward_test_state_v1"
+_MAX_PERSISTED_SIGNALS = 500
 
 
 def _db() -> Database:
@@ -51,9 +64,66 @@ def _db() -> Database:
 
 def _init_state() -> None:
     for k, v in [(_RUNS, {}), (_OPEN, {}), (_SIGNALS, []),
-                  (_CACHE, {}), (_EQUITY, {})]:
+                  (_CACHE, {}), (_EQUITY, {}), (_RESTORE, False)]:
         if k not in st.session_state:
             st.session_state[k] = v
+
+
+def _json_safe(value):
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    return value
+
+
+def _normalize_signal_row(row: dict) -> dict:
+    normalized = dict(row)
+    date_val = normalized.get("date")
+    if date_val is not None:
+        try:
+            normalized["date"] = pd.Timestamp(date_val).isoformat()
+        except Exception:
+            normalized["date"] = str(date_val)
+    return normalized
+
+
+def _persist_state_config() -> None:
+    payload = {
+        "runs": _json_safe(st.session_state.get(_RUNS) or {}),
+        "open": _json_safe(st.session_state.get(_OPEN) or {}),
+        "signals": [_normalize_signal_row(_json_safe(s)) for s in (st.session_state.get(_SIGNALS) or [])[-_MAX_PERSISTED_SIGNALS:]],
+        "equity": _json_safe(st.session_state.get(_EQUITY) or {}),
+        "saved_at": datetime.utcnow().isoformat(timespec="seconds"),
+    }
+    try:
+        _db().save_config(_STATE_CFG_KEY, payload)
+    except Exception:
+        pass
+
+
+def _restore_state_config() -> bool:
+    if st.session_state.get(_RESTORE):
+        return False
+    st.session_state[_RESTORE] = True
+    if st.session_state.get(_RUNS):
+        return False
+    try:
+        payload = _db().load_config(_STATE_CFG_KEY) or {}
+    except Exception:
+        return False
+    runs = payload.get("runs") or {}
+    if not isinstance(runs, dict) or not runs:
+        return False
+    st.session_state[_RUNS] = {str(k).upper(): dict(v) for k, v in runs.items() if isinstance(v, dict)}
+    st.session_state[_OPEN] = {str(k).upper(): v for k, v in (payload.get("open") or {}).items() if isinstance(v, dict) or v is None}
+    st.session_state[_SIGNALS] = [_normalize_signal_row(s) for s in (payload.get("signals") or []) if isinstance(s, dict)]
+    st.session_state[_EQUITY] = payload.get("equity") or {}
+    return True
 
 
 def _interval_td(interval: str) -> timedelta:
@@ -67,8 +137,7 @@ def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     delta = _interval_td(interval)
     end   = pd.Timestamp.now()
     start = end - delta * max(lookback * 3, 500)
-    data  = load_from_ticker(symbol, interval, start, end)
-    return data.tail(lookback).reset_index(drop=True)
+    return load_forward_blended_data(symbol, interval, start, end, lookback=lookback)
 
 
 def _leveraged_ret(entry: float, exit_p: float,
@@ -79,25 +148,101 @@ def _leveraged_ret(entry: float, exit_p: float,
     return raw * leverage * 100
 
 
-def _check_exit(trade: dict, bar: pd.Series) -> dict:
+def _latest_atr(prices: pd.DataFrame, period: int = 14) -> Optional[float]:
+    if len(prices) < 2:
+        return None
+    high = prices["high"].astype(float)
+    low = prices["low"].astype(float)
+    close = prices["close"].astype(float)
+    prev_close = close.shift(1)
+    tr = pd.concat(
+        [
+            high - low,
+            (high - prev_close).abs(),
+            (low - prev_close).abs(),
+        ],
+        axis=1,
+    ).max(axis=1)
+    atr = tr.rolling(period, min_periods=1).mean().iloc[-1]
+    return float(atr) if pd.notna(atr) else None
+
+
+def _check_exit(trade: dict, bar: pd.Series, atr_value: Optional[float] = None) -> dict:
     hi, lo = float(bar["high"]), float(bar["low"])
     tp, sl = trade.get("take_profit"), trade["stop_loss"]
     ep, lev, d = trade["entry_price"], trade["leverage"], trade["direction"]
+
+    if trade.get("trail_kind"):
+        trade["trail_bars"] = int(trade.get("trail_bars", 0)) + 1
+        if trade["trail_bars"] > int(trade.get("trail_grace", 0)):
+            hard_sl = float(trade.get("hard_stop_loss", sl))
+            if d == "Short":
+                trade["trail_best"] = min(float(trade.get("trail_best", ep)), lo)
+                if trade.get("trail_kind") == "pct":
+                    candidate_sl = trade["trail_best"] * (1 + float(trade["trail_value"]) / 100)
+                elif trade.get("trail_kind") == "atr" and atr_value is not None:
+                    candidate_sl = trade["trail_best"] + float(trade["trail_value"]) * atr_value
+                elif trade.get("trail_kind") == "giveback":
+                    profit_move = max(ep - trade["trail_best"], 0.0)
+                    profit_move_pct = profit_move / ep * 100 if ep > 0 else 0.0
+                    if profit_move_pct >= float(trade.get("trail_min_profit_pct", 0.0)):
+                        candidate_sl = trade["trail_best"] + float(trade["trail_value"]) * profit_move
+                    else:
+                        candidate_sl = hard_sl
+                else:
+                    candidate_sl = hard_sl
+                trade["stop_loss"] = min(candidate_sl, hard_sl)
+            else:
+                trade["trail_best"] = max(float(trade.get("trail_best", ep)), hi)
+                if trade.get("trail_kind") == "pct":
+                    candidate_sl = trade["trail_best"] * (1 - float(trade["trail_value"]) / 100)
+                elif trade.get("trail_kind") == "atr" and atr_value is not None:
+                    candidate_sl = trade["trail_best"] - float(trade["trail_value"]) * atr_value
+                elif trade.get("trail_kind") == "giveback":
+                    profit_move = max(trade["trail_best"] - ep, 0.0)
+                    profit_move_pct = profit_move / ep * 100 if ep > 0 else 0.0
+                    if profit_move_pct >= float(trade.get("trail_min_profit_pct", 0.0)):
+                        candidate_sl = trade["trail_best"] - float(trade["trail_value"]) * profit_move
+                    else:
+                        candidate_sl = hard_sl
+                else:
+                    candidate_sl = hard_sl
+                trade["stop_loss"] = max(candidate_sl, hard_sl)
+            sl = trade["stop_loss"]
+
     hit_sl = hi >= sl if d == "Short" else lo <= sl
     hit_tp = (lo <= tp if d == "Short" else hi >= tp) if tp else False
     if hit_sl and hit_tp:
         trade.update({"outcome": "Ambiguous candle", "exit_time": bar["date"]})
     elif hit_sl:
         ret = _leveraged_ret(ep, sl, lev, d)
-        trade.update({"outcome": "SL hit", "exit_price": sl,
+        outcome = "Trail stop" if trade.get("trail_kind") else "SL hit"
+        gross_pnl = trade["capital"] * ret / 100
+        net_pnl = gross_pnl - _trade_cost(trade)
+        trade.update({"outcome": outcome, "exit_price": sl,
                       "exit_time": bar["date"], "leveraged_return_%": ret,
-                      "pnl": round(trade["capital"] * ret / 100, 2)})
+                      "gross_pnl": round(gross_pnl, 2),
+                      "cost": round(_trade_cost(trade), 2),
+                      "pnl": round(net_pnl, 2)})
     elif hit_tp:
         ret = _leveraged_ret(ep, tp, lev, d)
+        gross_pnl = trade["capital"] * ret / 100
+        net_pnl = gross_pnl - _trade_cost(trade)
         trade.update({"outcome": "TP hit", "exit_price": tp,
                       "exit_time": bar["date"], "leveraged_return_%": ret,
-                      "pnl": round(trade["capital"] * ret / 100, 2)})
+                      "gross_pnl": round(gross_pnl, 2),
+                      "cost": round(_trade_cost(trade), 2),
+                      "pnl": round(net_pnl, 2)})
     return trade
+
+
+def _trade_cost(trade: dict) -> float:
+    return (
+        float(trade.get("capital", 0.0) or 0.0)
+        * (float(trade.get("spread_pct", 0.0) or 0.0) + float(trade.get("slippage_pct", 0.0) or 0.0))
+        / 100.0
+        + float(trade.get("commission", 0.0) or 0.0)
+    )
 
 
 def _save_trade_to_db(trade: dict, symbol: str, strategy_id: str) -> None:
@@ -106,6 +251,7 @@ def _save_trade_to_db(trade: dict, symbol: str, strategy_id: str) -> None:
     outcome_map = {
         "SL hit": TradeOutcome.STOP_LOSS,
         "TP hit": TradeOutcome.TAKE_PROFIT,
+        "Trail stop": TradeOutcome.TRAIL_STOP,
         "Manual close": TradeOutcome.SIGNAL_EXIT,
         "Ambiguous candle": TradeOutcome.AMBIGUOUS,
     }
@@ -259,7 +405,7 @@ def _run_tick(symbol: str, run: dict, closed_trades_acc: list) -> None:
     # Check open trade exit
     open_trade = st.session_state[_OPEN].get(symbol)
     if open_trade:
-        open_trade = _check_exit(open_trade, latest)
+        open_trade = _check_exit(open_trade, latest, atr_value=_latest_atr(prices))
         if open_trade.get("outcome") not in (None, "Open"):
             closed_trades_acc.append(open_trade)
             _save_trade_to_db(open_trade, symbol, run["strategy_id"])
@@ -270,56 +416,176 @@ def _run_tick(symbol: str, run: dict, closed_trades_acc: list) -> None:
                 {"time": latest_ts, "equity": round(prev_eq + pnl, 2), "pnl": round(pnl, 2)})
             st.session_state[_OPEN][symbol] = None
             open_trade = None
+            _persist_state_config()
 
     # Generate signal
     if open_trade is None:
         cls      = get_strategy(run["strategy_id"])
         strategy = cls(params=run["params"])
-        signal   = strategy.generate_signal(prices, symbol)
+        prepared_prices = prepare_strategy_data(
+            prices,
+            strategy,
+            primary_symbol=symbol,
+            source="forward_blend",
+            interval=run["interval"],
+            start=prices["date"].min() if not prices.empty else None,
+            end=prices["date"].max() if not prices.empty else None,
+        )
+        st.session_state[_CACHE][symbol] = prepared_prices
+        latest = prepared_prices.iloc[-1]
+        latest_ts = latest["date"]
+        signal   = strategy.generate_signal(prepared_prices, symbol)
 
+        signal_meta = signal.metadata or {}
+        gate_values = signal_meta.get("gate_values") or {}
         sig_row = {
             "date": latest_ts, "symbol": symbol,
             "action": signal.action.value,
             "close": float(latest["close"]),
             "strategy": cls.name,
-            "rsi": signal.metadata.get("rsi"),
+            "rsi": signal_meta.get("rsi"),
+            "atr_%": gate_values.get("atr_pct"),
+            "atr_ok": gate_values.get("atr_ok"),
+            "regime": signal_meta.get("regime") or ("no_trade" if signal.action == SignalAction.HOLD else None),
+            "episode_phase": gate_values.get("episode_phase"),
+            "spike_type": signal_meta.get("spike_type") or gate_values.get("episode_type"),
+            "verdict": signal_meta.get("verdict", signal.action.value),
+            "verdict_reason": signal_meta.get("verdict_reason"),
+            "gates": signal_meta.get("gate_summary"),
         }
-        st.session_state[_SIGNALS].append(sig_row)
+        st.session_state[_SIGNALS].append(_normalize_signal_row(sig_row))
 
         if signal.action != SignalAction.HOLD and signal.suggested_sl is not None:
             risk = RiskManager(settings.risk)
             direction = (Direction.LONG if signal.action == SignalAction.BUY
                          else Direction.SHORT)
+            entry_price_ft = float(latest["close"])
+
+            # ── Entry policy: Classic vs Alpaca-gated (pluggable) ──────────
+            # The policy encapsulates every pre-fill gate (RTH / SSR / PDT /
+            # fractional / fill-diagnostic). Policy is picked per-run via the
+            # dropdown, so the same signal can be compared under both logics
+            # by starting two runs side by side.
+            try:
+                _ft_all_trades = _db().get_trades(mode="forward_test")
+            except Exception:
+                _ft_all_trades = []
+            _ft_realised = float(sum(
+                float(t.get("pnl") or 0)
+                for t in _ft_all_trades if t.get("outcome") != "Open"
+            ))
+            _ft_portfolio_start = float(sum(
+                float(r.get("capital", 0) or 0)
+                for r in st.session_state[_RUNS].values()
+            ))
+            _ft_portfolio_equity = max(_ft_portfolio_start + _ft_realised, 0.0)
+
+            policy = get_policy(
+                run.get("execution_logic", "alpaca"),
+                **{
+                    k: run[k] for k in (
+                        "enforce_rth", "extended_hours", "enforce_pdt",
+                        "enforce_ssr", "enforce_fractional", "fill_diagnostic",
+                        "enforce_monday_open_delay",
+                    ) if k in run
+                },
+            )
+            _ft_ctx = EntryContext(
+                symbol=symbol,
+                direction=direction,
+                entry_price=entry_price_ft,
+                bar=latest,
+                bar_time=latest_ts,
+                prices=prepared_prices,
+                requested_capital=float(run["capital"]),
+                leverage=float(run["leverage"]),
+                portfolio_equity=_ft_portfolio_equity,
+                portfolio_trades=_ft_all_trades,
+            )
+            decision = policy.evaluate(_ft_ctx)
+            if not decision.allowed:
+                # Record the skip reason on the signal row so the UI can show it,
+                # then bail out without creating a trade.
+                if st.session_state[_SIGNALS]:
+                    st.session_state[_SIGNALS][-1]["skipped_reason"] = decision.skip_reason
+                return
+
+            # Policy may have scaled capital (e.g. fractional-short floor).
+            capital_ft = float(
+                decision.adjusted_capital
+                if decision.adjusted_capital is not None
+                else run["capital"]
+            )
+
             check = risk.check(
                 direction=direction,
-                entry_price=float(latest["close"]),
+                entry_price=entry_price_ft,
                 take_profit=signal.suggested_tp,
                 stop_loss=signal.suggested_sl,
                 leverage=run["leverage"],
-                capital_requested=run["capital"],
+                capital_requested=capital_ft,
             )
             if check.approved:
                 eff_sl = check.adjusted_sl or signal.suggested_sl
+                signal_meta = signal.metadata or {}
+                _extra_notes = " | ".join(
+                    s for s in (decision.notes_prefix, decision.post_fill_note) if s
+                )
                 new_trade = {
                     "id":          str(uuid.uuid4())[:8],
                     "symbol":      symbol,
                     "direction":   direction.value,
-                    "entry_price": float(latest["close"]),
+                    "entry_price": entry_price_ft,
                     "take_profit": signal.suggested_tp,
                     "stop_loss":   eff_sl,
                     "leverage":    run["leverage"],
-                    "capital":     run["capital"],
+                    "capital":     capital_ft,
                     "entry_time":  latest_ts,
                     "strategy":    cls.name,
                     "outcome":     "Open",
+                    "regime":      signal_meta.get("regime"),
+                    "spread_pct":   float(run.get("spread_pct", 0.0) or 0.0),
+                    "slippage_pct": float(run.get("slippage_pct", 0.0) or 0.0),
+                    "commission":   float(run.get("commission", 0.0) or 0.0),
+                    "policy_notes": _extra_notes,
                 }
+                if signal_meta.get("trailing_atr_mult") is not None:
+                    new_trade.update({
+                        "trail_kind": "atr",
+                        "trail_value": float(signal_meta["trailing_atr_mult"]),
+                        "trail_best": float(latest["close"]),
+                        "hard_stop_loss": eff_sl,
+                        "trail_grace": 0,
+                        "trail_bars": 0,
+                    })
+                elif signal_meta.get("pct_trail") is not None:
+                    new_trade.update({
+                        "trail_kind": "pct",
+                        "trail_value": float(signal_meta["pct_trail"]),
+                        "trail_best": float(latest["close"]),
+                        "hard_stop_loss": eff_sl,
+                        "trail_grace": 1,
+                        "trail_bars": 0,
+                    })
+                elif signal_meta.get("profit_giveback_frac") is not None:
+                    new_trade.update({
+                        "trail_kind": "giveback",
+                        "trail_value": float(signal_meta["profit_giveback_frac"]),
+                        "trail_min_profit_pct": float(signal_meta.get("profit_giveback_min_pct", 0.0) or 0.0),
+                        "trail_best": float(latest["close"]),
+                        "hard_stop_loss": eff_sl,
+                        "trail_grace": 1,
+                        "trail_bars": 0,
+                    })
                 st.session_state[_OPEN][symbol] = new_trade
+        _persist_state_config()
 
 
 # ── Page ─────────────────────────────────────────────────────────────────────
 
 def render() -> None:
     _init_state()
+    restored = _restore_state_config()
     render_mode_banner()
 
     st.title("🔭 Forward Test")
@@ -332,6 +598,8 @@ def render() -> None:
         "**Flow:** Backtester → **Forward Test** ← you are here → Paper Trading → Live  \n"
         "Forward Test = real-time data + local simulation. No orders sent anywhere."
     )
+    if restored:
+        st.caption("Restored active Forward Test runs from saved state.")
     st.divider()
 
     # ── Add new ticker run ────────────────────────────────────────────────────
@@ -346,17 +614,133 @@ def render() -> None:
                                         ["1m","2m","5m","15m","30m","1h","1d"],
                                         index=0, key="ft_new_interval")
         with col2:
-            new_lookback = st.number_input("Warm-up bars", 50, 1000, 200, 50, key="ft_new_lb")
+            new_lookback = st.number_input("Warm-up bars", 50, 5000, 2000, 50, key="ft_new_lb")
             new_capital  = st.number_input("Capital / trade ($)", 10.0, value=1000.0, key="ft_new_cap")
         with col3:
             new_leverage = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="ft_new_lev")
             new_max_loss = st.slider("Max capital loss %", 5, 100, 50, key="ft_new_ml")
+        c_cost1, c_cost2, c_cost3 = st.columns(3)
+        with c_cost1:
+            new_spread = st.number_input("Spread % (round-trip)", 0.0, value=0.06, step=0.01, format="%.2f", key="ft_spread")
+        with c_cost2:
+            new_slippage = st.number_input("Slippage % (round-trip)", 0.0, value=0.02, step=0.01, format="%.2f", key="ft_slippage")
+        with c_cost3:
+            new_commission = st.number_input("Commission / trade ($)", 0.0, value=0.0, step=0.01, format="%.2f", key="ft_commission")
+
+        # ── Execution logic selector ────────────────────────────────────────
+        _ft_policy_opts = available_policies()          # [(name, label), ...]
+        _ft_policy_labels = [lbl for _, lbl in _ft_policy_opts]
+        _ft_policy_names = [nm for nm, _ in _ft_policy_opts]
+        _ft_default_idx = _ft_policy_names.index("alpaca") if "alpaca" in _ft_policy_names else 0
+        st.markdown("**Execution logic**")
+        _ft_chosen_label = st.selectbox(
+            "Which entry-gate policy to use for this run?",
+            _ft_policy_labels,
+            index=_ft_default_idx,
+            key="ft_exec_logic",
+            help=(
+                "Classic = the unconstrained logic we had before Alpaca gates "
+                "were added. Alpaca-realistic = RTH / PDT / SSR / fractional / "
+                "fill-diagnostic applied at entry. Runs are independent, so you "
+                "can start two symbols under different policies and compare."
+            ),
+        )
+        new_execution_logic = _ft_policy_names[_ft_policy_labels.index(_ft_chosen_label)]
+
+        _ft_is_alpaca = new_execution_logic == "alpaca"
+        if _ft_is_alpaca:
+            st.markdown("**Alpaca execution rules** (fine-tune which gates to apply):")
+            fac1, fac2, fac3 = st.columns(3)
+            with fac1:
+                ft_enforce_rth = st.checkbox(
+                    "RTH only", value=True, key="ft_rth",
+                    help="Skip entries outside NYSE RTH (09:30-16:00 ET) and on holidays.",
+                )
+                ft_extended_hrs = st.checkbox(
+                    "Extended hours", value=False, key="ft_ext_hrs",
+                    help="Allow 04:00-20:00 ET entries on trading days.",
+                )
+            with fac2:
+                ft_enforce_pdt = st.checkbox(
+                    "PDT (<$25k)", value=True, key="ft_pdt",
+                    help="Block 4th day-trade in 5 days when equity < $25k.",
+                )
+                ft_enforce_ssr = st.checkbox(
+                    "SSR (shorts)", value=True, key="ft_ssr",
+                    help="Skip shorts on ≥10% gap-down vs prior close.",
+                )
+            with fac3:
+                ft_enforce_frac = st.checkbox(
+                    "Fractional rule", value=True, key="ft_frac",
+                    help="Shorts need integer qty ≥ 1 (Alpaca rule).",
+                )
+                ft_fill_diag = st.checkbox(
+                    "Fill-timing diag", value=True, key="ft_fill_diag",
+                    help="Attach bar H/L/range to each entry's notes.",
+                )
+        else:
+            st.caption(
+                "Classic mode — no Alpaca gates applied (no RTH / PDT / SSR / "
+                "fractional / fill-diagnostic). Useful as an unconstrained baseline."
+            )
+            ft_enforce_rth = True
+            ft_extended_hrs = False
+            ft_enforce_pdt = True
+            ft_enforce_ssr = True
+            ft_enforce_frac = True
+            ft_fill_diag = True
+
+        ft_enforce_monday_open_delay = st.checkbox(
+            "No Monday trades first 30m",
+            value=False,
+            key="ft_monday_open_delay",
+            help="Block all entries from the NYSE open until 10:00 ET on Mondays, regardless of strategy.",
+        )
 
         new_strat_name = st.selectbox("Strategy", list(strat_names.keys()), key="ft_new_strat")
         new_strat_id   = strat_names[new_strat_name]
+        gld_optional_overrides: dict[str, object] = {}
+        if new_strat_id == "bollinger_rsi" and str(new_symbol).upper() == "GLD":
+            use_rsi_spike_fade_short = st.checkbox(
+                "Use RSI spike-fade short (research)",
+                value=False,
+                key="ft_gld_rsi_spike_fade_short",
+                help="Optional GLD research overlay. This layers the researched RSI spike-fade short rule on top of the current GLD default.",
+            )
+            use_fair_gap_fade_short = st.checkbox(
+                "Use fair-gap fade short (research)",
+                value=False,
+                key="ft_gld_fair_gap_fade_short",
+                help="Optional GLD research overlay. This shorts GLD when price is materially above fair value, daily RSI is overbought, and the minute chart starts rolling over.",
+            )
+            use_weak_0800_filter = st.checkbox(
+                "Use weak 08:00 ET filter (research)",
+                value=False,
+                key="ft_gld_weak_0800_filter",
+                help="Optional GLD research overlay. This blocks the weak 08:00-08:29 ET shock-reversal short entries identified in the narrower time-of-day study.",
+            )
+            if use_rsi_spike_fade_short:
+                gld_optional_overrides.update(get_candidate("gld_rsi_spike_fade_short_20260426"))
+            if use_fair_gap_fade_short:
+                gld_optional_overrides.update(get_candidate("gld_fair_gap_fade_short_20260426"))
+            if use_weak_0800_filter:
+                gld_optional_overrides.update(get_candidate("gld_weak_0800_shock_reversal_filter_20260426"))
+            if gld_optional_overrides:
+                captions: list[str] = []
+                if use_rsi_spike_fade_short:
+                    captions.append("`RSI spike-fade short` (`rise >= 0.8%`, `RSI >= 88`)")
+                if use_fair_gap_fade_short:
+                    captions.append("`fair-gap fade short` (`gap >= 3%`, daily `RSI >= 80`)")
+                if use_weak_0800_filter:
+                    captions.append("`weak 08:00 ET filter` (blocks `shock_reversal_short` only)")
+                st.caption("Optional GLD preset active: adds " + " + ".join(captions) + ".")
         new_params     = render_strategy_params(new_strat_id,
                                                 leverage=new_leverage,
-                                                max_capital_loss_pct=float(new_max_loss))
+                                                max_capital_loss_pct=float(new_max_loss),
+                                                symbol=new_symbol,
+                                                source="yfinance",
+                                                interval=new_interval,
+                                                base_overrides=gld_optional_overrides if gld_optional_overrides else None)
 
         if st.button("➕ Add & Start", type="primary", key="ft_add"):
             run_cfg = {
@@ -366,14 +750,28 @@ def render() -> None:
                 "capital":     new_capital,
                 "leverage":    new_leverage,
                 "max_loss":    new_max_loss,
+                "spread_pct":  new_spread,
+                "slippage_pct": new_slippage,
+                "commission":  new_commission,
                 "strategy_id": new_strat_id,
                 "params":      dict(new_params),
                 "started_at":  datetime.now().isoformat(),
                 "active":      True,
+                # Entry-policy selector (see execution/entry_policy_*.py)
+                "execution_logic":    str(new_execution_logic),
+                # Alpaca execution rules (consumed only when execution_logic=='alpaca')
+                "enforce_rth":        bool(ft_enforce_rth),
+                "extended_hours":     bool(ft_extended_hrs),
+                "enforce_pdt":        bool(ft_enforce_pdt),
+                "enforce_ssr":        bool(ft_enforce_ssr),
+                "enforce_fractional": bool(ft_enforce_frac),
+                "fill_diagnostic":    bool(ft_fill_diag),
+                "enforce_monday_open_delay": bool(ft_enforce_monday_open_delay),
             }
             st.session_state[_RUNS][new_symbol]  = run_cfg
             st.session_state[_OPEN][new_symbol]  = None
             st.session_state[_EQUITY][new_symbol] = []
+            _persist_state_config()
             st.rerun()
 
     # ── Active runs ───────────────────────────────────────────────────────────
@@ -389,6 +787,7 @@ def render() -> None:
     if gcol3.button("🗑️ Clear All", key="ft_clear"):
         for k in [_RUNS, _OPEN, _SIGNALS, _CACHE, _EQUITY]:
             st.session_state[k] = {} if isinstance(st.session_state[k], dict) else []
+        _persist_state_config()
         st.rerun()
 
     # ── Collect all closed trades from DB for this session ────────────────────
@@ -423,7 +822,9 @@ def render() -> None:
             "Symbol":    sym,
             "Strategy":  run["strategy_id"],
             "Interval":  run["interval"],
+            "Logic":     "Alpaca" if run.get("execution_logic", "alpaca") == "alpaca" else "Classic",
             "Last Price": f"{last_px:.4f}" if last_px else "—",
+            "Costs":     f"{float(run.get('spread_pct', 0.0) or 0.0):.2f}% + {float(run.get('slippage_pct', 0.0) or 0.0):.2f}%",
             "Open Position": (f"{open_t['direction']} @ {open_t['entry_price']:.4f}"
                               if open_t else "None"),
             "Closed Trades": trades_cnt,
@@ -433,7 +834,7 @@ def render() -> None:
         })
 
     if summary_rows:
-        st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
+        st.dataframe(pd.DataFrame(summary_rows), width='stretch')
 
     st.divider()
 
@@ -462,6 +863,7 @@ def render() -> None:
                 if c2.button(f"{'⏸ Pause' if run.get('active') else '▶ Resume'}",
                               key=f"ft_toggle_{symbol}"):
                     st.session_state[_RUNS][symbol]["active"] = not run.get("active", True)
+                    _persist_state_config()
                     st.rerun()
                 if c3.button(f"❌ Close Open Trade",
                               key=f"ft_close_{symbol}",
@@ -473,22 +875,32 @@ def render() -> None:
                         lev = open_t["leverage"]
                         raw = (xp - ep) / ep * (1 if d == "Long" else -1)
                         ret = raw * lev * 100
-                        pnl = open_t["capital"] * ret / 100
+                        gross_pnl = open_t["capital"] * ret / 100
+                        cost = _trade_cost(open_t)
+                        pnl = gross_pnl - cost
                         open_t.update({
                             "outcome": "Manual close", "exit_price": xp,
                             "exit_time": prices.iloc[-1]["date"],
                             "leveraged_return_%": round(ret, 3),
+                            "gross_pnl": round(gross_pnl, 2),
+                            "cost": round(cost, 2),
                             "pnl": round(pnl, 2),
                         })
                         closed_this_session.append(open_t)
                         _save_trade_to_db(open_t, symbol, run["strategy_id"])
                         st.session_state[_OPEN][symbol] = None
+                        _persist_state_config()
                         st.rerun()
                 if c4.button(f"🗑️ Remove {symbol}", key=f"ft_remove_{symbol}"):
                     del st.session_state[_RUNS][symbol]
                     st.session_state[_OPEN].pop(symbol, None)
                     st.session_state[_CACHE].pop(symbol, None)
                     st.session_state[_EQUITY].pop(symbol, None)
+                    st.session_state[_SIGNALS] = [
+                        s for s in st.session_state[_SIGNALS]
+                        if s.get("symbol") != symbol
+                    ]
+                    _persist_state_config()
                     st.rerun()
 
                 if prices is None:
@@ -531,7 +943,7 @@ def render() -> None:
                 # Price chart
                 st.altair_chart(_price_chart(prices, closed_this_session,
                                              open_t, st.session_state[_SIGNALS], symbol),
-                                use_container_width=True)
+                                width='stretch')
 
                 # RSI chart
                 if run["strategy_id"] in ("rsi_threshold", "atr_rsi",
@@ -552,23 +964,25 @@ def render() -> None:
                         .configure_view(strokeOpacity=0)
                         .configure_axis(**_AXIS)
                         .configure_title(**_TITLE),
-                        use_container_width=True,
+                        width='stretch',
                     )
 
                 # Equity curve
                 eq_hist = st.session_state[_EQUITY].get(symbol, [])
                 if len(eq_hist) >= 2:
                     st.altair_chart(_equity_chart(eq_hist, run["capital"], symbol),
-                                    use_container_width=True)
+                                    width='stretch')
 
                 # Signal log
                 with st.expander("📡 Signals", expanded=False):
                     sym_sigs = [s for s in st.session_state[_SIGNALS]
                                 if s.get("symbol") == symbol]
                     if sym_sigs:
-                        st.dataframe(pd.DataFrame(sym_sigs)
-                                     .sort_values("date", ascending=False),
-                                     use_container_width=True)
+                        sig_df = pd.DataFrame(sym_sigs).copy()
+                        if "date" in sig_df.columns:
+                            sig_df["date"] = pd.to_datetime(sig_df["date"], errors="coerce")
+                            sig_df = sig_df.sort_values("date", ascending=False)
+                        st.dataframe(sig_df, width='stretch')
                     else:
                         st.info("No signals yet.")
 
@@ -576,16 +990,20 @@ def render() -> None:
                 with st.expander("📋 Trades", expanded=False):
                     if sym_closed_list:
                         st.dataframe(pd.DataFrame(sym_closed_list),
-                                     use_container_width=True)
+                                     width='stretch')
                     else:
                         st.info("No closed trades yet.")
 
     # Auto-refresh mechanism
-    if auto and any(r.get("active") for r in runs.values()):
-        import time
+    auto_enabled = auto and any(r.get("active") for r in runs.values())
+    min_interval = 60
+    if auto_enabled:
         min_interval = min(
             int(_interval_td(r["interval"]).total_seconds())
             for r in runs.values() if r.get("active")
         )
-        time.sleep(max(min_interval, 60))
-        st.rerun()
+    render_autorefresh_timer(
+        auto_enabled,
+        max(min_interval, 60),
+        key="forward_test_refresh",
+    )

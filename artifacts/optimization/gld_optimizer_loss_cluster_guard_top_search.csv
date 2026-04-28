@@ -1,0 +1,12 @@
+label,total_return_pct,max_drawdown_pct,sharpe_ratio,win_rate_pct,total_trades,score,regime_loss_guard_rules
+baseline_current_default,95.68,-2.816,3.9223,59.3,54,146.31019999999998,{}
+shock_rebound_after_2_losses_cooldown_195,95.68,-2.816,3.9223,59.3,54,146.31019999999998,"{'shock_rebound_long': {'trigger_losses': 2, 'cooldown_bars': 195}}"
+shock_rebound_after_2_losses_cooldown_390,95.68,-2.816,3.9223,59.3,54,146.31019999999998,"{'shock_rebound_long': {'trigger_losses': 2, 'cooldown_bars': 390}}"
+shock_rebound_after_2_losses_cooldown_780,95.68,-2.816,3.9223,59.3,54,146.31019999999998,"{'shock_rebound_long': {'trigger_losses': 2, 'cooldown_bars': 780}}"
+global_after_2_losses_cooldown_195,94.102,-2.729,3.9317,58.5,53,145.0128,"{'__all__': {'trigger_losses': 2, 'cooldown_bars': 195}}"
+global_after_2_losses_cooldown_390,94.102,-2.729,3.9317,58.5,53,145.0128,"{'__all__': {'trigger_losses': 2, 'cooldown_bars': 390}}"
+global_after_3_losses_cooldown_390,94.431,-3.626,3.8602,57.4,54,142.57179999999997,"{'__all__': {'trigger_losses': 3, 'cooldown_bars': 390}}"
+spike_momentum_after_3_losses_cooldown_390,94.15,-3.634,3.8467,57.4,54,142.0858,"{'spike_momentum_long': {'trigger_losses': 3, 'cooldown_bars': 390}}"
+spike_momentum_after_3_losses_cooldown_780,94.15,-3.634,3.8467,57.4,54,142.0858,"{'spike_momentum_long': {'trigger_losses': 3, 'cooldown_bars': 780}}"
+shock_rebound_2loss_390_plus_spike_momentum_3loss_390,94.15,-3.634,3.8467,57.4,54,142.0858,"{'shock_rebound_long': {'trigger_losses': 2, 'cooldown_bars': 390}, 'spike_momentum_long': {'trigger_losses': 3, 'cooldown_bars': 390}}"
+shock_rebound_2loss_390_plus_spike_momentum_3loss_780,94.15,-3.634,3.8467,57.4,54,142.0858,"{'shock_rebound_long': {'trigger_losses': 2, 'cooldown_bars': 390}, 'spike_momentum_long': {'trigger_losses': 3, 'cooldown_bars': 780}}"

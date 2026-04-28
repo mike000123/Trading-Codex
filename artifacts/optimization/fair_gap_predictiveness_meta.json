@@ -1,0 +1,69 @@
+{
+  "date_start": "2011-11-29 00:00:00",
+  "date_end": "2026-04-23 00:00:00",
+  "rows": 3647,
+  "model": {
+    "model_type": "two_layer",
+    "data_timeframe": "1D",
+    "target_source": "custom:GLD ETF Stock Price History.csv",
+    "structural_set": "structural_plus_money_official_no_usd",
+    "market_set": "market_full",
+    "structural_features": [
+      "real_yield",
+      "real_yield_trend",
+      "inflation",
+      "liquidity",
+      "liquidity_trend",
+      "money",
+      "stress",
+      "etf_official",
+      "cb_official"
+    ],
+    "market_features": [
+      "peer",
+      "peer_trend",
+      "miners",
+      "miners_trend",
+      "etf_proxy",
+      "etf_turnover_proxy",
+      "etf_official",
+      "cb_official",
+      "riskoff",
+      "rates_proxy",
+      "momentum",
+      "momentum_trend"
+    ],
+    "z_window": 252,
+    "structural_fit_window": 252,
+    "market_fit_window": 126,
+    "ridge_alpha": 0.5,
+    "smooth_span": 2,
+    "betas": {
+      "real_yield": 0.07232814123682031,
+      "real_yield_trend": -0.04016090501757543,
+      "inflation": 0.014902122143610726,
+      "liquidity": -0.000499676496982085,
+      "liquidity_trend": 0.020894803742264507,
+      "money": -0.05559248238616216,
+      "stress": 0.0055813892488278645,
+      "etf_official": -0.025126401820293638,
+      "cb_official": -0.053651661231044916,
+      "peer": 0.016685810029398392,
+      "peer_trend": -0.00432004519458523,
+      "miners": 0.021879367768146325,
+      "miners_trend": 0.0008353569502426284,
+      "etf_proxy": 0.006296144726172404,
+      "etf_turnover_proxy": 0.005787676715359566,
+      "riskoff": 0.010853498850038447,
+      "rates_proxy": -0.037083197439451564,
+      "momentum": 0.027374011317391422,
+      "momentum_trend": 0.005339345862648016
+    },
+    "optional_sources": {
+      "ETF_OFFICIAL": "custom:GLD_ETF_PROXY:1D",
+      "CB_OFFICIAL": "custom:GLD_CB_PROXY:1D",
+      "GLD_ETF_OBV_PROXY": "derived:GLD:1D",
+      "GLD_ETF_TURNOVER_PROXY": "derived:GLD:1D"
+    }
+  }
+}

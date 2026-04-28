@@ -1,0 +1,158 @@
+{
+  "candidate": "current_default__maxhold_390m__ex_spike_momentum_long",
+  "window_start": "2024-04-04 00:00:00",
+  "window_end": "2026-04-03 23:59:59",
+  "filters": {
+    "max_hold_minutes": 390.0,
+    "exclude_regime": [
+      "spike_momentum_long"
+    ],
+    "min_trades": 2
+  },
+  "total_trades": 54,
+  "filtered_trades": 19,
+  "total_return_pct": 95.264,
+  "max_drawdown_pct": -2.998,
+  "sharpe_ratio": 3.8817,
+  "top_30m_buckets": [
+    {
+      "entry_bucket_30m": "09:00",
+      "trades": 2,
+      "total_pnl": 5.288037919999917,
+      "avg_pnl": 2.6440189599999586,
+      "median_pnl": 2.6440189599999586,
+      "avg_return_pct": 0.39645629911883273,
+      "median_return_pct": 0.39645629911883273,
+      "win_rate_pct": 50.0,
+      "avg_hold_minutes": 6.5,
+      "expectancy_score": 0.19822814955941637
+    },
+    {
+      "entry_bucket_30m": "04:30",
+      "trades": 2,
+      "total_pnl": 3.867919999999925,
+      "avg_pnl": 1.9339599999999626,
+      "median_pnl": 1.9339599999999626,
+      "avg_return_pct": 0.2999999999999956,
+      "median_return_pct": 0.2999999999999956,
+      "win_rate_pct": 50.0,
+      "avg_hold_minutes": 23.5,
+      "expectancy_score": 0.1499999999999978
+    },
+    {
+      "entry_bucket_30m": "08:00",
+      "trades": 12,
+      "total_pnl": -19.357762043329167,
+      "avg_pnl": -1.6131468369440973,
+      "median_pnl": -4.07742978471876,
+      "avg_return_pct": -0.07037692502774305,
+      "median_return_pct": -0.3277429784718759,
+      "win_rate_pct": 41.66666666666667,
+      "avg_hold_minutes": 70.91666666666667,
+      "expectancy_score": -0.02932371876155961
+    }
+  ],
+  "top_regimes": [
+    {
+      "regime": "rsi_flush_rebound_long",
+      "trades": 2,
+      "total_pnl": 10.400000000000052,
+      "avg_pnl": 5.200000000000026,
+      "median_pnl": 5.200000000000026,
+      "avg_return_pct": 0.6000000000000025,
+      "median_return_pct": 0.6000000000000025,
+      "win_rate_pct": 100.0,
+      "avg_hold_minutes": 2.0,
+      "expectancy_score": 0.6000000000000025
+    },
+    {
+      "regime": "intraday_pullback_short",
+      "trades": 4,
+      "total_pnl": 18.14174591999991,
+      "avg_pnl": 4.535436479999977,
+      "median_pnl": 5.41499296,
+      "avg_return_pct": 0.6302865926796344,
+      "median_return_pct": 0.7641168862404348,
+      "win_rate_pct": 75.0,
+      "avg_hold_minutes": 26.5,
+      "expectancy_score": 0.4727149445097258
+    },
+    {
+      "regime": "cascade_breakdown_short",
+      "trades": 2,
+      "total_pnl": 1.8441979199999343,
+      "avg_pnl": 0.9220989599999672,
+      "median_pnl": 0.9220989599999672,
+      "avg_return_pct": 0.19999999999999601,
+      "median_return_pct": 0.19999999999999601,
+      "win_rate_pct": 50.0,
+      "avg_hold_minutes": 4.0,
+      "expectancy_score": 0.09999999999999801
+    },
+    {
+      "regime": "shock_rebound_long",
+      "trades": 7,
+      "total_pnl": -35.87264278463138,
+      "avg_pnl": -5.1246632549473405,
+      "median_pnl": -6.684778140490919,
+      "avg_return_pct": -0.43246632549473396,
+      "median_return_pct": -0.5884778140490918,
+      "win_rate_pct": 14.285714285714285,
+      "avg_hold_minutes": 117.14285714285714,
+      "expectancy_score": -0.06178090364210485
+    },
+    {
+      "regime": "shock_reversal_short",
+      "trades": 3,
+      "total_pnl": -6.981075040000017,
+      "avg_pnl": -2.327025013333339,
+      "median_pnl": -7.502881759999982,
+      "avg_return_pct": -0.20000000000000062,
+      "median_return_pct": -0.7999999999999979,
+      "win_rate_pct": 33.33333333333333,
+      "avg_hold_minutes": 10.666666666666666,
+      "expectancy_score": -0.06666666666666686
+    }
+  ],
+  "top_regime_bucket_rows": [
+    {
+      "regime": "rsi_flush_rebound_long",
+      "entry_bucket_30m": "08:00",
+      "trades": 2,
+      "total_pnl": 10.400000000000052,
+      "avg_pnl": 5.200000000000026,
+      "median_pnl": 5.200000000000026,
+      "avg_return_pct": 0.6000000000000025,
+      "median_return_pct": 0.6000000000000025,
+      "win_rate_pct": 100.0,
+      "avg_hold_minutes": 2.0,
+      "expectancy_score": 0.6000000000000025
+    },
+    {
+      "regime": "shock_reversal_short",
+      "entry_bucket_30m": "08:00",
+      "trades": 3,
+      "total_pnl": -6.981075040000017,
+      "avg_pnl": -2.327025013333339,
+      "median_pnl": -7.502881759999982,
+      "avg_return_pct": -0.20000000000000062,
+      "median_return_pct": -0.7999999999999979,
+      "win_rate_pct": 33.33333333333333,
+      "avg_hold_minutes": 10.666666666666666,
+      "expectancy_score": -0.06666666666666686
+    },
+    {
+      "regime": "shock_rebound_long",
+      "entry_bucket_30m": "08:00",
+      "trades": 6,
+      "total_pnl": -31.245231003329206,
+      "avg_pnl": -5.207538500554867,
+      "median_pnl": -6.947176329458159,
+      "avg_return_pct": -0.4407538500554868,
+      "median_return_pct": -0.6147176329458159,
+      "win_rate_pct": 16.666666666666664,
+      "avg_hold_minutes": 131.66666666666666,
+      "expectancy_score": -0.07345897500924778
+    }
+  ]
+}

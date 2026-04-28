@@ -113,23 +113,23 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
         eq["equity"] = 10_000 + eq["pnl"].cumsum()
         st.altair_chart(
             equity_curve_chart(eq.rename(columns={"exit_time": "date"}), f"Cumulative P&L – {mode or 'All'}"),
-            use_container_width=True,
+            width='stretch',
         )
 
     if not closed.empty:
-        st.altair_chart(pnl_distribution(closed), use_container_width=True)
+        st.altair_chart(pnl_distribution(closed), width='stretch')
 
     open_pos = df[df["outcome"] == "Open"].to_dict("records")
     if open_pos:
         col1, col2 = st.columns([0.4, 0.6])
         with col1:
-            st.altair_chart(portfolio_allocation_pie(open_pos), use_container_width=True)
+            st.altair_chart(portfolio_allocation_pie(open_pos), width='stretch')
         with col2:
             st.subheader("Open Positions")
             open_df = pd.DataFrame(open_pos)
             show = [c for c in ["symbol", "direction", "entry_price", "capital_allocated",
                                 "strategy_id", "mode"] if c in open_df.columns]
-            st.dataframe(open_df[show], use_container_width=True)
+            st.dataframe(open_df[show], width='stretch')
 
     if "strategy_id" in closed.columns and not closed.empty:
         with st.expander("📊 Per-Strategy Breakdown", expanded=False):
@@ -144,7 +144,7 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
                 .reset_index()
             )
             bd["win_rate"] = (bd["wins"] / bd["trades"] * 100).round(1)
-            st.dataframe(bd, use_container_width=True)
+            st.dataframe(bd, width='stretch')
 
     with st.expander("📋 Trade Log", expanded=False):
         cols = [c for c in [
@@ -154,7 +154,7 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
         ] if c in df.columns]
         filt_sym = st.text_input("Filter by symbol", key=f"filt_{mode or 'all'}")
         fdf = df[df["symbol"].str.contains(filt_sym, case=False)] if filt_sym else df
-        st.dataframe(fdf[cols].sort_values("entry_time", ascending=False), use_container_width=True)
+        st.dataframe(fdf[cols].sort_values("entry_time", ascending=False), width='stretch')
         if st.button("📥 Export CSV", key=f"exp_{mode or 'all'}"):
             st.download_button("Download", fdf[cols].to_csv(index=False),
                                f"trades_{mode or 'all'}.csv", "text/csv")
@@ -195,7 +195,7 @@ def render() -> None:
                 return f"color: {color}; font-weight: bold"
             return ""
 
-        st.dataframe(display_df.style.applymap(_pnl_style, subset=["Total P&L"]), use_container_width=True)
+        st.dataframe(display_df.style.applymap(_pnl_style, subset=["Total P&L"]), width='stretch')
 
         open_ticker_rows = ticker_df[ticker_df["Open"] > 0]
         if not open_ticker_rows.empty:

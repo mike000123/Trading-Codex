@@ -39,6 +39,23 @@ with st.sidebar:
 
 apply_theme(st.session_state["theme"])
 
+from config.settings import settings
+from db.database import Database
+
+# ── Server-side paper-trading worker ──────────────────────────────────────
+# Launches a daemon thread that ticks every 60s independent of any browser
+# session, so phone-locked / refreshed pages keep getting bars processed.
+# Idempotent: only the first call per process actually starts a thread.
+try:
+    from execution import paper_worker as _paper_worker
+    _paper_worker.start()
+except Exception as _exc:  # noqa: BLE001
+    # Never let worker boot kill the app; it's a backstop, not a hard dep.
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        f"paper_worker failed to start: {_exc}"
+    )
+
 # ── Page registry ──────────────────────────────────────────────────────────
 from pages import (
     page_simulator,
@@ -46,6 +63,7 @@ from pages import (
     page_backtest,
     page_forward_test,
     page_paper_trading,
+    page_shadow_compare,
     page_portfolio,
     page_settings,
 )
@@ -56,28 +74,107 @@ PAGES = {
     "⏪ Backtester":             page_backtest,
     "🔭 Forward Test":            page_forward_test,
     "📝 Paper Trading":          page_paper_trading,
+    "🔁 Shadow Compare":         page_shadow_compare,
     "💼 Portfolio":              page_portfolio,
     "⚙️ Settings":               page_settings,
 }
+
+PAGE_SLUGS = {
+    "📊 Historical Simulator": "simulator",
+    "🔬 Strategy Lab": "strategy_lab",
+    "⏪ Backtester": "backtester",
+    "🔭 Forward Test": "forward_test",
+    "📝 Paper Trading": "paper_trading",
+    "🔁 Shadow Compare": "shadow_compare",
+    "💼 Portfolio": "portfolio",
+    "⚙️ Settings": "settings",
+}
+SLUG_TO_PAGE = {slug: label for label, slug in PAGE_SLUGS.items()}
+_APP_PAGE_CFG_KEY = "app_last_page_v1"
+_CURRENT_PAGE_KEY = "current_page"
+_NAV_WIDGET_KEY = "nav_radio"
+
+
+def _db() -> Database:
+    return Database(settings.db_path)
+
+
+def _get_page_from_query() -> str | None:
+    try:
+        page_slug = st.query_params.get("page")
+    except Exception:
+        return None
+    if isinstance(page_slug, list):
+        page_slug = page_slug[0] if page_slug else None
+    if not page_slug:
+        return None
+    return SLUG_TO_PAGE.get(str(page_slug))
+
+
+def _get_page_from_config() -> str | None:
+    try:
+        payload = _db().load_config(_APP_PAGE_CFG_KEY) or {}
+    except Exception:
+        return None
+    page_slug = payload.get("page")
+    if not page_slug:
+        return None
+    return SLUG_TO_PAGE.get(str(page_slug))
+
+
+def _set_page_query(page_name: str) -> None:
+    slug = PAGE_SLUGS.get(page_name)
+    if not slug:
+        return
+    try:
+        current = st.query_params.get("page")
+        if isinstance(current, list):
+            current = current[0] if current else None
+        if current != slug:
+            st.query_params["page"] = slug
+    except Exception:
+        pass
+
+
+def _persist_page_config(page_name: str) -> None:
+    slug = PAGE_SLUGS.get(page_name)
+    if not slug:
+        return
+    try:
+        _db().save_config(_APP_PAGE_CFG_KEY, {"page": slug})
+    except Exception:
+        pass
+
+
+def _resolve_desired_page(page_keys: list[str]) -> str:
+    nav_target = st.session_state.pop("nav_target", None)
+    if nav_target and nav_target in page_keys:
+        return nav_target
+    desired = (
+        _get_page_from_query()
+        or _get_page_from_config()
+        or st.session_state.get(_CURRENT_PAGE_KEY)
+        or "⏪ Backtester"
+    )
+    if desired not in page_keys:
+        desired = page_keys[0]
+    return desired
 
 with st.sidebar:
     st.markdown("---")
     st.markdown("### 📈 AlgoTrader Pro")
     page_keys = list(PAGES.keys())
-    # Allow portfolio nav buttons to redirect here
-    nav_target = st.session_state.pop("nav_target", None)
-    if nav_target and nav_target in page_keys:
-        default_idx = page_keys.index(nav_target)
-    else:
-        default_page = "⏪ Backtester"
-        default_idx  = page_keys.index(default_page) if default_page in page_keys else 0
+    desired_page = _resolve_desired_page(page_keys)
     page_name = st.radio(
         "Navigation",
         page_keys,
-        index=default_idx,
-        key="nav",
+        index=page_keys.index(desired_page),
+        key=_NAV_WIDGET_KEY,
         label_visibility="collapsed",
     )
+    st.session_state[_CURRENT_PAGE_KEY] = page_name
+    _set_page_query(page_name)
+    _persist_page_config(page_name)
     st.markdown("---")
 
 # ── Render selected page ───────────────────────────────────────────────────
