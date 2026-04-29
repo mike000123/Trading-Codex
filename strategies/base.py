@@ -138,6 +138,24 @@ class BaseStrategy(ABC):
         """Return list of validation error strings (empty = valid)."""
         return []
 
+    def min_warmup_bars(
+        self,
+        symbol: Optional[str] = None,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> int:
+        """Minimum number of bars the strategy needs before it can emit a real
+        (non-warm-up) signal. The Paper-Trading and Forward-Test runners use
+        this to size the historical-bar prefetch when a run starts, so the
+        first worker tick already evaluates the indicator stack instead of
+        spending the first ~3 trading days returning HOLD.
+
+        Default is intentionally generous (100) and covers the small RSI /
+        MACD / MA-crossover strategies. Strategies whose longest internal
+        window exceeds this should override.
+        """
+        return 100
+
     def companion_symbols(
         self,
         symbol: str,

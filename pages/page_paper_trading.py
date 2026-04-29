@@ -1526,8 +1526,27 @@ def _safe_warn(msg: str) -> None:
 
 
 def _run_tick(symbol: str, run: dict) -> None:
+    # Auto-floor the lookback to whatever the chosen strategy actually needs
+    # for warm-up. The user-set "Warm-up bars" value still acts as a manual
+    # ceiling override (e.g. for sweep diagnostics), but if the strategy
+    # needs more bars than the user picked we bump the request so the first
+    # worker tick already evaluates real signals instead of returning HOLD
+    # for the first ~3 trading days. min_warmup_bars defaults to 100 on
+    # BaseStrategy and is overridden per-strategy with the actual indicator
+    # window math.
     try:
-        prices = _fetch(symbol, run["interval"], run["lookback"])
+        _cls_for_warmup = get_strategy(run["strategy_id"])
+        _strategy_warm = _cls_for_warmup(params=run.get("params") or {})
+        _need = int(_strategy_warm.min_warmup_bars(
+            symbol=symbol, source="forward_blend", interval=run["interval"],
+        ))
+    except Exception:
+        _need = 0
+    _user_lb = int(run.get("lookback") or 0)
+    effective_lookback = max(_user_lb, _need + 50)
+
+    try:
+        prices = _fetch(symbol, run["interval"], effective_lookback)
     except Exception as e:
         _safe_warn(f"⚠️ {symbol}: data fetch failed — {e}")
         return
@@ -2005,7 +2024,8 @@ def render() -> None:
                                         ["1m","2m","5m","15m","30m","1h","1d"],
                                         index=0, key="pt_new_interval")
         with col2:
-            new_lookback = st.number_input("Warm-up bars", 50, 5000, 2000, 50, key="pt_new_lb")
+            new_lookback = st.number_input("Warm-up bars", 50, 5000, 2000, 50, key="pt_new_lb",
+                                            help="Floor only — the run automatically requests at least the strategy's required warm-up window (e.g. 1182 for Bollinger+RSI on GLD), so the first tick can emit a real signal.")
             new_capital  = st.number_input("Capital / trade ($)", 10.0, value=500.0, key="pt_new_cap")
         with col3:
             new_leverage = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="pt_new_lev")

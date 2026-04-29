@@ -71,6 +71,69 @@ v3 (this revision): targets the post-Dec 2025 damage uncovered by the v2
       in strategies/components/trend.py behind a knob so GLD and UVXY
       keep their existing behavior.
 
+
+v4 (attempt, reverted): added an opt-in trail-exit mode to
+  rsi_flush_rebound_long via a new rsi_flush_trail_pct knob (1.5% on USO).
+  Hypothesis was that tracking peak-and-trail would let oversold bounces
+  ride past the fixed TP=3% cap.  Result was worse than v3.5 — the 1.5%
+  trail tripped on routine intra-bounce retraces (USO bounces give back
+  1-2% intraday on the way up), exiting at lower prices than the fixed TP
+  would have locked in.  Counter-signal exits, which already extend
+  profitable trades naturally when the regime flips, did a better job in
+  practice than the trail did. Reverted to v3.5 fixed TP+SL.
+
+  The new rsi_flush_trail_pct knob stays in default_params (default 0.0
+  = off) and the strategy branch stays in place; this leaves the door
+  open for a future preset to opt in with a wider trail (e.g. 3-4%) or
+  for a hybrid "fixed TP first, then trail" exit if anyone wants to
+  experiment.
+
+
+v5 (this revision): targets two gaps surfaced after v3.5 stabilised the
+  drawdown — slow-grind trends went uncaptured (Jul-Oct 2023 +33% move,
+  zero trend_bias entries) and only ~47% of the Mar-Apr 2026 +75% rally
+  was captured because the no-higher-reentry gate could only unlock on a
+  full slow-EMA inversion, which doesn't happen until the trend has
+  fully ended. Two changes:
+
+    1. trend_bias_min_momentum_120 1.5 -> 0.6. v3 raised this from 0.6
+       to 1.5 to fight v2's chase-the-top, but the structural gate
+       added later does that job; the high momentum bar was now just
+       blocking slow legitimate trends. 0.6 sits between GLD's 0.3 and
+       the pure-vol-scaled equivalent of ~0.9.
+    2. New trend_bias_reentry_retrace_pct knob (default 0.0 = off in
+       default_params, opt-in here at 4.0). Gives the no-higher-reentry
+       gate a softer secondary unlock: after a fill, if price retraces
+       from its post-fill peak by >= 4% AND is back above fast EMA, the
+       gate unlocks for the next qualifying signal. Catches healthy
+       intra-trend pullbacks (the kind that retest the fast EMA without
+       breaking the trend structure) so we can engage on continuation
+       legs without chasing a still-rising price.
+
+
+v5 (attempt, reverted): two changes targeting the Jul-Oct 2023 slow grind
+  (which never produced a trend_bias entry) and the Mar-Apr 2026 rally
+  (which captured ~47% of the move).
+    - trend_bias_min_momentum_120 1.5 -> 0.6
+    - trend_bias_reentry_retrace_pct 0.0 -> 4.0 (new opt-in knob)
+  Result: total return dropped from +30% to +8%. Per-regime audit showed
+  trend_bias_long went from 2 trades / +$140 to 6 trades / -$118. The
+  Mar 06 +$107 home run was lost — the lower momentum threshold admitted
+  an earlier setup at $87 (Mar 2) that took a small +$27 profit and
+  consumed the gate-lock, blocking the Mar 06 EMA-pullback trade. The
+  retrace-unlock then fired three times during the rally's topping
+  phase ($122 / $137 / $126 entries), all stopped at -3%, which is
+  exactly the chase-the-top failure mode the strict gate was designed
+  to prevent. Slow-grind trends (Jul-Oct 2023, May 2025) also generated
+  losers, not winners — by the time momentum_120 ticks above 0.6, the
+  EMA-pullback structure is too late.
+
+  Reverted to v3.5: trend_bias_min_momentum_120=1.5, trend_bias_reentry_retrace_pct=0.0.
+  The new knob stays in default_params (default 0.0 = off) and the
+  strategy-code branch stays gated; future experiments could try a
+  stronger filter (e.g. require an actual EMA touch from above, not
+  just price-above-EMA) before opting back in.
+
 Capital allocation is configured per Paper-Trading run and is left to the
 caller; this file only carries strategy-parameter overrides.
 """
@@ -94,7 +157,7 @@ PRESET: dict[str, object] = {
     "trend_bias_slow_ema": 780,
     "trend_bias_lookback_bars": 90,
     "trend_bias_min_retrace_pct": 1.5,
-    "trend_bias_min_momentum_120": 1.5,    # v3: 0.6 -> 1.5; require stronger trend.
+    "trend_bias_min_momentum_120": 1.5,    # v3.5: keeps strict; v5 lowering to 0.6 broke the Mar 06 home run.
     "trend_bias_min_atr_pct": 0.10,
     "trend_bias_min_rsi": 46.0,
     "trend_bias_max_rsi": 68.0,            # v3: 74 -> 68; don't chase extended price.
@@ -107,6 +170,13 @@ PRESET: dict[str, object] = {
     # is fast_ema crossing below slow_ema since the last entry; once that
     # happens, the price-above-last-entry block resets.
     "trend_bias_no_higher_reentry": True,
+    # trend_bias_reentry_retrace_pct intentionally NOT overridden (defaults
+    # to 0.0 = strict v3 behavior). v5 tested it at 4.0 and the unlock fired
+    # on rolling tops, not healthy retraces — three losing re-entries during
+    # the Mar-Apr 2026 rally cost more than the early-trend capture earned.
+    # The strategy-code branch stays in default_params; future experiments
+    # could try a stronger filter (e.g. require an actual EMA touch from
+    # above, not just price-above-EMA) before opting back in.
     "trend_context_score_enabled": False,
     "trend_context_min_score": 1.1,
     "trend_peer_strength_weight": 0.0,
@@ -179,8 +249,17 @@ PRESET: dict[str, object] = {
     "rsi_flush_rebound_long_enabled": True,
     "rsi_flush_drop_pct": 1.5,
     "rsi_flush_rsi_trigger": 22.0,
-    "rsi_flush_sl_pct": 2.5,
-    "rsi_flush_tp_pct": 1.8,
+    "rsi_flush_sl_pct": 3.0,           # v3.5 retune: 2.5 -> 3.0 to balance reward/risk at 1:1.
+    "rsi_flush_tp_pct": 3.0,           # v3.5 retune: 1.8 -> 3.0 to capture more of each oversold bounce.
+    # rsi_flush_trail_pct intentionally NOT overridden here (defaults to 0.0).
+    # v4 attempted a 1.5% trail on this module to ride bounces past the fixed
+    # TP, but the run was worse than v3.5 — oversold bounces are inherently
+    # choppy so a tight trail exits during normal intra-bounce retraces. Every
+    # other preset (GLD/UVXY/VXX/VXZ) also keeps rsi_flush at fixed TP+SL by
+    # design; this module is a quick scalp, not a ride-the-trend module.
+    # Trail-style exits are handled by the OTHER modules already enabled
+    # below (intraday_pullback_short, shock_reversal_short, cascade_breakdown
+    # _short, shock_rebound_long, trend_bias_long).
     "rsi_flush_cooldown": 0,
     "rsi_flush_require_green_rebound_bar": False,
     "rsi_flush_rebound_confirm_bars": 3,

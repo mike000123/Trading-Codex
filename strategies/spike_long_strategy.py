@@ -114,6 +114,11 @@ class SpikeLongStrategy(BaseStrategy):
         atr_unwinding = atr_s < float(p["atr_exit_mult"])  * atr_ma_s
         return in_spike, atr_unwinding, atr_s, atr_ma_s
 
+    def min_warmup_bars(self, symbol=None, source=None, interval=None) -> int:
+        p = {**self.default_params(), **self.params}
+        return max(int(p["atr_period"]), int(p["atr_ma_period"]),
+                   int(p["rsi_period"]), int(p["momentum_bars"])) + 10
+
     def generate_signal(self, data: pd.DataFrame, symbol: str) -> Signal:
         p = {**self.default_params(), **self.params}
         min_bars = max(int(p["atr_period"]), int(p["atr_ma_period"]),

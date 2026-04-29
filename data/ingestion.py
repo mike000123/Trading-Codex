@@ -152,22 +152,45 @@ def load_from_ticker(
     log.info(f"yfinance FETCH: {ticker} {interval} "
              f"{fetch_start.date()} → {fetch_end.date()}")
 
-    data = yf.download(
-        ticker,
-        start     = fetch_start.strftime("%Y-%m-%d"),
-        end       = (fetch_end + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
-        interval  = interval,
-        auto_adjust = False,
-        progress  = False,
-    )
+    fetch_failed: Exception | None = None
+    try:
+        data = yf.download(
+            ticker,
+            start     = fetch_start.strftime("%Y-%m-%d"),
+            end       = (fetch_end + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
+            interval  = interval,
+            auto_adjust = False,
+            progress  = False,
+        )
+    except Exception as exc:  # offline / DNS / 429 / yfinance internal
+        fetch_failed = exc
+        data = None
 
-    if data is None or data.empty:
+    # Cache fallback path: serve cached range when fresh fetch is unavailable
+    # OR when it returned nothing. Without this branch, an offline backtest
+    # would raise even with a fully populated data_cache.
+    if fetch_failed is not None or data is None or data.empty:
         if use_cache:
             cached = _cache.load(source, ticker, interval)
             if cached is not None and not cached.empty:
-                log.warning(f"yfinance returned no new data for {ticker}/{interval}. "
-                            f"Serving {len(cached)} cached bars.")
-                return cached
+                mask = ((cached["date"] >= start_date) &
+                        (cached["date"] <= end_date))
+                sliced = cached[mask].reset_index(drop=True)
+                if not sliced.empty:
+                    if fetch_failed is not None:
+                        log.warning(f"yfinance fetch failed for {ticker}/{interval} "
+                                    f"({fetch_failed.__class__.__name__}: {fetch_failed}). "
+                                    f"Serving {len(sliced)} cached bars instead.")
+                    else:
+                        log.warning(f"yfinance returned no new data for {ticker}/{interval}. "
+                                    f"Serving {len(sliced)} cached bars.")
+                    return sliced
+        if fetch_failed is not None:
+            raise ValueError(
+                f"yfinance fetch failed for {ticker}/{interval} and no cached "
+                f"data is available for {start_date.date()} → {end_date.date()}: "
+                f"{fetch_failed.__class__.__name__}: {fetch_failed}"
+            )
         raise ValueError(f"No data returned for {ticker} / {interval}.")
 
     if isinstance(data.columns, pd.MultiIndex):
@@ -272,18 +295,38 @@ def load_from_alpaca_history(
         adjustment        = "all",   # adjust for splits/dividends
     )
 
-    response = client.get_stock_bars(req)
-    bars     = response.df
+    fetch_failed: Exception | None = None
+    try:
+        response = client.get_stock_bars(req)
+        bars     = response.df
+    except Exception as exc:  # offline / DNS / 429 / auth
+        fetch_failed = exc
+        bars = pd.DataFrame()
 
-    if bars.empty:
-        # If nothing new but we have cache, just return cached range
+    # Cache fallback: serve cached range when fresh fetch is unavailable
+    # OR when it returned nothing. Without this, an offline backtest would
+    # raise even with a fully populated data_cache for the requested range.
+    if fetch_failed is not None or bars.empty:
         if use_cache:
             cached = _cache.load(source, symbol, timeframe)
             if cached is not None and not cached.empty:
                 mask = ((cached["date"] >= start) & (cached["date"] <= end))
-                log.warning(f"Alpaca returned no new bars for {symbol}/{timeframe}. "
-                            f"Returning {mask.sum()} cached bars.")
-                return cached[mask].reset_index(drop=True)
+                sliced = cached[mask].reset_index(drop=True)
+                if not sliced.empty:
+                    if fetch_failed is not None:
+                        log.warning(f"Alpaca fetch failed for {symbol}/{timeframe} "
+                                    f"({fetch_failed.__class__.__name__}: {fetch_failed}). "
+                                    f"Serving {len(sliced)} cached bars instead.")
+                    else:
+                        log.warning(f"Alpaca returned no new bars for {symbol}/{timeframe}. "
+                                    f"Returning {len(sliced)} cached bars.")
+                    return sliced
+        if fetch_failed is not None:
+            raise ValueError(
+                f"Alpaca fetch failed for {symbol}/{timeframe} and no cached "
+                f"data is available for {start.date()} → {end.date()}: "
+                f"{fetch_failed.__class__.__name__}: {fetch_failed}"
+            )
         raise ValueError(
             f"No data returned for {symbol} ({timeframe}) "
             f"{fetch_start.date()} → {fetch_end.date()}.\n"

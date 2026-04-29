@@ -174,6 +174,12 @@ class BollingerRSIStrategy(BaseStrategy):
             # until a fast/slow EMA inversion has happened since that fill.
             # Off here so GLD/UVXY behavior is unchanged.
             "trend_bias_no_higher_reentry": False,
+            # v5 secondary unlock for the no-higher-reentry gate. When > 0,
+            # the gate also unlocks on a healthy intra-trend retrace: if price
+            # has dropped from its post-fill peak by >= this %, AND price is
+            # back above the fast EMA, the next qualifying signal can fire.
+            # 0 = off (preserves the v3 behavior exactly).
+            "trend_bias_reentry_retrace_pct": 0.0,
             "trend_context_score_enabled": False,
             "trend_context_min_score": 1.0,
             "trend_peer_strength_weight": 1.0,
@@ -243,6 +249,11 @@ class BollingerRSIStrategy(BaseStrategy):
             "rsi_flush_rsi_trigger": 25.0,
             "rsi_flush_sl_pct": 1.0,
             "rsi_flush_tp_pct": 0.5,
+            # Opt-in trail mode: when > 0, the rsi_flush_rebound_long emission
+            # drops suggested_tp and installs a pct_trail in metadata, mirroring
+            # how trend_bias_long handles its winners. Default 0 preserves the
+            # existing fixed-TP behavior for every symbol that hasn't opted in.
+            "rsi_flush_trail_pct": 0.0,
             "rsi_flush_cooldown": 0,
             "rsi_flush_require_green_rebound_bar": False,
             "rsi_flush_rebound_confirm_bars": 3,
@@ -641,6 +652,10 @@ class BollingerRSIStrategy(BaseStrategy):
 
         return in_spike_atr, suppress_shorts, post_spike, is_drift, in_decay, atr_s, any_spike_onset, spike_active
 
+    def min_warmup_bars(self, symbol=None, source=None, interval=None) -> int:
+        p = self.resolve_params(symbol=symbol, source=source, interval=interval)
+        return max(int(p["bb_period"]), int(p["rsi_period"]), int(p["spike_high_window"])) + 10
+
     def generate_signal(self, data: pd.DataFrame, symbol: str) -> Signal:
         p = self.resolve_params(symbol)
         min_bars = max(int(p["bb_period"]), int(p["rsi_period"]), int(p["spike_high_window"])) + 2
@@ -722,6 +737,7 @@ class BollingerRSIStrategy(BaseStrategy):
         trend_bias_sl_pct = float(p["trend_bias_sl_pct"])
         trend_bias_cooldown = int(p["trend_bias_cooldown"])
         trend_bias_no_higher_reentry = bool(p.get("trend_bias_no_higher_reentry", False))
+        trend_bias_reentry_retrace_pct = float(p.get("trend_bias_reentry_retrace_pct", 0.0))
         trend_context_score_enabled = bool(p["trend_context_score_enabled"])
         trend_context_min_score = float(p["trend_context_min_score"])
         trend_peer_strength_weight = float(p["trend_peer_strength_weight"])
@@ -791,6 +807,7 @@ class BollingerRSIStrategy(BaseStrategy):
         rsi_flush_rsi_trigger = float(p["rsi_flush_rsi_trigger"])
         rsi_flush_sl_pct = float(p["rsi_flush_sl_pct"])
         rsi_flush_tp_pct = float(p["rsi_flush_tp_pct"])
+        rsi_flush_trail_pct = float(p.get("rsi_flush_trail_pct", 0.0))
         rsi_flush_cooldown = int(p["rsi_flush_cooldown"])
         rsi_flush_require_green_rebound_bar = bool(p["rsi_flush_require_green_rebound_bar"])
         rsi_flush_rebound_confirm_bars = int(p["rsi_flush_rebound_confirm_bars"])
@@ -1041,6 +1058,10 @@ class BollingerRSIStrategy(BaseStrategy):
         # bar is allowed regardless of EMA history.
         last_trend_bias_entry_px = float("nan")
         trend_break_since_last_entry = True
+        # v5: highest price seen since the last trend_bias_long fill. Used
+        # by the retrace-from-peak gate softener. Reset to the fill price on
+        # every new entry so the very first bar can't back-prop through it.
+        trend_bias_post_entry_peak = float("nan")
         last_spike_bar = -spike_cooldown - 1
         last_splong_bar = -splong_cooldown - 1
         last_spike_momo_bar = -spike_momo_cooldown - 1
@@ -2790,13 +2811,15 @@ class BollingerRSIStrategy(BaseStrategy):
                 and (pos - last_rsi_flush_bar) >= rsi_flush_cooldown
                 and not block_rsi_flush_vol
             ):
-                tp = px * (1 + rsi_flush_tp_pct / 100)
+                # Trail mode (opt-in via rsi_flush_trail_pct > 0): no fixed TP,
+                # let the trade ride and exit when price retraces by pct_trail
+                # from its post-entry peak. SL stays as the "thesis broken"
+                # backstop. Mirrors trend_bias_long's exit shape exactly.
+                use_rsi_flush_trail = rsi_flush_trail_pct > 0.0
+                tp = None if use_rsi_flush_trail else px * (1 + rsi_flush_tp_pct / 100)
                 sl = px * (1 - rsi_flush_sl_pct / 100)
                 actions[pos] = SignalAction.BUY
-                metas[pos] = {
-                    "suggested_tp": tp,
-                    "suggested_sl": sl,
-                    "metadata": {
+                _rsi_flush_metadata = {
                         "rsi": round(rsi_val, 2),
                         "regime": "rsi_flush_rebound_long",
                         "spike_type": episode_type,
@@ -2811,7 +2834,13 @@ class BollingerRSIStrategy(BaseStrategy):
                         "gold_fair_slope_pct": round(float(fair_slope_pct_now), 3) if not np.isnan(fair_slope_pct_now) else None,
                         "gold_fair_regime": fair_regime_now,
                         "gold_fair_model_ok": bool(fair_value_model_ok),
-                    },
+                }
+                if use_rsi_flush_trail:
+                    _rsi_flush_metadata["pct_trail"] = rsi_flush_trail_pct
+                metas[pos] = {
+                    "suggested_tp": tp,
+                    "suggested_sl": sl,
+                    "metadata": _rsi_flush_metadata,
                 }
                 last_rsi_flush_bar = pos
                 pending_rsi_flush_signal_bar = -1
@@ -2863,11 +2892,37 @@ class BollingerRSIStrategy(BaseStrategy):
             ):
                 trend_break_since_last_entry = True
 
+            # v5 secondary unlock: track post-fill peak and unlock the gate
+            # when price has retraced from peak by >= trend_bias_reentry_retrace_pct
+            # AND is currently back above the fast EMA. This catches healthy
+            # intra-trend pullbacks without re-introducing the chase-the-top
+            # failure mode the strict gate was built to prevent.
+            if (
+                trend_bias_no_higher_reentry
+                and trend_bias_reentry_retrace_pct > 0.0
+                and not np.isnan(last_trend_bias_entry_px)
+            ):
+                if np.isnan(trend_bias_post_entry_peak) or px > trend_bias_post_entry_peak:
+                    trend_bias_post_entry_peak = px
+                if (
+                    not np.isnan(trend_bias_post_entry_peak)
+                    and trend_bias_post_entry_peak > 0
+                    and not np.isnan(trend_fast_now)
+                ):
+                    retrace_from_peak_pct = (
+                        (trend_bias_post_entry_peak - px) / trend_bias_post_entry_peak * 100.0
+                    )
+                    if (
+                        retrace_from_peak_pct >= trend_bias_reentry_retrace_pct
+                        and px >= trend_fast_now
+                    ):
+                        trend_break_since_last_entry = True
+
             # v3 no-higher-reentry gate: once a trend_bias_long fill happens,
             # the gate locks. It only unlocks after a fast<slow EMA inversion
-            # (a real trend break / reset) is seen at any subsequent bar.
-            # That inversion is what makes the next entry a fresh-cycle entry
-            # rather than chasing the same trend higher.
+            # OR (v5) a healthy retrace from post-fill peak. Either condition
+            # makes the next entry a fresh-cycle entry rather than chasing
+            # the same trend higher.
             trend_bias_reentry_ok = True
             if trend_bias_no_higher_reentry and not np.isnan(last_trend_bias_entry_px):
                 trend_bias_reentry_ok = trend_break_since_last_entry
@@ -2899,6 +2954,7 @@ class BollingerRSIStrategy(BaseStrategy):
                 last_trend_bias_bar = pos
                 last_trend_bias_entry_px = px
                 trend_break_since_last_entry = False
+                trend_bias_post_entry_peak = px
                 continue
 
             if (pos - last_normal_bar) < cooldown:
