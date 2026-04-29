@@ -243,8 +243,9 @@ def load_from_alpaca_history(
     First call: downloads full range, saves to data_cache/alpaca/<symbol>/<tf>.csv
     Subsequent calls: loads cache, fetches only new bars since last cached date.
 
-    Uses SIP feed (full consolidated tape) — not IEX (sparse free feed).
-    SIP is included in all Alpaca accounts at no extra cost.
+    Prefers SIP feed first, but automatically falls back to IEX when the
+    account is not permitted to query recent SIP bars. That keeps forward /
+    paper warm-up seeding working on hosted environments with lighter plans.
     """
     try:
         from alpaca.data.historical import StockHistoricalDataClient
@@ -284,25 +285,28 @@ def load_from_alpaca_history(
     # ── Alpaca API call ───────────────────────────────────────────────────────
     client = StockHistoricalDataClient(api_key=api_key, secret_key=secret_key)
 
-    req = StockBarsRequest(
-        symbol_or_symbols = symbol,
-        timeframe         = tf,
-        start             = fetch_start.to_pydatetime(),
-        end               = fetch_end.to_pydatetime(),
-        feed              = "sip",   # SIP = full consolidated tape
-                                     # IEX (default free feed) has very sparse
-                                     # coverage for ETFs on 1-min bars.
-                                     # SIP is free on all Alpaca accounts.
-        adjustment        = "all",   # adjust for splits/dividends
-    )
-
     fetch_failed: Exception | None = None
-    try:
-        response = client.get_stock_bars(req)
-        bars     = response.df
-    except Exception as exc:  # offline / DNS / 429 / auth
-        fetch_failed = exc
-        bars = pd.DataFrame()
+    bars = pd.DataFrame()
+    used_feed = None
+    for feed_name in ("sip", "iex"):
+        req = StockBarsRequest(
+            symbol_or_symbols = symbol,
+            timeframe         = tf,
+            start             = fetch_start.to_pydatetime(),
+            end               = fetch_end.to_pydatetime(),
+            feed              = feed_name,
+            adjustment        = "all",
+        )
+        try:
+            response = client.get_stock_bars(req)
+            bars = response.df
+            if bars is not None and not bars.empty:
+                used_feed = feed_name
+                break
+        except Exception as exc:  # offline / DNS / 429 / auth / feed entitlement
+            fetch_failed = exc
+            bars = pd.DataFrame()
+            continue
 
     # Cache fallback: serve cached range when fresh fetch is unavailable
     # OR when it returned nothing. Without this, an offline backtest would
@@ -334,6 +338,11 @@ def load_from_alpaca_history(
             f"Check: (1) symbol is a US equity/ETF, "
             f"(2) date range includes NYSE trading days, "
             f"(3) Alpaca API keys are valid."
+        )
+    if used_feed == "iex":
+        log.warning(
+            f"Alpaca fallback feed in use for {symbol}/{timeframe}: "
+            "SIP unavailable, serving IEX history instead."
         )
 
     # ── Flatten multi-level index (symbol, timestamp) ─────────────────────────

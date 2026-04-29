@@ -661,7 +661,22 @@ class BollingerRSIStrategy(BaseStrategy):
 
     def min_warmup_bars(self, symbol=None, source=None, interval=None) -> int:
         p = self.resolve_params(symbol=symbol, source=source, interval=interval)
-        return max(int(p["bb_period"]), int(p["rsi_period"]), int(p["spike_high_window"])) + 10
+        base = max(int(p["bb_period"]), int(p["rsi_period"]), int(p["spike_high_window"])) + 10
+        sym = str(symbol or "").strip().upper()
+        src = str(source or "").strip().lower()
+        ivl = str(interval or "").strip().lower()
+
+        # Forward / paper mode fetches raw bars, then enriches them through the
+        # blended companion pipeline. On GLD 1-minute runs, the number of
+        # usable prepared rows can be materially smaller than the raw fetch
+        # count, which leaves the strategy stuck in warm-up even after loading
+        # "enough" source bars. Ask for a larger raw prefetch budget only on
+        # that path; generate_signal() still enforces the true indicator
+        # minimum separately, so this does not change backtest logic.
+        if sym == "GLD" and src == "forward_blend" and ivl in {"1m", "1min"}:
+            return max(base + 50, int(math.ceil(base * 2.6)))
+
+        return base
 
     def generate_signal(self, data: pd.DataFrame, symbol: str) -> Signal:
         p = self.resolve_params(symbol)
