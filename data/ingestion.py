@@ -458,7 +458,10 @@ def load_forward_blended_data(
     if alpaca_tf:
         cached = _cache.load("alpaca", symbol, alpaca_tf)
         if cached is not None and not cached.empty:
-            mask = (cached["date"] >= start_ts) & (cached["date"] <= end_ts)
+            alpaca_cache_end = end_ts
+            if yahoo_recent_window is not None:
+                alpaca_cache_end = max(start_ts, end_ts - yahoo_recent_window) - pd.Timedelta(minutes=1)
+            mask = (cached["date"] >= start_ts) & (cached["date"] <= alpaca_cache_end)
             frames.append(cached.loc[mask].copy())
 
     try:

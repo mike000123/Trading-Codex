@@ -3042,8 +3042,8 @@ class BollingerRSIStrategy(BaseStrategy):
             if px <= low_price_chop_price and float(bw_pct.iloc[pos]) <= low_price_chop_bandwidth_pct:
                 allow_normal_long = False
 
-            latest_diagnostics: dict[str, Any] | None = None
-            if include_diagnostics and pos == n - 1:
+            diagnostics_payload: dict[str, Any] | None = None
+            if include_diagnostics:
                 normal_long_rr = None
                 normal_short_rr = None
                 if (
@@ -3187,8 +3187,9 @@ class BollingerRSIStrategy(BaseStrategy):
                     blocked_by.append("ATR below minimum")
                 if bool(active_now) and bool(spy_rebound_risk):
                     blocked_by.append("SPY rebound risk")
-                latest_diagnostics = {
+                diagnostics_payload = {
                     "verdict": actions[pos].value,
+                    "rsi": round(rsi_val, 2),
                     "verdict_reason": "Trade gate passed" if actions[pos] != SignalAction.HOLD else "; ".join(blocked_by[:5]) or "No entry gate passed",
                     "gate_values": gate_values,
                     "gate_summary": ", ".join(f"{k}={v}" for k, v in gate_values.items()),
@@ -3225,8 +3226,8 @@ class BollingerRSIStrategy(BaseStrategy):
                     }
                     last_normal_bar = pos
 
-            if latest_diagnostics is not None:
+            if diagnostics_payload is not None:
                 meta_payload = metas[pos].setdefault("metadata", {})
-                meta_payload.update(latest_diagnostics)
+                meta_payload.update(diagnostics_payload)
 
         return actions, metas

@@ -1718,18 +1718,20 @@ def _rebuild_recent_signals_for_run(
     if prepared is None or prepared.empty:
         return
 
-    window = prepared.tail(_MAX_PERSISTED_SIGNALS).copy()
-    window.attrs.update(getattr(prepared, "attrs", {}))
+    full_frame = prepared.copy()
+    full_frame.attrs.update(getattr(prepared, "attrs", {}))
 
     actions = metas = None
     try:
-        actions, metas = strategy.generate_signals_bulk(window, symbol, include_diagnostics=True)
+        actions, metas = strategy.generate_signals_bulk(full_frame, symbol, include_diagnostics=True)
     except Exception:
         actions, metas = None, None
 
     rebuilt: list[dict] = []
-    if actions is not None and metas is not None and len(actions) == len(window) and len(metas) == len(window):
-        for idx, (_, row) in enumerate(window.iterrows()):
+    start_idx = max(0, len(full_frame) - _MAX_PERSISTED_SIGNALS)
+    if actions is not None and metas is not None and len(actions) == len(full_frame) and len(metas) == len(full_frame):
+        recent_frame = full_frame.iloc[start_idx:].copy()
+        for idx, (_, row) in enumerate(recent_frame.iterrows(), start=start_idx):
             meta = metas[idx] or {}
             metadata = dict(meta.get("metadata", {}) or {})
             rsi_v = metadata.get("rsi")
