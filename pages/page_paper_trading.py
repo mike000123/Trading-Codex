@@ -1657,6 +1657,37 @@ def _refresh_last_signal_snapshot(
     latest_ts = latest["date"]
     signal = strategy.generate_signal(prepared, symbol)
     sig_meta = signal.metadata or {}
+    sig_row = {
+        "date": pd.Timestamp(_to_local(latest_ts)).isoformat(),
+        "symbol": symbol,
+        "action": signal.action.value,
+        "close": float(latest["close"]),
+        "strategy": cls.name,
+        "confidence": signal.confidence,
+        "tp": signal.suggested_tp,
+        "sl": signal.suggested_sl,
+        "rsi": sig_meta.get("rsi"),
+        "run_started_at": run.get("started_at"),
+        "regime": sig_meta.get("regime"),
+        "verdict_reason": sig_meta.get("verdict_reason"),
+    }
+    signals = _signals_state()
+    run_marker = str(run.get("started_at") or "").strip()
+    updated = False
+    for idx in range(len(signals) - 1, -1, -1):
+        row = signals[idx]
+        if row.get("symbol") != symbol:
+            continue
+        if str(row.get("run_started_at") or "").strip() != run_marker:
+            continue
+        if str(row.get("date") or "").strip() != sig_row["date"]:
+            continue
+        signals[idx] = _normalize_signal_row(sig_row)
+        updated = True
+        break
+    if not updated:
+        signals.append(_normalize_signal_row(sig_row))
+
     run["_last_signal"] = {
         "action": signal.action.value,
         "confidence": signal.confidence,

@@ -184,9 +184,12 @@ class DataCache:
         first_cached = existing["date"].min()
         last_cached  = existing["date"].max()
 
-        # If the requested range is entirely before what we have, nothing to do
-        if requested_end <= first_cached:
-            return None, None
+        # If the request starts before the earliest cached bar, we are missing
+        # a front segment. Re-fetch the whole requested window and let append()
+        # deduplicate. This keeps caches consistent across environments even
+        # when one host already has only the later part of the desired range.
+        if requested_start < first_cached:
+            return requested_start, requested_end
 
         # Fetch from the last cached bar onward so we catch any new bars
         # (overlap by 1 period ensures no gaps at the boundary)
