@@ -268,10 +268,19 @@ def _trim_signal_rows(signals: list[dict]) -> list[dict]:
     `_MAX_PERSISTED_SIGNALS` rows per (symbol, run_started_at) and only then
     apply a broad total cap.
     """
-    buckets: dict[tuple[str, str], list[dict]] = {}
+    deduped: dict[tuple[str, str, str], dict] = {}
     for row in signals or []:
         if not isinstance(row, dict):
             continue
+        dedupe_key = (
+            str(row.get("symbol") or "").strip().upper(),
+            str(row.get("run_started_at") or "").strip(),
+            str(row.get("date") or "").strip(),
+        )
+        deduped[dedupe_key] = row
+
+    buckets: dict[tuple[str, str], list[dict]] = {}
+    for row in deduped.values():
         key = (
             str(row.get("symbol") or "").strip().upper(),
             str(row.get("run_started_at") or "").strip(),
@@ -393,6 +402,18 @@ def _interval_td(interval: str) -> timedelta:
             "1d": timedelta(days=1)}.get(interval, timedelta(minutes=5))
 
 
+def _interval_floor_freq(interval: str) -> str:
+    return {
+        "1m": "1min",
+        "2m": "2min",
+        "5m": "5min",
+        "15m": "15min",
+        "30m": "30min",
+        "1h": "1h",
+        "1d": "1d",
+    }.get(str(interval).lower(), "5min")
+
+
 def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     """Fetch `lookback` bars for `symbol` at `interval`, sized to actually
     return that many bars even when the window straddles a weekend or
@@ -408,7 +429,9 @@ def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     delta = _interval_td(interval)
     # Use a UTC-naive anchor so hosted/server and desktop environments request
     # the same historical window before local display conversion happens.
-    end   = pd.Timestamp.utcnow().tz_localize(None)
+    now_utc = pd.Timestamp.utcnow().tz_localize(None)
+    freq = _interval_floor_freq(interval)
+    end = now_utc.floor(freq) - delta
     if delta < timedelta(hours=1):
         clock_multiplier = 7   # sub-hour: account for ~75% non-trading clock
     else:

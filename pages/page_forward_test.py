@@ -133,6 +133,18 @@ def _interval_td(interval: str) -> timedelta:
             "1d": timedelta(days=1)}.get(interval, timedelta(minutes=5))
 
 
+def _interval_floor_freq(interval: str) -> str:
+    return {
+        "1m": "1min",
+        "2m": "2min",
+        "5m": "5min",
+        "15m": "15min",
+        "30m": "30min",
+        "1h": "1h",
+        "1d": "1d",
+    }.get(str(interval).lower(), "5min")
+
+
 def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     """Fetch `lookback` bars sized to actually return that many even when the
     window straddles a weekend or off-hours stretch. See pages.page_paper_trading
@@ -140,7 +152,9 @@ def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     delta = _interval_td(interval)
     # Use a UTC-naive anchor so hosted/server and desktop environments request
     # the same historical window before local display conversion happens.
-    end   = pd.Timestamp.utcnow().tz_localize(None)
+    now_utc = pd.Timestamp.utcnow().tz_localize(None)
+    freq = _interval_floor_freq(interval)
+    end = now_utc.floor(freq) - delta
     if delta < timedelta(hours=1):
         clock_multiplier = 7
     else:
