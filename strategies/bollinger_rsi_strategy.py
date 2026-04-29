@@ -254,6 +254,13 @@ class BollingerRSIStrategy(BaseStrategy):
             # how trend_bias_long handles its winners. Default 0 preserves the
             # existing fixed-TP behavior for every symbol that hasn't opted in.
             "rsi_flush_trail_pct": 0.0,
+            # Opt-in counter-signal-exit suppression. When > 0, an rsi_flush
+            # trade that has already reached this % profit ignores opposing
+            # regime signals and continues toward TP / SL / trail / EOD instead
+            # of being closed early. Default 0 = current behavior (counter-
+            # signal always fires). Lets bigger winners reach TP without giving
+            # up the protection that counter-signal provides on weaker trades.
+            "rsi_flush_counter_signal_min_profit_pct": 0.0,
             "rsi_flush_cooldown": 0,
             "rsi_flush_require_green_rebound_bar": False,
             "rsi_flush_rebound_confirm_bars": 3,
@@ -808,6 +815,7 @@ class BollingerRSIStrategy(BaseStrategy):
         rsi_flush_sl_pct = float(p["rsi_flush_sl_pct"])
         rsi_flush_tp_pct = float(p["rsi_flush_tp_pct"])
         rsi_flush_trail_pct = float(p.get("rsi_flush_trail_pct", 0.0))
+        rsi_flush_counter_signal_min_profit_pct = float(p.get("rsi_flush_counter_signal_min_profit_pct", 0.0))
         rsi_flush_cooldown = int(p["rsi_flush_cooldown"])
         rsi_flush_require_green_rebound_bar = bool(p["rsi_flush_require_green_rebound_bar"])
         rsi_flush_rebound_confirm_bars = int(p["rsi_flush_rebound_confirm_bars"])
@@ -2837,6 +2845,8 @@ class BollingerRSIStrategy(BaseStrategy):
                 }
                 if use_rsi_flush_trail:
                     _rsi_flush_metadata["pct_trail"] = rsi_flush_trail_pct
+                if rsi_flush_counter_signal_min_profit_pct > 0.0:
+                    _rsi_flush_metadata["counter_signal_min_profit_pct"] = rsi_flush_counter_signal_min_profit_pct
                 metas[pos] = {
                     "suggested_tp": tp,
                     "suggested_sl": sl,

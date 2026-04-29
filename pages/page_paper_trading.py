@@ -1257,6 +1257,19 @@ def _process_symbol_bar(
             if not is_reversal:
                 continue
             exit_px = float(latest["close"])
+            # Per-trade suppression: trade carries a min-profit threshold and
+            # is currently at or above it → skip counter-signal exit, let the
+            # trade run to TP / SL / trail / EOD.
+            _cs_min = open_t.get("counter_signal_min_profit_pct")
+            if _cs_min is not None:
+                _entry_px = float(open_t.get("entry_price") or 0.0)
+                if _entry_px > 0:
+                    _pct = (exit_px - _entry_px) / _entry_px
+                    if current_dir == "Short":
+                        _pct = -_pct
+                    if _pct * 100.0 >= float(_cs_min):
+                        continue   # suppressed — keep the trade open
+
             outcome = _counter_signal_outcome(run.get("strategy_id", ""), current_dir)
             _close_trade(
                 open_t,
@@ -1434,6 +1447,13 @@ def _process_symbol_bar(
         trade.notes = f"{trade.notes or ''} | {decision.post_fill_note}".strip(" |")
     if sig_meta.get("session_exit") and "REJECTED" not in (trade.notes or ""):
         trade.notes = f"{trade.notes or ''} | session_exit={sig_meta.get('session_exit')}".strip(" |")
+
+    # Per-trade counter-signal-exit suppression threshold from strategy metadata.
+    # Stamped on the trade so the counter-signal exit block can read it later.
+    _cs_thresh = sig_meta.get("counter_signal_min_profit_pct")
+    if _cs_thresh is not None and "REJECTED" not in (trade.notes or ""):
+        trade.counter_signal_min_profit_pct = float(_cs_thresh)
+        trade.notes = f"{trade.notes or ''} | cs_min_profit={float(_cs_thresh):.2f}%".strip(" |")
 
     # Persist + stash trailing state if the strategy emitted one
     _db().save_signal(signal)

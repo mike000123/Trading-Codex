@@ -95,6 +95,13 @@ class TradeRecord:
     pnl: Optional[float] = None               # absolute $ P&L
     notes: str = ""
 
+    # Counter-signal-exit suppression threshold (None = always exit on opposing
+    # signal; float = only exit if current profit < this %). Set per-trade by
+    # the strategy via signal metadata so a regime can opt into "ride past the
+    # regime flip if I'm already winning enough." Used by reporting.backtest
+    # and pages.page_paper_trading.
+    counter_signal_min_profit_pct: Optional[float] = None
+
     # ── Broker-order lifecycle (populated only for alpaca_paper / live) ───
     # These mirror what Alpaca's Order object returns so we can reconcile
     # our internal trade_id with the broker's view.

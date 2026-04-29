@@ -251,6 +251,13 @@ PRESET: dict[str, object] = {
     "rsi_flush_rsi_trigger": 22.0,
     "rsi_flush_sl_pct": 3.0,           # v3.5 retune: 2.5 -> 3.0 to balance reward/risk at 1:1.
     "rsi_flush_tp_pct": 3.0,           # v3.5 retune: 1.8 -> 3.0 to capture more of each oversold bounce.
+    # v6 opt-in: when an rsi_flush trade is already up >= 2.0%, ignore opposing
+    # regime signals and let the trade ride to TP/SL/trail/EOD instead. Targets
+    # the v3.5 pattern where 8 of 12 rsi_flush exits closed via counter-signal
+    # at +0.7% to +2.5% — the ones that exited at +2.0%+ were close to TP and
+    # likely would have hit it. Smaller-profit trades still get counter-signal
+    # protection so we don't expose ourselves to reversal risk on weak setups.
+    "rsi_flush_counter_signal_min_profit_pct": 2.0,
     # rsi_flush_trail_pct intentionally NOT overridden here (defaults to 0.0).
     # v4 attempted a 1.5% trail on this module to ride bounces past the fixed
     # TP, but the run was worse than v3.5 — oversold bounces are inherently

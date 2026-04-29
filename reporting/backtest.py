@@ -377,6 +377,16 @@ class BacktestEngine:
                     (current_dir == Direction.LONG and new_direction == Direction.SHORT)
                     or (current_dir == Direction.SHORT and new_direction == Direction.LONG)
                 )
+                # Per-trade suppression: if the trade carries a min-profit
+                # threshold and is currently at or above it, skip the counter-
+                # signal exit and let the trade run to TP / SL / trail / EOD.
+                if is_reversal and open_trade.counter_signal_min_profit_pct is not None:
+                    _exit_px_check = float(bar["close"])
+                    _pct_check = (_exit_px_check - open_trade.entry_price) / open_trade.entry_price
+                    if current_dir == Direction.SHORT:
+                        _pct_check = -_pct_check
+                    if _pct_check * 100.0 >= open_trade.counter_signal_min_profit_pct:
+                        is_reversal = False  # suppress counter-signal exit
                 if is_reversal:
                     exit_px = float(bar["close"])
                     pct = (exit_px - open_trade.entry_price) / open_trade.entry_price
@@ -538,6 +548,13 @@ class BacktestEngine:
                     outcome=TradeOutcome.OPEN,
                     notes=_base_notes,
                 )
+                # Per-trade counter-signal-exit suppression threshold. Set by
+                # the strategy via signal metadata; None means "always exit on
+                # opposing signal" (default behavior).
+                _cs_thresh = sig_meta.get("metadata", {}).get("counter_signal_min_profit_pct")
+                if _cs_thresh is not None:
+                    open_trade.counter_signal_min_profit_pct = float(_cs_thresh)
+                    open_trade.notes += f" | cs_min_profit={float(_cs_thresh):.2f}%"
                 open_trade_regime = regime
 
                 req_atr = sig_meta.get("trailing_atr_mult")

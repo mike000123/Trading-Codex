@@ -59,6 +59,7 @@ class TradeRow(Base):
     broker_submitted_at = Column(String, nullable=True)
     filled_qty          = Column(Float,  nullable=True)
     filled_avg_price    = Column(Float,  nullable=True)
+    counter_signal_min_profit_pct = Column(Float, nullable=True)
     filled_at           = Column(String, nullable=True)
     last_synced_at      = Column(String, nullable=True)
 
@@ -131,6 +132,7 @@ class Database:
             "filled_avg_price":    "REAL",
             "filled_at":           "TEXT",
             "last_synced_at":      "TEXT",
+            "counter_signal_min_profit_pct": "REAL",
         }
         with self._engine.begin() as conn:
             existing = {
@@ -192,6 +194,7 @@ class Database:
             row.broker_submitted_at = _iso(getattr(trade, "broker_submitted_at", None))
             row.filled_qty          = getattr(trade, "filled_qty",          None)
             row.filled_avg_price    = getattr(trade, "filled_avg_price",    None)
+            row.counter_signal_min_profit_pct = getattr(trade, "counter_signal_min_profit_pct", None)
             row.filled_at           = _iso(getattr(trade, "filled_at",      None))
             row.last_synced_at      = _iso(getattr(trade, "last_synced_at", None))
 
