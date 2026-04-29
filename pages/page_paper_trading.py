@@ -82,6 +82,7 @@ _RUNS_CFG_KEY = "paper_trading_runs_v1"
 _SIGNALS_CFG_KEY = "paper_trading_signals_v1"
 _TRAIL_CFG_KEY = "paper_trading_trail_v1"
 _MAX_PERSISTED_SIGNALS = 500
+_MAX_PERSISTED_SIGNALS_TOTAL = 5000
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -259,10 +260,40 @@ def _signals_for_run(signals: list[dict], symbol: str, run: dict) -> list[dict]:
     return scoped
 
 
+def _trim_signal_rows(signals: list[dict]) -> list[dict]:
+    """Keep recent signal history per symbol/run instead of globally.
+
+    A global tail(500) works for one symbol, but with multiple active runs the
+    last rebuilt ticker can evict the others entirely. Keep up to
+    `_MAX_PERSISTED_SIGNALS` rows per (symbol, run_started_at) and only then
+    apply a broad total cap.
+    """
+    buckets: dict[tuple[str, str], list[dict]] = {}
+    for row in signals or []:
+        if not isinstance(row, dict):
+            continue
+        key = (
+            str(row.get("symbol") or "").strip().upper(),
+            str(row.get("run_started_at") or "").strip(),
+        )
+        buckets.setdefault(key, []).append(row)
+
+    kept: list[dict] = []
+    for rows in buckets.values():
+        rows_sorted = sorted(
+            rows,
+            key=lambda r: (_wall_time_ts(r.get("date")) or pd.Timestamp.min),
+        )
+        kept.extend(rows_sorted[-_MAX_PERSISTED_SIGNALS:])
+
+    kept.sort(key=lambda r: (_wall_time_ts(r.get("date")) or pd.Timestamp.min))
+    return kept[-_MAX_PERSISTED_SIGNALS_TOTAL:]
+
+
 def _persist_signals_config() -> None:
-    signals = _signals_state() or []
+    signals = _trim_signal_rows(_signals_state() or [])
     payload = {
-        "signals": [_normalize_signal_row(_json_safe(s)) for s in signals[-_MAX_PERSISTED_SIGNALS:]],
+        "signals": [_normalize_signal_row(_json_safe(s)) for s in signals],
         "saved_at": datetime.utcnow().isoformat(timespec="seconds"),
     }
     try:
@@ -332,7 +363,7 @@ def _restore_signals_config() -> bool:
         return False
     _state_set(
         _SIGNALS,
-        [_normalize_signal_row(s) for s in signals[-_MAX_PERSISTED_SIGNALS:] if isinstance(s, dict)],
+        _trim_signal_rows([_normalize_signal_row(s) for s in signals if isinstance(s, dict)]),
     )
     return True
 
@@ -1321,6 +1352,7 @@ def _process_symbol_bar(
         "regime":   sig_meta.get("regime"),
         "verdict_reason": sig_meta.get("verdict_reason"),
     })
+    _state_set(_SIGNALS, _trim_signal_rows(_signals_state()))
 
     run["_last_signal"] = {
         "action":     signal.action.value,
@@ -1699,6 +1731,7 @@ def _refresh_last_signal_snapshot(
         break
     if not updated:
         signals.append(_normalize_signal_row(sig_row))
+    _state_set(_SIGNALS, _trim_signal_rows(signals))
 
     run["_last_signal"] = {
         "action": signal.action.value,
@@ -1779,7 +1812,7 @@ def _rebuild_recent_signals_for_run(
         )
     ]
     kept.extend(rebuilt)
-    _state_set(_SIGNALS, kept[-_MAX_PERSISTED_SIGNALS:])
+    _state_set(_SIGNALS, _trim_signal_rows(kept))
 
 
 def _run_tick(symbol: str, run: dict) -> None:
