@@ -134,9 +134,16 @@ def _interval_td(interval: str) -> timedelta:
 
 
 def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
+    """Fetch `lookback` bars sized to actually return that many even when the
+    window straddles a weekend or off-hours stretch. See pages.page_paper_trading
+    ._fetch for the full rationale on the clock-multiplier."""
     delta = _interval_td(interval)
     end   = pd.Timestamp.now()
-    start = end - delta * max(lookback * 3, 500)
+    if delta < timedelta(hours=1):
+        clock_multiplier = 7
+    else:
+        clock_multiplier = 2
+    start = end - delta * max(lookback * clock_multiplier, 500)
     return load_forward_blended_data(symbol, interval, start, end, lookback=lookback)
 
 
@@ -392,8 +399,22 @@ def _equity_chart(eq_history: list, starting_capital: float,
 
 def _run_tick(symbol: str, run: dict, closed_trades_acc: list) -> None:
     """Fetch latest bar, check exits, check entries, store results."""
+    # Floor the lookback to whatever the chosen strategy actually needs
+    # for warm-up. Mirrors pages.page_paper_trading._run_tick. Without this
+    # a fresh forward-test run sits in HOLD for the first N bars while the
+    # indicator stack populates.
     try:
-        prices = _fetch(symbol, run["interval"], run["lookback"])
+        _cls_for_warmup = get_strategy(run["strategy_id"])
+        _strategy_warm = _cls_for_warmup(params=run.get("params") or {})
+        _need = int(_strategy_warm.min_warmup_bars(
+            symbol=symbol, source="forward_blend", interval=run["interval"],
+        ))
+    except Exception:
+        _need = 0
+    _user_lb = int(run.get("lookback") or 0)
+    effective_lookback = max(_user_lb, _need + 50)
+    try:
+        prices = _fetch(symbol, run["interval"], effective_lookback)
         st.session_state[_CACHE][symbol] = prices
     except Exception as e:
         st.warning(f"⚠️ {symbol}: data fetch failed — {e}")

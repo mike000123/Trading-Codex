@@ -308,14 +308,49 @@ def _interval_td(interval: str) -> timedelta:
 
 
 def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
+    """Fetch `lookback` bars for `symbol` at `interval`, sized to actually
+    return that many bars even when the window straddles a weekend or
+    off-hours stretch.
+
+    Sub-hour intervals only have bars during regular + extended hours,
+    which is roughly 25 percent of clock time. So a `lookback * 3`-minute
+    window can come back with as few as 0.25 * 3 = 75 percent of the
+    requested bars when the window includes a weekend. We need a wider
+    safety margin: 7x for sub-hour intervals (handles weekend + holiday)
+    and 2x for hour/day intervals (where weekends matter less).
+    """
     delta = _interval_td(interval)
     end   = pd.Timestamp.now()
-    start = end - delta * max(lookback * 3, 500)
+    if delta < timedelta(hours=1):
+        clock_multiplier = 7   # sub-hour: account for ~75% non-trading clock
+    else:
+        clock_multiplier = 2
+    start = end - delta * max(lookback * clock_multiplier, 500)
     return load_forward_blended_data(symbol, interval, start, end, lookback=lookback)
 
 
 def _local_tz():
-    """Return the user's local timezone (tzinfo)."""
+    """Return the user's local timezone (tzinfo).
+
+    On Streamlit Cloud / Railway the process runs in UTC, but the user's
+    browser is wherever they are. Streamlit's request-time context exposes
+    the browser timezone (newer Streamlit), which is what we want for
+    display. Fall back to the process timezone for desktop runs (where
+    process tz == user tz) or older Streamlit installs.
+    """
+    # Prefer the browser tz from Streamlit's request context.
+    try:
+        ctx = getattr(st, "context", None)
+        tz_name = getattr(ctx, "timezone", None) if ctx is not None else None
+        if tz_name:
+            try:
+                from zoneinfo import ZoneInfo
+                return ZoneInfo(str(tz_name))
+            except Exception:
+                pass
+    except Exception:
+        pass
+    # Fall back to the process tz (matches the desktop case).
     try:
         return datetime.now().astimezone().tzinfo
     except Exception:
