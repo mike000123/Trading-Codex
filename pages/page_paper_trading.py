@@ -95,6 +95,53 @@ def _fmt_price(value) -> str:
     return f"{float(value):.4f}" if value is not None else "—"
 
 
+def _requested_shadow_qty(trade: dict) -> Optional[float]:
+    try:
+        capital = float(trade.get("capital_allocated") or 0.0)
+        leverage = float(trade.get("leverage") or 0.0)
+        entry = float(trade.get("entry_price") or 0.0)
+    except Exception:
+        return None
+    if entry <= 0:
+        return None
+    return (capital * leverage) / entry
+
+
+def _shadow_bracket_label(trade: dict) -> str:
+    qty = _requested_shadow_qty(trade)
+    has_tp = trade.get("take_profit") is not None
+    has_sl = trade.get("stop_loss") is not None
+    is_whole = qty is not None and abs(qty - round(qty)) < 1e-9
+    return "Bracket (TP+SL)" if has_tp and has_sl and is_whole else "Plain market"
+
+
+def _shadow_trace_frame(trades: list[dict]) -> pd.DataFrame:
+    rows: list[dict] = []
+    for trade in trades:
+        qty = _requested_shadow_qty(trade)
+        rows.append({
+            "Entry Time": trade.get("entry_time"),
+            "Direction": trade.get("direction"),
+            "Requested Qty": qty,
+            "Filled Qty": trade.get("filled_qty"),
+            "Entry Ref": trade.get("entry_price"),
+            "Filled Avg": trade.get("filled_avg_price"),
+            "Order Type": "Market",
+            "Size Mode": "Shares (qty)",
+            "Time In Force": "DAY",
+            "Bracket": _shadow_bracket_label(trade),
+            "TP": trade.get("take_profit"),
+            "SL": trade.get("stop_loss"),
+            "Broker Status": trade.get("broker_status"),
+            "Broker Order ID": trade.get("broker_order_id"),
+            "Submitted At": trade.get("broker_submitted_at"),
+            "Filled At": trade.get("filled_at"),
+            "Outcome": trade.get("outcome"),
+            "Notes": trade.get("notes"),
+        })
+    return pd.DataFrame(rows)
+
+
 def _init_state() -> None:
     for k, v in [(_RUNS, {}), (_CACHE, {}), (_SIGNALS, []), (_TRAIL, {}),
                   (_SYNC, {}), (_ACCT, {}), (_POS, {}), (_RECON, {}),
@@ -2784,6 +2831,10 @@ def render() -> None:
         all_paper = _db().get_trades(mode="paper")
     except Exception:
         all_paper = []
+    try:
+        all_shadow = _db().get_trades(mode="alpaca_paper")
+    except Exception:
+        all_shadow = []
     closed_paper = [t for t in all_paper if t.get("outcome") != "Open"]
 
     # ── Summary table ────────────────────────────────────────────────────────
@@ -3029,6 +3080,27 @@ def render() -> None:
                     st.dataframe(pd.DataFrame(sym_trades), width='stretch')
                 else:
                     st.info("No paper trades for this symbol yet.")
+
+            if run.get("shadow_alpaca"):
+                with st.expander("🧾 Shadow / Alpaca Order Trace", expanded=False):
+                    shadow_trades = [t for t in all_shadow if t.get("symbol") == symbol]
+                    if shadow_trades:
+                        shadow_df = _shadow_trace_frame(shadow_trades).copy()
+                        for col in ("Entry Time", "Submitted At", "Filled At"):
+                            if col in shadow_df.columns:
+                                shadow_df[col] = _to_local_series(shadow_df[col])
+                        for col in ("Requested Qty", "Filled Qty", "Entry Ref", "Filled Avg", "TP", "SL"):
+                            if col in shadow_df.columns:
+                                shadow_df[col] = pd.to_numeric(shadow_df[col], errors="coerce")
+                        shadow_df = shadow_df.sort_values("Entry Time", ascending=False)
+                        st.caption(
+                            "Mirrored Alpaca-paper orders are always submitted as "
+                            "`Market` orders in `Shares (qty)` with `DAY` time-in-force. "
+                            "Bracket means Alpaca accepted attached TP + SL; otherwise it was sent as a plain market order."
+                        )
+                        st.dataframe(shadow_df, width='stretch')
+                    else:
+                        st.info("No mirrored Alpaca-paper orders for this symbol yet.")
 
     # ── Closed paper history (all symbols) ───────────────────────────────────
     st.divider()
