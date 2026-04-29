@@ -1,14 +1,6 @@
-from . import (
-    page_simulator,
-    page_strategy_lab,
-    page_backtest,
-    page_forward_test,
-    page_paper_trading,
-    page_portfolio,
-    page_settings,
-)
+"""
+Pages package.
 
-__all__ = [
-    "page_simulator", "page_strategy_lab", "page_backtest",
-    "page_forward_test", "page_paper_trading", "page_portfolio", "page_settings",
-]
+Intentionally side-effect free so Streamlit startup only imports the page
+module that is actually being rendered.
+"""
