@@ -36,7 +36,11 @@ from config.settings import settings, TradingMode
 from core import kill_switch as ks
 from core.logger import log
 from core.models import Direction, SignalAction, TradeOutcome
-from data.ingestion import load_forward_blended_data, prepare_strategy_data
+from data.ingestion import (
+    load_forward_blended_data,
+    load_from_alpaca_history,
+    prepare_strategy_data,
+)
 from db.database import Database
 from execution.router import OrderRouter, ROUTE_ALPACA_PAPER, ROUTE_SIM
 from execution import trading_stream as ts
@@ -201,7 +205,62 @@ def _normalize_signal_row(row: dict) -> dict:
             normalized["date"] = pd.Timestamp(date_val).isoformat()
         except Exception:
             normalized["date"] = str(date_val)
+    run_started_val = normalized.get("run_started_at")
+    if run_started_val is not None:
+        try:
+            normalized["run_started_at"] = pd.Timestamp(run_started_val).isoformat()
+        except Exception:
+            normalized["run_started_at"] = str(run_started_val)
     return normalized
+
+
+def _wall_time_ts(value) -> Optional[pd.Timestamp]:
+    """Parse a timestamp while preserving the local wall-clock reading.
+
+    Paper-page signal rows are stored in the user's local timezone for display,
+    while `run["started_at"]` is a naive local timestamp. For run-scoped UI
+    filtering we intentionally compare wall-clock values rather than converting
+    everything to UTC.
+    """
+    if value in (None, ""):
+        return None
+    try:
+        ts = pd.Timestamp(value)
+    except Exception:
+        return None
+    if ts is pd.NaT:
+        return None
+    if getattr(ts, "tzinfo", None) is not None:
+        try:
+            ts = ts.tz_localize(None)
+        except Exception:
+            pass
+    return ts
+
+
+def _signals_for_run(signals: list[dict], symbol: str, run: dict) -> list[dict]:
+    """Return only signal rows that belong to the current active run.
+
+    Without this, the Paper Trading UI mixes historical rows from older runs of
+    the same symbol, which makes Streamlit and desktop instances look different
+    whenever their saved DB state diverges.
+    """
+    run_marker = str(run.get("started_at") or "").strip()
+    anchor = _wall_time_ts(run_marker)
+    scoped: list[dict] = []
+    for row in signals or []:
+        if row.get("symbol") != symbol:
+            continue
+        row_marker = str(row.get("run_started_at") or "").strip()
+        if run_marker and row_marker:
+            if row_marker != run_marker:
+                continue
+        elif anchor is not None:
+            row_ts = _wall_time_ts(row.get("date"))
+            if row_ts is not None and row_ts < anchor:
+                continue
+        scoped.append(row)
+    return scoped
 
 
 def _persist_signals_config() -> None:
@@ -326,7 +385,46 @@ def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     else:
         clock_multiplier = 2
     start = end - delta * max(lookback * clock_multiplier, 500)
-    return load_forward_blended_data(symbol, interval, start, end, lookback=lookback)
+    try:
+        return load_forward_blended_data(symbol, interval, start, end, lookback=lookback)
+    except Exception as blended_exc:
+        tf_map = {
+            "1m": "1Min",
+            "2m": "2Min",
+            "5m": "5Min",
+            "15m": "15Min",
+            "30m": "30Min",
+            "1h": "1Hour",
+            "1d": "1Day",
+        }
+        alpaca_tf = tf_map.get(str(interval).lower())
+        if alpaca_tf:
+            creds = None
+            if settings.alpaca.has_paper_credentials():
+                creds = (settings.alpaca.paper_api_key, settings.alpaca.paper_secret_key, True)
+            elif settings.alpaca.has_live_credentials():
+                creds = (settings.alpaca.live_api_key, settings.alpaca.live_secret_key, False)
+            if creds is not None:
+                api_key, secret_key, paper = creds
+                try:
+                    seeded = load_from_alpaca_history(
+                        symbol,
+                        alpaca_tf,
+                        start,
+                        end,
+                        api_key=api_key,
+                        secret_key=secret_key,
+                        paper=paper,
+                        use_cache=True,
+                    )
+                    if seeded is not None and not seeded.empty:
+                        return seeded.tail(int(lookback)).reset_index(drop=True)
+                except Exception as alpaca_exc:
+                    raise ValueError(
+                        f"{blended_exc}; direct Alpaca fallback failed: "
+                        f"{alpaca_exc.__class__.__name__}: {alpaca_exc}"
+                    ) from alpaca_exc
+        raise
 
 
 def _local_tz():
@@ -1256,6 +1354,7 @@ def _process_symbol_bar(
         "tp":       signal.suggested_tp,
         "sl":       signal.suggested_sl,
         "rsi":      sig_meta.get("rsi"),
+        "run_started_at": run.get("started_at"),
         "regime":   sig_meta.get("regime"),
         "verdict_reason": sig_meta.get("verdict_reason"),
     })
@@ -2684,9 +2783,10 @@ def render() -> None:
             st.caption("These charts belong to Paper Trading for the active symbol and are independent from the Backtester.")
 
             # ── Live price chart ─────────────────────────────────────────────
+            run_signals = _signals_for_run(_signals_state(), symbol, run)
             st.altair_chart(
                 _paper_price_chart(prices_local, symbol,
-                                    st.session_state[_SIGNALS],
+                                    run_signals,
                                     open_t_list, closed_paper),
                 width='stretch',
             )
@@ -2734,8 +2834,7 @@ def render() -> None:
 
             # ── Recent signals / trades expanders ────────────────────────────
             with st.expander("📡 Recent Signals", expanded=False):
-                sym_sigs = [s for s in st.session_state[_SIGNALS]
-                            if s.get("symbol") == symbol]
+                sym_sigs = run_signals
                 if sym_sigs:
                     sig_df = pd.DataFrame(sym_sigs).copy()
                     if "date" in sig_df.columns:
