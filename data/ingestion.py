@@ -255,6 +255,7 @@ def load_from_alpaca_history(
 
     tf_map = {
         "1Min":  TimeFrame(1,  TimeFrameUnit.Minute),
+        "2Min":  TimeFrame(2,  TimeFrameUnit.Minute),
         "5Min":  TimeFrame(5,  TimeFrameUnit.Minute),
         "15Min": TimeFrame(15, TimeFrameUnit.Minute),
         "30Min": TimeFrame(30, TimeFrameUnit.Minute),
@@ -391,6 +392,18 @@ def _alpaca_timeframe_from_yfinance_interval(interval: str | None) -> str | None
     return mapping.get(str(interval).lower())
 
 
+def _forward_alpaca_credentials() -> tuple[str, str, bool] | None:
+    """
+    Pick whichever Alpaca credentials are available so forward-paper pages can
+    self-seed a cold cache on hosted environments.
+    """
+    if settings.alpaca.has_paper_credentials():
+        return settings.alpaca.paper_api_key, settings.alpaca.paper_secret_key, True
+    if settings.alpaca.has_live_credentials():
+        return settings.alpaca.live_api_key, settings.alpaca.live_secret_key, False
+    return None
+
+
 def load_forward_blended_data(
     symbol: str,
     interval: str,
@@ -402,9 +415,10 @@ def load_forward_blended_data(
     Forward-test helper: combine older Alpaca cache with recent Yahoo bars.
 
     Alpaca gives us the dense historical warm-up cache, while Yahoo can provide
-    recent 1-minute bars when Alpaca SIP access is delayed. This function does
-    not call Alpaca's API; it only reads the local Alpaca cache and appends the
-    cache-aware Yahoo fetch, preferring Yahoo rows on overlapping timestamps.
+    recent 1-minute bars when Alpaca SIP access is delayed. On a cold hosted
+    session, if neither the local Alpaca cache nor Yahoo is enough, this
+    function will self-seed the cache from Alpaca history when credentials are
+    configured. Yahoo rows still win on overlapping timestamps.
     """
     symbol = symbol.strip().upper()
     start_ts = pd.Timestamp(start)
@@ -424,6 +438,34 @@ def load_forward_blended_data(
             frames.append(yahoo.copy())
     except Exception as e:
         log.warning(f"Forward Yahoo refresh failed for {symbol}/{interval}: {e}")
+
+    need_alpaca_seed = False
+    creds = _forward_alpaca_credentials()
+    if alpaca_tf and creds is not None:
+        if not frames:
+            need_alpaca_seed = True
+        elif lookback is not None and lookback > 0:
+            current_rows = sum(len(frame) for frame in frames)
+            if current_rows < int(lookback):
+                need_alpaca_seed = True
+
+    if need_alpaca_seed:
+        api_key, secret_key, paper = creds
+        try:
+            alpaca_seed = load_from_alpaca_history(
+                symbol,
+                alpaca_tf,
+                start_ts,
+                end_ts,
+                api_key=api_key,
+                secret_key=secret_key,
+                paper=paper,
+                use_cache=True,
+            )
+            if alpaca_seed is not None and not alpaca_seed.empty:
+                frames.append(alpaca_seed.copy())
+        except Exception as e:
+            log.warning(f"Forward Alpaca warm-up failed for {symbol}/{interval}: {e}")
 
     if not frames:
         raise ValueError(f"No forward data available for {symbol}/{interval}.")
