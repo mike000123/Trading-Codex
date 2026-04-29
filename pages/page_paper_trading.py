@@ -2332,7 +2332,7 @@ def render() -> None:
         _has_paper_creds = settings.alpaca.has_paper_credentials()
         new_shadow_alpaca = st.checkbox(
             "Send to Alpaca paper in parallel (shadow mode)",
-            value=False,
+            value=bool(_has_paper_creds),
             key="pt_shadow_alpaca",
             disabled=not _has_paper_creds,
             help=(
