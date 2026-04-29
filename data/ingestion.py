@@ -464,12 +464,25 @@ def load_forward_blended_data(
             mask = (cached["date"] >= start_ts) & (cached["date"] <= alpaca_cache_end)
             frames.append(cached.loc[mask].copy())
 
+    yahoo = None
     try:
-        yahoo = load_from_ticker(symbol, interval, yahoo_start_ts, end_ts, use_cache=True)
-        if yahoo is not None and not yahoo.empty:
-            frames.append(yahoo.copy())
+        # For the active recent slice, prefer a fresh Yahoo fetch so paper/live
+        # runs on different hosts don't drift because one machine happens to
+        # have older cached minute bars than the other.
+        yahoo = load_from_ticker(symbol, interval, yahoo_start_ts, end_ts, use_cache=False)
     except Exception as e:
-        log.warning(f"Forward Yahoo refresh failed for {symbol}/{interval}: {e}")
+        log.warning(f"Forward Yahoo fresh fetch failed for {symbol}/{interval}: {e}")
+        try:
+            yahoo = load_from_ticker(symbol, interval, yahoo_start_ts, end_ts, use_cache=True)
+        except Exception as cached_e:
+            log.warning(f"Forward Yahoo cache fallback failed for {symbol}/{interval}: {cached_e}")
+            yahoo = None
+
+    if yahoo is not None and not yahoo.empty:
+        yahoo = yahoo.copy()
+        frames.append(yahoo)
+        if lookback is not None and lookback > 0 and len(yahoo) >= int(lookback):
+            return yahoo.tail(int(lookback)).reset_index(drop=True)
 
     need_alpaca_seed = False
     creds = _forward_alpaca_credentials()
