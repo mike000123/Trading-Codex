@@ -1,3 +1,8 @@
-from .ingestion import load_from_csv, load_from_ticker, load_from_alpaca_history
+"""
+Data package.
 
-__all__ = ["load_from_csv", "load_from_ticker", "load_from_alpaca_history"]
+Intentionally side-effect free so importing a submodule such as
+`data.fair_value` does not also force heavy sibling imports during app boot.
+"""
+
+__all__: list[str] = []

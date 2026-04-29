@@ -36,11 +36,7 @@ from config.settings import settings, TradingMode
 from core import kill_switch as ks
 from core.logger import log
 from core.models import Direction, SignalAction, TradeOutcome
-from data.ingestion import (
-    load_forward_blended_data,
-    load_from_alpaca_history,
-    prepare_strategy_data,
-)
+from data.ingestion import load_forward_blended_data, prepare_strategy_data
 from db.database import Database
 from execution.router import OrderRouter, ROUTE_ALPACA_PAPER, ROUTE_SIM
 from execution import trading_stream as ts
@@ -385,46 +381,7 @@ def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     else:
         clock_multiplier = 2
     start = end - delta * max(lookback * clock_multiplier, 500)
-    try:
-        return load_forward_blended_data(symbol, interval, start, end, lookback=lookback)
-    except Exception as blended_exc:
-        tf_map = {
-            "1m": "1Min",
-            "2m": "2Min",
-            "5m": "5Min",
-            "15m": "15Min",
-            "30m": "30Min",
-            "1h": "1Hour",
-            "1d": "1Day",
-        }
-        alpaca_tf = tf_map.get(str(interval).lower())
-        if alpaca_tf:
-            creds = None
-            if settings.alpaca.has_paper_credentials():
-                creds = (settings.alpaca.paper_api_key, settings.alpaca.paper_secret_key, True)
-            elif settings.alpaca.has_live_credentials():
-                creds = (settings.alpaca.live_api_key, settings.alpaca.live_secret_key, False)
-            if creds is not None:
-                api_key, secret_key, paper = creds
-                try:
-                    seeded = load_from_alpaca_history(
-                        symbol,
-                        alpaca_tf,
-                        start,
-                        end,
-                        api_key=api_key,
-                        secret_key=secret_key,
-                        paper=paper,
-                        use_cache=True,
-                    )
-                    if seeded is not None and not seeded.empty:
-                        return seeded.tail(int(lookback)).reset_index(drop=True)
-                except Exception as alpaca_exc:
-                    raise ValueError(
-                        f"{blended_exc}; direct Alpaca fallback failed: "
-                        f"{alpaca_exc.__class__.__name__}: {alpaca_exc}"
-                    ) from alpaca_exc
-        raise
+    return load_forward_blended_data(symbol, interval, start, end, lookback=lookback)
 
 
 def _local_tz():

@@ -404,6 +404,22 @@ def _forward_alpaca_credentials() -> tuple[str, str, bool] | None:
     return None
 
 
+def _forward_yahoo_recent_window(interval: str) -> pd.Timedelta | None:
+    """Return the maximum recent window we should request from Yahoo.
+
+    For 1-minute bars, Yahoo is the preferred source for the most recent slice,
+    while Alpaca is better used for the older warm-up segment. Requesting the
+    full 10-day window from Yahoo for 1m often underdelivers because Yahoo only
+    serves about 7 recent days at that granularity.
+    """
+    key = str(interval).lower()
+    if key in {"1m", "1min"}:
+        return pd.Timedelta(days=7)
+    if key in {"2m", "2min", "5m", "5min", "15m", "15min", "30m", "30min", "1h", "1hour"}:
+        return pd.Timedelta(days=60)
+    return None
+
+
 def load_forward_blended_data(
     symbol: str,
     interval: str,
@@ -424,6 +440,10 @@ def load_forward_blended_data(
     start_ts = pd.Timestamp(start)
     end_ts = pd.Timestamp(end)
     frames: list[pd.DataFrame] = []
+    yahoo_recent_window = _forward_yahoo_recent_window(interval)
+    yahoo_start_ts = start_ts
+    if yahoo_recent_window is not None:
+        yahoo_start_ts = max(start_ts, end_ts - yahoo_recent_window)
 
     alpaca_tf = _alpaca_timeframe_from_yfinance_interval(interval)
     if alpaca_tf:
@@ -433,7 +453,7 @@ def load_forward_blended_data(
             frames.append(cached.loc[mask].copy())
 
     try:
-        yahoo = load_from_ticker(symbol, interval, start_ts, end_ts, use_cache=True)
+        yahoo = load_from_ticker(symbol, interval, yahoo_start_ts, end_ts, use_cache=True)
         if yahoo is not None and not yahoo.empty:
             frames.append(yahoo.copy())
     except Exception as e:
@@ -451,19 +471,27 @@ def load_forward_blended_data(
 
     if need_alpaca_seed:
         api_key, secret_key, paper = creds
+        alpaca_seed_start = start_ts
+        alpaca_seed_end = end_ts
+        if yahoo_recent_window is not None:
+            older_cutoff = max(start_ts, end_ts - yahoo_recent_window)
+            alpaca_seed_end = older_cutoff - pd.Timedelta(minutes=1)
+        if alpaca_seed_end <= alpaca_seed_start:
+            alpaca_seed_end = pd.NaT
         try:
-            alpaca_seed = load_from_alpaca_history(
-                symbol,
-                alpaca_tf,
-                start_ts,
-                end_ts,
-                api_key=api_key,
-                secret_key=secret_key,
-                paper=paper,
-                use_cache=True,
-            )
-            if alpaca_seed is not None and not alpaca_seed.empty:
-                frames.append(alpaca_seed.copy())
+            if pd.notna(alpaca_seed_end):
+                alpaca_seed = load_from_alpaca_history(
+                    symbol,
+                    alpaca_tf,
+                    alpaca_seed_start,
+                    alpaca_seed_end,
+                    api_key=api_key,
+                    secret_key=secret_key,
+                    paper=paper,
+                    use_cache=True,
+                )
+                if alpaca_seed is not None and not alpaca_seed.empty:
+                    frames.append(alpaca_seed.copy())
         except Exception as e:
             log.warning(f"Forward Alpaca warm-up failed for {symbol}/{interval}: {e}")
 
