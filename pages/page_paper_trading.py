@@ -1636,6 +1636,42 @@ def _safe_warn(msg: str) -> None:
         log.warning(msg)
 
 
+def _refresh_last_signal_snapshot(
+    symbol: str,
+    run: dict,
+    cls,
+    strategy,
+    prepared: pd.DataFrame,
+) -> None:
+    """Refresh the UI-facing latest-signal banner from the newest prepared bar.
+
+    This is intentionally side-effect free for trading: it does not append a
+    recent-signal row, does not advance the processed-bar cursor, and does not
+    open/close trades. It only updates run["_last_signal"] so the page doesn't
+    keep showing a stale warm-up message after the cached history grows while
+    the market is idle.
+    """
+    if prepared is None or prepared.empty:
+        return
+    latest = prepared.iloc[-1]
+    latest_ts = latest["date"]
+    signal = strategy.generate_signal(prepared, symbol)
+    sig_meta = signal.metadata or {}
+    run["_last_signal"] = {
+        "action": signal.action.value,
+        "confidence": signal.confidence,
+        "tp": signal.suggested_tp,
+        "sl": signal.suggested_sl,
+        "rsi": sig_meta.get("rsi"),
+        "regime": sig_meta.get("regime"),
+        "verdict_reason": sig_meta.get("verdict_reason"),
+        "entry_price": float(latest["close"]),
+        "timestamp": str(_to_local(latest_ts)),
+        "bars_loaded": int(len(prepared)),
+        "bars_required": int((sig_meta.get("gate_values") or {}).get("bars_required", 0) or 0),
+    }
+
+
 def _run_tick(symbol: str, run: dict) -> None:
     # Auto-floor the lookback to whatever the chosen strategy actually needs
     # for warm-up. The user-set "Warm-up bars" value still acts as a manual
@@ -1684,6 +1720,8 @@ def _run_tick(symbol: str, run: dict) -> None:
 
     positions = _bar_positions_to_process(prepared_full["date"], run.get("_last_processed_bar"))
     if not positions:
+        _refresh_last_signal_snapshot(symbol, run, cls, strategy, prepared_full)
+        _persist_runs_config()
         return
 
     raw_dates = prices["date"].apply(_bar_timestamp)
@@ -2716,6 +2754,13 @@ def render() -> None:
                 reason = last_sig.get("verdict_reason")
                 if reason:
                     st.caption(f"_why:_ {reason}")
+                bars_loaded = last_sig.get("bars_loaded")
+                bars_required = last_sig.get("bars_required")
+                if bars_loaded or bars_required:
+                    st.caption(
+                        f"_signal window:_ prepared bars "
+                        f"`{int(bars_loaded or 0)}` / required `{int(bars_required or 0)}`"
+                    )
 
             if open_t_list:
                 ot = open_t_list[0]
@@ -2739,6 +2784,11 @@ def render() -> None:
             # Local-tz display copy used by both price and RSI charts
             prices_local = prices.copy()
             prices_local["date"] = _to_local_series(prices_local["date"])
+            if not prices_local.empty:
+                st.caption(
+                    f"_chart window:_ {pd.Timestamp(prices_local['date'].iloc[0]).strftime('%Y-%m-%d %H:%M')} "
+                    f"→ {pd.Timestamp(prices_local['date'].iloc[-1]).strftime('%Y-%m-%d %H:%M')}"
+                )
 
             st.markdown(f"#### Live Charts · {symbol}")
             st.caption("These charts belong to Paper Trading for the active symbol and are independent from the Backtester.")
