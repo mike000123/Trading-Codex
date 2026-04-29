@@ -694,7 +694,14 @@ def prepare_strategy_data(
         except Exception as e:
             log.warning(f"Derived GLD fair-value context failed: {e}")
 
-    return enriched.reset_index(drop=True)
+    out = enriched.reset_index(drop=True)
+    try:
+        out.attrs["_strategy_symbol"] = str(primary_symbol or "").strip().upper()
+        out.attrs["_strategy_source"] = str(source or "").strip().lower()
+        out.attrs["_strategy_interval"] = str(interval or "").strip().lower()
+    except Exception:
+        pass
+    return out
 
 
 def prefetch_strategy_companions(

@@ -678,9 +678,41 @@ class BollingerRSIStrategy(BaseStrategy):
 
         return base
 
+    def _signal_min_bars(
+        self,
+        symbol: str | None,
+        *,
+        data: pd.DataFrame | None = None,
+    ) -> int:
+        source = ""
+        interval = ""
+        if data is not None:
+            try:
+                source = str(data.attrs.get("_strategy_source") or "").strip().lower()
+                interval = str(data.attrs.get("_strategy_interval") or "").strip().lower()
+            except Exception:
+                source = ""
+                interval = ""
+
+        p = self.resolve_params(symbol=symbol, source=source or None, interval=interval or None)
+        strict = max(int(p["bb_period"]), int(p["rsi_period"]), int(p["spike_high_window"])) + 2
+        sym = str(symbol or "").strip().upper()
+
+        # In live forward / paper mode, GLD can still evaluate most of the
+        # signal stack before the full spike_high_window is completely warmed.
+        # Keeping the strict 1170-bar gate here causes the whole strategy to
+        # emit HOLD/confidence=0 even when the rest of the inputs are ready.
+        # Use a slightly shorter live-only floor so the runner becomes
+        # operational sooner, while backtests remain unchanged.
+        if sym == "GLD" and source == "forward_blend" and interval in {"1m", "1min"}:
+            live_floor = max(int(p["bb_period"]), int(p["rsi_period"]), min(int(p["spike_high_window"]), 900)) + 2
+            return min(strict, live_floor)
+
+        return strict
+
     def generate_signal(self, data: pd.DataFrame, symbol: str) -> Signal:
         p = self.resolve_params(symbol)
-        min_bars = max(int(p["bb_period"]), int(p["rsi_period"]), int(p["spike_high_window"])) + 2
+        min_bars = self._signal_min_bars(symbol, data=data)
         if len(data) < min_bars:
             metadata: dict[str, Any] = {
                 "reason": "insufficient_data",
