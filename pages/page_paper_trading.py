@@ -1703,6 +1703,71 @@ def _refresh_last_signal_snapshot(
     }
 
 
+def _rebuild_recent_signals_for_run(
+    symbol: str,
+    run: dict,
+    cls,
+    strategy,
+    prepared: pd.DataFrame,
+) -> None:
+    """Recompute the persisted recent-signal rows for the active run.
+
+    This removes stale legacy rows from before the confidence/warm-up fixes and
+    keeps the export/table aligned with the currently prepared chart window.
+    """
+    if prepared is None or prepared.empty:
+        return
+
+    window = prepared.tail(_MAX_PERSISTED_SIGNALS).copy()
+    window.attrs.update(getattr(prepared, "attrs", {}))
+
+    actions = metas = None
+    try:
+        actions, metas = strategy.generate_signals_bulk(window, symbol, include_diagnostics=True)
+    except Exception:
+        actions, metas = None, None
+
+    rebuilt: list[dict] = []
+    if actions is not None and metas is not None and len(actions) == len(window) and len(metas) == len(window):
+        for idx, (_, row) in enumerate(window.iterrows()):
+            meta = metas[idx] or {}
+            metadata = dict(meta.get("metadata", {}) or {})
+            rsi_v = metadata.get("rsi")
+            try:
+                conf = min(1.0, abs(float(rsi_v) - 50.0) / 50.0) if rsi_v is not None else 0.0
+            except Exception:
+                conf = 0.0
+            rebuilt.append(_normalize_signal_row({
+                "date": pd.Timestamp(_to_local(row["date"])).isoformat(),
+                "symbol": symbol,
+                "action": actions[idx].value if hasattr(actions[idx], "value") else str(actions[idx]),
+                "close": float(row["close"]),
+                "strategy": cls.name,
+                "confidence": float(conf),
+                "tp": meta.get("suggested_tp"),
+                "sl": meta.get("suggested_sl"),
+                "rsi": rsi_v,
+                "run_started_at": run.get("started_at"),
+                "regime": metadata.get("regime"),
+                "verdict_reason": metadata.get("verdict_reason"),
+            }))
+
+    if not rebuilt:
+        return
+
+    signals = _signals_state()
+    run_marker = str(run.get("started_at") or "").strip()
+    kept = [
+        row for row in signals
+        if not (
+            row.get("symbol") == symbol
+            and str(row.get("run_started_at") or "").strip() == run_marker
+        )
+    ]
+    kept.extend(rebuilt)
+    _state_set(_SIGNALS, kept[-_MAX_PERSISTED_SIGNALS:])
+
+
 def _run_tick(symbol: str, run: dict) -> None:
     # Auto-floor the lookback to whatever the chosen strategy actually needs
     # for warm-up. The user-set "Warm-up bars" value still acts as a manual
@@ -1748,11 +1813,13 @@ def _run_tick(symbol: str, run: dict) -> None:
     prepared_full.attrs["_strategy_interval"] = str(run["interval"] or "").strip().lower()
 
     _cache_state()[symbol] = prepared_full
+    _rebuild_recent_signals_for_run(symbol, run, cls, strategy, prepared_full)
 
     positions = _bar_positions_to_process(prepared_full["date"], run.get("_last_processed_bar"))
     if not positions:
         _refresh_last_signal_snapshot(symbol, run, cls, strategy, prepared_full)
         _persist_runs_config()
+        _persist_signals_config()
         return
 
     raw_dates = prices["date"].apply(_bar_timestamp)
