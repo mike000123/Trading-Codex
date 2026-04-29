@@ -138,7 +138,9 @@ def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     window straddles a weekend or off-hours stretch. See pages.page_paper_trading
     ._fetch for the full rationale on the clock-multiplier."""
     delta = _interval_td(interval)
-    end   = pd.Timestamp.now()
+    # Use a UTC-naive anchor so hosted/server and desktop environments request
+    # the same historical window before local display conversion happens.
+    end   = pd.Timestamp.utcnow().tz_localize(None)
     if delta < timedelta(hours=1):
         clock_multiplier = 7
     else:

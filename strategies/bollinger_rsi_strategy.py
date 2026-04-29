@@ -698,14 +698,13 @@ class BollingerRSIStrategy(BaseStrategy):
         strict = max(int(p["bb_period"]), int(p["rsi_period"]), int(p["spike_high_window"])) + 2
         sym = str(symbol or "").strip().upper()
 
-        # In live forward / paper mode, GLD can still evaluate most of the
-        # signal stack before the full spike_high_window is completely warmed.
-        # Keeping the strict 1170-bar gate here causes the whole strategy to
-        # emit HOLD/confidence=0 even when the rest of the inputs are ready.
-        # Use a slightly shorter live-only floor so the runner becomes
-        # operational sooner, while backtests remain unchanged.
+        # In live forward / paper mode, GLD still uses a softer source-aware
+        # gate than the generic backtest path, but we keep it aligned with the
+        # full spike-history requirement rather than the earlier 900-bar
+        # compromise so paper/live evaluation starts from the same conservative
+        # history depth you asked for.
         if sym == "GLD" and source == "forward_blend" and interval in {"1m", "1min"}:
-            live_floor = max(int(p["bb_period"]), int(p["rsi_period"]), min(int(p["spike_high_window"]), 900)) + 2
+            live_floor = max(int(p["bb_period"]), int(p["rsi_period"]), int(p["spike_high_window"])) + 2
             return min(strict, live_floor)
 
         return strict

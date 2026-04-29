@@ -375,7 +375,9 @@ def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
     and 2x for hour/day intervals (where weekends matter less).
     """
     delta = _interval_td(interval)
-    end   = pd.Timestamp.now()
+    # Use a UTC-naive anchor so hosted/server and desktop environments request
+    # the same historical window before local display conversion happens.
+    end   = pd.Timestamp.utcnow().tz_localize(None)
     if delta < timedelta(hours=1):
         clock_multiplier = 7   # sub-hour: account for ~75% non-trading clock
     else:
@@ -1301,6 +1303,10 @@ def _process_symbol_bar(
 
     signal = strategy.generate_signal(prepared, symbol)
     sig_meta = signal.metadata or {}
+    try:
+        bars_required = int(strategy._signal_min_bars(symbol, data=prepared))  # type: ignore[attr-defined]
+    except Exception:
+        bars_required = int((sig_meta.get("gate_values") or {}).get("bars_required", 0) or 0)
     _signals_state().append({
         "date":     pd.Timestamp(_to_local(latest_ts)).isoformat(),
         "symbol":   symbol,
@@ -1326,6 +1332,8 @@ def _process_symbol_bar(
         "verdict_reason": sig_meta.get("verdict_reason"),
         "entry_price": float(latest["close"]),
         "timestamp":   str(_to_local(latest_ts)),
+        "bars_loaded": int(len(prepared)),
+        "bars_required": bars_required,
     }
     run["_last_processed_bar"] = pd.Timestamp(_bar_timestamp(latest_ts) or latest_ts).isoformat()
     if persist_state:
@@ -1657,6 +1665,10 @@ def _refresh_last_signal_snapshot(
     latest_ts = latest["date"]
     signal = strategy.generate_signal(prepared, symbol)
     sig_meta = signal.metadata or {}
+    try:
+        bars_required = int(strategy._signal_min_bars(symbol, data=prepared))  # type: ignore[attr-defined]
+    except Exception:
+        bars_required = int((sig_meta.get("gate_values") or {}).get("bars_required", 0) or 0)
     sig_row = {
         "date": pd.Timestamp(_to_local(latest_ts)).isoformat(),
         "symbol": symbol,
@@ -1699,7 +1711,7 @@ def _refresh_last_signal_snapshot(
         "entry_price": float(latest["close"]),
         "timestamp": str(_to_local(latest_ts)),
         "bars_loaded": int(len(prepared)),
-        "bars_required": int((sig_meta.get("gate_values") or {}).get("bars_required", 0) or 0),
+        "bars_required": bars_required,
     }
 
 
