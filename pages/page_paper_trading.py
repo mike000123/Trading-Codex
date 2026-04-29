@@ -1676,6 +1676,9 @@ def _run_tick(symbol: str, run: dict) -> None:
     if prepared_full is None or prepared_full.empty:
         _safe_warn(f"⚠️ {symbol}: prepared strategy data is empty.")
         return
+    prepared_full.attrs["_strategy_symbol"] = str(symbol or "").strip().upper()
+    prepared_full.attrs["_strategy_source"] = "forward_blend"
+    prepared_full.attrs["_strategy_interval"] = str(run["interval"] or "").strip().lower()
 
     _cache_state()[symbol] = prepared_full
 
@@ -1686,6 +1689,7 @@ def _run_tick(symbol: str, run: dict) -> None:
     raw_dates = prices["date"].apply(_bar_timestamp)
     for pos in positions:
         prepared_slice = prepared_full.iloc[: pos + 1].copy()
+        prepared_slice.attrs.update(prepared_full.attrs)
         latest = prepared_slice.iloc[-1]
         latest_ts = latest["date"]
         latest_bar_ts = _bar_timestamp(latest_ts)

@@ -452,6 +452,9 @@ def _run_tick(symbol: str, run: dict, closed_trades_acc: list) -> None:
             start=prices["date"].min() if not prices.empty else None,
             end=prices["date"].max() if not prices.empty else None,
         )
+        prepared_prices.attrs["_strategy_symbol"] = str(symbol or "").strip().upper()
+        prepared_prices.attrs["_strategy_source"] = "forward_blend"
+        prepared_prices.attrs["_strategy_interval"] = str(run["interval"] or "").strip().lower()
         st.session_state[_CACHE][symbol] = prepared_prices
         latest = prepared_prices.iloc[-1]
         latest_ts = latest["date"]
