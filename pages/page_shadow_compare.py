@@ -40,14 +40,14 @@ from reporting.shadow_compare import (
 
 
 # ── Styling (matches paper trading) ──────────────────────────────────────────
-_GREEN = "#26a69a"
-_RED   = "#ef5350"
-_BLUE  = "#4a9eff"
+_GREEN = "#2faa6a"
+_RED   = "#c64242"
+_BLUE  = "#d4af37"
 _GOLD  = "#ffd54f"
-_GREY  = "#9e9eb8"
-_AXIS  = dict(gridColor="#2a2d3e", labelColor="#d0d4f0", titleColor="#d0d4f0",
+_GREY  = "#a89c80"
+_AXIS  = dict(gridColor="rgba(212,175,55,0.18)", labelColor="#a89c80", titleColor="#a89c80",
               labelFontSize=12, titleFontSize=13)
-_TITLE = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
+_TITLE = dict(color="#e8c566", fontSize=14, fontWeight="bold")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -141,6 +141,8 @@ def _cumulative_pnl_chart(metrics_df: pd.DataFrame) -> alt.Chart:
             tooltip=["source", "entry_time_sim", alt.Tooltip("cum_pnl", format="+.2f")],
         )
         .properties(height=280, title="Cumulative P&L — sim vs Alpaca paper")
+        .configure(background="#0c0d14")
+        .configure_view(fill="#181a25", strokeOpacity=0)
         .configure_axis(**_AXIS).configure_title(**_TITLE)
     )
 
@@ -173,7 +175,7 @@ def _histogram(series: pd.Series, title: str, x_label: str,
             color=_GOLD, strokeDash=[4, 4]
         ).encode(x="v:Q")
         chart = chart + zero
-    return chart.configure_axis(**_AXIS).configure_title(**_TITLE)
+    return (chart.configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
 def _outcome_pie(metrics_df: pd.DataFrame) -> Optional[alt.Chart]:
@@ -203,6 +205,8 @@ def _outcome_pie(metrics_df: pd.DataFrame) -> Optional[alt.Chart]:
             tooltip=["match_status", "count"],
         )
         .properties(height=220, title="Outcome alignment")
+        .configure(background="#0c0d14")
+        .configure_view(fill="#181a25", strokeOpacity=0)
         .configure_title(**_TITLE)
     )
 
@@ -210,7 +214,7 @@ def _outcome_pie(metrics_df: pd.DataFrame) -> Optional[alt.Chart]:
 # ── Page ─────────────────────────────────────────────────────────────────────
 
 def render() -> None:
-    st.title("🔁 Shadow Comparison")
+    st.title("Shadow Comparison")
     st.caption(
         "Pairs every local-sim trade with its Alpaca-paper twin (matched via "
         "`shadow_of=<sim_trade_id>` in notes) and quantifies divergence. "

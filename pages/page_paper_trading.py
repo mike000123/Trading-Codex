@@ -24,6 +24,7 @@ OrderRouter and persisted in the DB with mode="paper":
 from __future__ import annotations
 
 import threading
+import socket
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -56,14 +57,14 @@ from ui.charts import rsi_chart
 
 
 # ── Styling (matches forward test) ───────────────────────────────────────────
-_GREEN = "#26a69a"
-_RED   = "#ef5350"
-_BLUE  = "#4a9eff"
+_GREEN = "#2faa6a"
+_RED   = "#c64242"
+_BLUE  = "#d4af37"
 _GOLD  = "#ffd54f"
-_GREY  = "#9e9eb8"
-_AXIS  = dict(gridColor="#2a2d3e", labelColor="#d0d4f0", titleColor="#d0d4f0",
+_GREY  = "#a89c80"
+_AXIS  = dict(gridColor="rgba(212,175,55,0.18)", labelColor="#a89c80", titleColor="#a89c80",
               labelFontSize=12, titleFontSize=13)
-_TITLE = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
+_TITLE = dict(color="#e8c566", fontSize=14, fontWeight="bold")
 
 
 # ── Session-state keys ───────────────────────────────────────────────────────
@@ -122,6 +123,7 @@ def _shadow_trace_frame(trades: list[dict]) -> pd.DataFrame:
         rows.append({
             "Entry Time": trade.get("entry_time"),
             "Direction": trade.get("direction"),
+            "Origin": trade.get("origin"),
             "Requested Qty": qty,
             "Filled Qty": trade.get("filled_qty"),
             "Entry Ref": trade.get("entry_price"),
@@ -160,6 +162,20 @@ def _init_state() -> None:
 # `st.session_state`. The `_persist_*_config` helpers below already write to DB
 # so the worker thread's dirty state is durable on every tick.
 _worker_state_local = threading.local()
+
+
+def _trade_origin() -> str:
+    """Tag broker-side trades with the app instance + execution channel.
+
+    This lets us distinguish orders emitted from a hosted paper-worker thread
+    versus an interactive Streamlit page on a local machine.
+    """
+    try:
+        host = socket.gethostname() or "unknown-host"
+    except Exception:
+        host = "unknown-host"
+    channel = "paper_worker" if getattr(_worker_state_local, "state", None) is not None else "streamlit_page"
+    return f"{host}:{channel}"
 
 
 def _state_dict(key: str, default_factory):
@@ -652,6 +668,36 @@ def _open_alpaca_paper_trades(symbol: Optional[str] = None) -> list[dict]:
     return live
 
 
+def _shadow_orphan_block_reason(symbol: str) -> Optional[str]:
+    """Return a human-readable block reason for unsafe new shadow entries.
+
+    We only block when Alpaca currently reports a live position in `symbol`
+    and this app has no tracked open `alpaca_paper` trade for it. That is the
+    exact orphan pattern that previously allowed duplicate broker exposure.
+    """
+    if not settings.alpaca.has_paper_credentials():
+        return None
+    if _open_alpaca_paper_trades(symbol):
+        return None
+    try:
+        router = OrderRouter(risk_manager=RiskManager(settings.risk))
+        pos_snapshot = router.fetch_alpaca_positions(paper=True) or {}
+    except Exception:
+        return None
+    if not pos_snapshot.get("ok"):
+        return None
+    positions = pos_snapshot.get("positions") or []
+    for pos in positions:
+        if str(pos.get("symbol") or "").upper().strip() == str(symbol or "").upper().strip():
+            qty = pos.get("qty")
+            return (
+                f"blocked: Alpaca already holds {symbol}"
+                + (f" (qty {qty})" if qty not in (None, "") else "")
+                + " with no matching tracked shadow trade."
+            )
+    return None
+
+
 # ── Alpaca-paper order sync (Step 4) ─────────────────────────────────────────
 
 def _sync_alpaca_paper_orders() -> dict:
@@ -803,6 +849,7 @@ def _persist_alpaca_paper_update(
         "pnl":               trade_row.get("pnl"),
         "notes":             merged_notes,
         # Broker-lifecycle fields — merge new values, preserve old ones
+        "origin":              trade_row.get("origin"),
         "broker_order_id":     trade_row.get("broker_order_id"),
         "broker_status":       broker_status if broker_status is not None else trade_row.get("broker_status"),
         "broker_submitted_at": _preserve_dt(trade_row.get("broker_submitted_at")),
@@ -1133,6 +1180,7 @@ def _update_alpaca_paper_exit(
         "leveraged_return_pct": float(leveraged_return_pct),
         "pnl":               float(pnl),
         "notes":             base.get("notes") or "",
+        "origin":              base.get("origin"),
         "broker_order_id":     base.get("broker_order_id"),
         "broker_status":       base.get("broker_status"),
         "broker_submitted_at": _preserve_dt(base.get("broker_submitted_at")),
@@ -1670,6 +1718,12 @@ def _process_symbol_bar(
     # so the two populations can be compared without touching the sim
     # side's open-position tracking (_open_paper_trades filters by mode).
     if run.get("shadow_alpaca") and settings.alpaca.has_paper_credentials():
+        _shadow_block = _shadow_orphan_block_reason(symbol)
+        if _shadow_block:
+            run["_last_signal"]["shadow_status"] = _shadow_block
+            if persist_state:
+                _persist_runs_config()
+            return
         try:
             shadow_trade = router.execute(
                 symbol=symbol, direction=direction,
@@ -1684,6 +1738,7 @@ def _process_symbol_bar(
             )
             # Tag the shadow record so the UI can pair it with its sim twin.
             pair_tag = f"shadow_of={trade.id}"
+            shadow_trade.origin = _trade_origin()
             shadow_trade.notes = (
                 f"{shadow_trade.notes or ''} | {pair_tag}".strip(" |")
             )
@@ -2054,7 +2109,7 @@ def _equity_curve_chart(closed_trades: list[dict], starting_capital: float,
                              alt.Tooltip("pnl:Q",    format="+$,.2f", title="Trade P&L")]))
     return (alt.layer(base_line, area, dots)
             .properties(title=alt.TitleParams(title, **_TITLE), height=260)
-            .configure_view(strokeOpacity=0)
+            .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
             .configure_axis(**_AXIS)
             .configure_title(**_TITLE))
 
@@ -2131,7 +2186,7 @@ def _paper_price_chart(prices: pd.DataFrame, symbol: str,
     return (alt.layer(*layers)
             .properties(title=alt.TitleParams(
                 f"{symbol} – Paper Trading  ▲ BUY  ▼ SELL  ✕ Exit", **_TITLE), height=300)
-            .configure_view(strokeOpacity=0)
+            .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
             .configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
@@ -2145,7 +2200,7 @@ def _render_preflight_and_kill_switch() -> None:
         entries). "Re-arm" button to clear it.
       • Otherwise: a compact status strip with market-open, account status,
         credentials, and shadow-run count.
-      • Always: a "🛑 Kill switch" button that lets the user arm the switch
+      • Always: a "Kill switch" button that lets the user arm the switch
         (with a confirmation step) and a "Flatten all" emergency button that
         appears when there's at least one open sim or Alpaca paper position.
 
@@ -2219,39 +2274,39 @@ def _render_preflight_and_kill_switch() -> None:
         if clk.get("is_open"):
             nxt = clk.get("next_close")
             nxt_str = pd.Timestamp(nxt).strftime("%H:%M") if nxt else "?"
-            bits.append(f"🟢 Market **open** (closes {nxt_str})")
+            bits.append(f"Market **open** (closes {nxt_str})")
         else:
             nxt = clk.get("next_open")
             nxt_str = pd.Timestamp(nxt).strftime("%a %H:%M") if nxt else "?"
-            bits.append(f"🌙 Market **closed** (opens {nxt_str})")
+            bits.append(f"Market **closed** (opens {nxt_str})")
     elif creds_ok:
-        bits.append("⚠️ Market clock unavailable")
+        bits.append("Market clock unavailable")
     else:
-        bits.append("⚪ No Alpaca credentials")
+        bits.append("No Alpaca credentials")
 
     # Account status (only surfaced if shadow mode is on somewhere)
     if creds_ok and acct.get("ok"):
         status = (acct.get("status") or "unknown").lower()
         if acct.get("trading_blocked") or acct.get("account_blocked"):
-            bits.append("🚫 Account blocked")
+            bits.append("Account blocked")
         elif status == "active":
             eq = acct.get("equity") or 0
-            bits.append(f"🏦 Alpaca active · equity ${eq:,.0f}")
+            bits.append(f"Alpaca active · equity ${eq:,.0f}")
         else:
-            bits.append(f"🏦 Alpaca status: {status}")
+            bits.append(f"Alpaca status: {status}")
         if acct.get("pattern_day_trader"):
-            bits.append(f"🏷 PDT · {acct.get('daytrade_count', 0)} day-trades (5d)")
+            bits.append(f"PDT · {acct.get('daytrade_count', 0)} day-trades (5d)")
     elif creds_ok and shadow_n > 0:
-        bits.append("🏦 Alpaca account: not yet synced")
+        bits.append("Alpaca account: not yet synced")
 
     # Shadow summary
     if shadow_n > 0:
-        bits.append(f"🔁 Shadow: {shadow_n} run(s)")
+        bits.append(f"Shadow: {shadow_n} run(s)")
     else:
-        bits.append("🔁 Shadow: off")
+        bits.append("Shadow: off")
 
     # Kill-switch state
-    bits.append("🟢 Kill switch armed (trading enabled)")
+    bits.append("Kill switch armed (trading enabled)")
 
     st.info(" · ".join(bits))
 
@@ -2261,13 +2316,13 @@ def _render_preflight_and_kill_switch() -> None:
 
     with action_cols[0]:
         if not confirm:
-            if st.button("🛑 Kill switch", key="pt_ks_arm", type="secondary",
+            if st.button("Kill switch", key="pt_ks_arm", type="secondary",
                          help="Halt all new entries. Exits, trailing stops, "
                               "and reconciliation continue to run."):
                 st.session_state[_KS_CONF] = True
                 st.rerun()
         else:
-            if st.button("🛑 Confirm — trip kill switch", key="pt_ks_confirm",
+            if st.button("Confirm — trip kill switch", key="pt_ks_confirm",
                          type="primary"):
                 ks.trip(db, reason="manual from paper-trading page", actor="user")
                 st.session_state[_KS_CONF] = False
@@ -2330,9 +2385,9 @@ def render() -> None:
 
     mode = settings.trading_mode
     if mode == TradingMode.LIVE:
-        st.warning("🔴 **Live mode detected.** Switch to Paper mode in Settings to use this page safely.")
+        st.warning("**Live mode detected.** Switch to Paper mode in Settings to use this page safely.")
 
-    st.title("📝 Paper Trading")
+    st.title("Paper Trading")
     st.caption(
         "Strategies run **automatically** on live market data — BUY/SELL signals are placed as "
         "paper orders via the risk router; TP/SL (and trailing stops) are enforced on every tick. "
@@ -2366,7 +2421,7 @@ def render() -> None:
             _errs = _hb.get("errors") or []
             _err_tail = f" · last error: {_errs[-1].get('error')}" if _errs else ""
             st.caption(
-                f"🟢 Server-side worker: running · last tick {_at}{_dur_s}{_proc_s}{_err_tail}"
+                f"Server-side worker: running · last tick {_at}{_dur_s}{_proc_s}{_err_tail}"
             )
         elif not settings.alpaca.has_paper_credentials():
             st.caption(
@@ -2381,7 +2436,7 @@ def render() -> None:
     st.divider()
 
     # ── Add new ticker run ───────────────────────────────────────────────────
-    with st.expander("➕ Add Symbol to Paper Trading", expanded=len(st.session_state[_RUNS]) == 0):
+    with st.expander("Add Symbol to Paper Trading", expanded=len(st.session_state[_RUNS]) == 0):
         strategies  = list_strategies()
         strat_names = {s["name"]: s["id"] for s in strategies}
 
@@ -2593,7 +2648,7 @@ def render() -> None:
             base_overrides=gld_optional_overrides if gld_optional_overrides else None,
         )
 
-        if st.button("➕ Add & Start", type="primary", key="pt_add"):
+        if st.button("Add & Start", type="primary", key="pt_add"):
             run_cfg = {
                 "symbol":       new_symbol,
                 "interval":     new_interval,
@@ -2634,9 +2689,9 @@ def render() -> None:
 
     # ── Global controls ──────────────────────────────────────────────────────
     gcol1, gcol2, gcol3 = st.columns(3)
-    refresh_all = gcol1.button("🔄 Refresh All Symbols", type="primary", key="pt_refresh_all")
+    refresh_all = gcol1.button("Refresh All Symbols", type="primary", key="pt_refresh_all")
     auto        = gcol2.checkbox("Auto-refresh (60s)", value=True, key="pt_auto")
-    if gcol3.button("🗑️ Clear All", key="pt_clear_all"):
+    if gcol3.button("Clear All", key="pt_clear_all"):
         for k in [_RUNS, _CACHE, _SIGNALS, _TRAIL]:
             st.session_state[k] = {} if isinstance(st.session_state[k], dict) else []
         _persist_runs_config()
@@ -2757,7 +2812,7 @@ def render() -> None:
             for c in _recon["closed_by_broker"]
         ]
         st.success(
-            "🔄 Alpaca reconciliation closed: " + " · ".join(_closed_lines)
+            "Alpaca reconciliation closed: " + " · ".join(_closed_lines)
         )
     if _recon.get("orphan_positions"):
         st.warning(
@@ -2838,7 +2893,7 @@ def render() -> None:
     closed_paper = [t for t in all_paper if t.get("outcome") != "Open"]
 
     # ── Summary table ────────────────────────────────────────────────────────
-    st.subheader("📊 Active Symbols")
+    st.subheader("Active Symbols")
     summary_rows = []
     for sym, run in runs.items():
         prices  = st.session_state[_CACHE].get(sym)
@@ -2893,7 +2948,7 @@ def render() -> None:
 
     # ── Per-symbol tabs ──────────────────────────────────────────────────────
     sym_list = list(runs.keys())
-    tabs = st.tabs([f"{'🟢' if runs[s].get('active') else '⏸'} {s}" for s in sym_list])
+    tabs = st.tabs([f"{'●' if runs[s].get('active') else '○'} {s}" for s in sym_list])
 
     for tab, symbol in zip(tabs, sym_list):
         with tab:
@@ -2902,7 +2957,7 @@ def render() -> None:
 
             # Per-symbol controls
             c1, c2, c3, c4 = st.columns(4)
-            if c1.button(f"🔄 Refresh {symbol}", key=f"pt_ref_{symbol}"):
+            if c1.button(f"Refresh {symbol}", key=f"pt_ref_{symbol}"):
                 _run_tick(symbol, run)
                 st.rerun()
             if c2.button(f"{'⏸ Pause' if run.get('active') else '▶ Resume'}",
@@ -2939,7 +2994,7 @@ def render() -> None:
                                 f"⚠️ {symbol}: shadow-mode Alpaca close failed — {_exc}"
                             )
                     st.rerun()
-            if c4.button(f"🗑️ Remove {symbol}", key=f"pt_remove_{symbol}"):
+            if c4.button(f"Remove {symbol}", key=f"pt_remove_{symbol}"):
                 del st.session_state[_RUNS][symbol]
                 st.session_state[_CACHE].pop(symbol, None)
                 st.session_state[_SIGNALS] = [
@@ -2952,7 +3007,7 @@ def render() -> None:
                 st.rerun()
 
             if prices is None or prices.empty:
-                st.info(f"Click **🔄 Refresh {symbol}** to fetch first bars.")
+                st.info(f"Click **Refresh {symbol}** to fetch first bars.")
                 continue
 
             last_close = float(prices["close"].iloc[-1])
@@ -2991,7 +3046,7 @@ def render() -> None:
                 tp_str = f"{float(ot['take_profit']):.4f}" if ot.get("take_profit") else "—"
                 sl_str = f"{float(ot['stop_loss']):.4f}"   if ot.get("stop_loss")   else "—"
                 st.markdown(
-                    f'<div style="border:1px solid #2a2d3e;border-radius:8px;'
+                    f'<div style="border:1px solid rgba(212,175,55,0.30);border-radius:8px;'
                     f'padding:8px 14px;margin:6px 0;">'
                     f'<b>Open paper position:</b> {d} @ <code>{ep:.4f}</code> · '
                     f'SL <code>{sl_str}</code> · TP <code>{tp_str}</code> · '
@@ -3038,7 +3093,7 @@ def render() -> None:
                 st.altair_chart(
                     rsi_chart(prices_local, rsi_p, buy_lvls, sell_lvls)
                         .properties(title=alt.TitleParams(f"{symbol} – Paper Trading RSI ({rsi_p})", **_TITLE))
-                        .configure_view(strokeOpacity=0)
+                        .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
                         .configure_axis(**_AXIS)
                         .configure_title(**_TITLE),
                     width='stretch',

@@ -17,18 +17,18 @@ from db.database import Database
 from ui.components import render_mode_banner, render_metrics_row
 from ui.charts import equity_curve_chart, pnl_distribution, portfolio_allocation_pie
 
-_GREEN = "#26a69a"
-_RED = "#ef5350"
-_BLUE = "#4a9eff"
-_GREY = "#9e9eb8"
-_AXIS = dict(gridColor="#2a2d3e", labelColor="#d0d4f0", titleColor="#d0d4f0",
+_GREEN = "#2faa6a"
+_RED = "#c64242"
+_BLUE = "#d4af37"
+_GREY = "#a89c80"
+_AXIS = dict(gridColor="rgba(212,175,55,0.18)", labelColor="#a89c80", titleColor="#a89c80",
              labelFontSize=12, titleFontSize=13)
-_TITLE = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
+_TITLE = dict(color="#e8c566", fontSize=14, fontWeight="bold")
 
 MODE_NAV = {
-    "forward_test": "🔭 Forward Test",
-    "paper": "📝 Paper Trading",
-    "live": "🔴 Live Trading",
+    "forward_test": "Forward Test",
+    "paper": "Paper Trading",
+    "live": "Live Trading",
 }
 
 
@@ -108,7 +108,9 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
 
     if not closed.empty and "exit_time" in closed.columns:
         eq = closed[["exit_time", "pnl"]].dropna().copy()
-        eq["exit_time"] = pd.to_datetime(eq["exit_time"])
+        eq["exit_time"] = pd.to_datetime(
+            eq["exit_time"], errors="coerce", utc=True, format="mixed"
+        ).dt.tz_localize(None)
         eq = eq.sort_values("exit_time")
         eq["equity"] = 10_000 + eq["pnl"].cumsum()
         st.altair_chart(
@@ -162,10 +164,10 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
 
 def render() -> None:
     render_mode_banner()
-    st.title("💼 Portfolio Overview")
+    st.title("Portfolio Overview")
 
     db = _db()
-    st.subheader("🗂️ All Positions by Ticker")
+    st.subheader("All Positions by Ticker")
 
     all_trades = db.get_trades(mode=None, limit=2000)
     ft_open = st.session_state.get("ft_open_trades", {})
@@ -214,7 +216,7 @@ def render() -> None:
     st.divider()
 
     tab_ft, tab_paper, tab_bt, tab_live, tab_all = st.tabs(
-        ["🔭 Forward Test", "📝 Paper", "⏪ Backtest", "🔴 Live", "🌐 All"]
+        ["Forward Test", "Paper", "Backtest", "Live", "All"]
     )
     with tab_ft:
         _render_mode_tab("forward_test", db)

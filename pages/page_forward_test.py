@@ -34,14 +34,14 @@ from ui.autorefresh import render_autorefresh_timer
 from ui.components import render_mode_banner, render_strategy_params, render_metrics_row
 from ui.charts import rsi_chart
 
-_GREEN  = "#26a69a"
-_RED    = "#ef5350"
-_BLUE   = "#4a9eff"
+_GREEN  = "#2faa6a"
+_RED    = "#c64242"
+_BLUE   = "#d4af37"
 _GOLD   = "#ffd54f"
-_GREY   = "#9e9eb8"
-_AXIS   = dict(gridColor="#2a2d3e", labelColor="#d0d4f0", titleColor="#d0d4f0",
+_GREY   = "#a89c80"
+_AXIS   = dict(gridColor="rgba(212,175,55,0.18)", labelColor="#a89c80", titleColor="#a89c80",
                labelFontSize=12, titleFontSize=13)
-_TITLE  = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
+_TITLE  = dict(color="#e8c566", fontSize=14, fontWeight="bold")
 
 # ── Shared session state (read by page_portfolio) ─────────────────────────────
 # ft_active_runs : dict[symbol → run_config_dict]
@@ -376,7 +376,7 @@ def _price_chart(prices: pd.DataFrame, closed_trades: list,
     return (alt.layer(*layers)
             .properties(title=alt.TitleParams(
                 f"{symbol} – Forward Test  ▲ BUY  ▼ SELL  ✕ Exit", **_TITLE), height=300)
-            .configure_view(strokeOpacity=0)
+            .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
             .configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
@@ -408,7 +408,7 @@ def _equity_chart(eq_history: list, starting_capital: float,
                              alt.Tooltip("pnl:Q",    format="+$,.2f", title="P&L")]))
     return (alt.layer(base, area, dots)
             .properties(title=alt.TitleParams(f"{symbol} – Equity", **_TITLE), height=220)
-            .configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE))
+            .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE))
 
 
 # ── Core fetch + evaluate logic (called per symbol per refresh) ───────────────
@@ -628,7 +628,7 @@ def render() -> None:
     restored = _restore_state_config()
     render_mode_banner()
 
-    st.title("🔭 Forward Test")
+    st.title("Forward Test")
     st.caption(
         "Run strategies on **live market data** with **simulated orders** — "
         "no broker needed. Supports multiple tickers simultaneously. "
@@ -643,7 +643,7 @@ def render() -> None:
     st.divider()
 
     # ── Add new ticker run ────────────────────────────────────────────────────
-    with st.expander("➕ Add Symbol to Forward Test", expanded=len(st.session_state[_RUNS]) == 0):
+    with st.expander("Add Symbol to Forward Test", expanded=len(st.session_state[_RUNS]) == 0):
         strategies  = list_strategies()
         strat_names = {s["name"]: s["id"] for s in strategies}
 
@@ -782,7 +782,7 @@ def render() -> None:
                                                 interval=new_interval,
                                                 base_overrides=gld_optional_overrides if gld_optional_overrides else None)
 
-        if st.button("➕ Add & Start", type="primary", key="ft_add"):
+        if st.button("Add & Start", type="primary", key="ft_add"):
             run_cfg = {
                 "symbol":      new_symbol,
                 "interval":    new_interval,
@@ -822,9 +822,9 @@ def render() -> None:
 
     # Global controls
     gcol1, gcol2, gcol3 = st.columns(3)
-    refresh_all = gcol1.button("🔄 Refresh All Symbols", type="primary", key="ft_refresh_all")
+    refresh_all = gcol1.button("Refresh All Symbols", type="primary", key="ft_refresh_all")
     auto        = gcol2.checkbox("Auto-refresh (60s)", value=False, key="ft_auto")
-    if gcol3.button("🗑️ Clear All", key="ft_clear"):
+    if gcol3.button("Clear All", key="ft_clear"):
         for k in [_RUNS, _OPEN, _SIGNALS, _CACHE, _EQUITY]:
             st.session_state[k] = {} if isinstance(st.session_state[k], dict) else []
         _persist_state_config()
@@ -848,7 +848,7 @@ def render() -> None:
     st.divider()
 
     # ── Summary table across all symbols ─────────────────────────────────────
-    st.subheader("📊 Active Symbols")
+    st.subheader("Active Symbols")
     summary_rows = []
     for sym, run in runs.items():
         open_t   = st.session_state[_OPEN].get(sym)
@@ -886,7 +886,7 @@ def render() -> None:
     default_tab = sym_list.index(jump_sym) if jump_sym and jump_sym in sym_list else 0
 
     if sym_list:
-        tabs = st.tabs([f"{'🟢' if runs[s].get('active') else '⏸'} {s}"
+        tabs = st.tabs([f"{'●' if runs[s].get('active') else '○'} {s}"
                         for s in sym_list])
 
         for i, (tab, symbol) in enumerate(zip(tabs, sym_list)):
@@ -897,7 +897,7 @@ def render() -> None:
 
                 # Per-symbol controls
                 c1, c2, c3, c4 = st.columns(4)
-                if c1.button(f"🔄 Refresh {symbol}", key=f"ft_ref_{symbol}"):
+                if c1.button(f"Refresh {symbol}", key=f"ft_ref_{symbol}"):
                     _run_tick(symbol, run, closed_this_session)
                     st.rerun()
                 if c2.button(f"{'⏸ Pause' if run.get('active') else '▶ Resume'}",
@@ -944,7 +944,7 @@ def render() -> None:
                     st.rerun()
 
                 if prices is None:
-                    st.info(f"Click **🔄 Refresh {symbol}** to fetch first bar.")
+                    st.info(f"Click **Refresh {symbol}** to fetch first bar.")
                     continue
 
                 latest = prices.iloc[-1]
@@ -959,7 +959,7 @@ def render() -> None:
                     col    = "green" if unreal >= 0 else "red"
                     tp_str = f"{open_t['take_profit']:.4f}" if open_t.get("take_profit") else "—"
                     st.markdown(
-                        f'<div style="border:1px solid #2a2d3e;border-radius:8px;'
+                        f'<div style="border:1px solid rgba(212,175,55,0.30);border-radius:8px;'
                         f'padding:8px 14px;">'
                         f'<b>Open:</b> {d} @ <code>{ep:.4f}</code> · '
                         f'SL <code>{open_t["stop_loss"]:.4f}</code> · '
@@ -1001,7 +1001,7 @@ def render() -> None:
                         buy_lvls, sell_lvls = [30], [70]
                     st.altair_chart(
                         rsi_chart(prices, rsi_p, buy_lvls, sell_lvls)
-                        .configure_view(strokeOpacity=0)
+                        .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
                         .configure_axis(**_AXIS)
                         .configure_title(**_TITLE),
                         width='stretch',

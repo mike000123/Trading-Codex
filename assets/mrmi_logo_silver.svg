@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 240" width="180" height="200">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#f5f5fa"/>
+      <stop offset="50%" stop-color="#c0c0c8"/>
+      <stop offset="100%" stop-color="#7a7a86"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#dcdce2"/>
+      <stop offset="100%" stop-color="#8a8a98"/>
+    </linearGradient>
+  </defs>
+  <path d="M30 30 L190 30 L190 130 Q190 200 110 230 Q30 200 30 130 Z"
+        fill="none" stroke="url(#g)" stroke-width="6"/>
+  <path d="M40 38 L180 38 L180 128 Q180 192 110 220 Q40 192 40 128 Z"
+        fill="none" stroke="url(#g2)" stroke-width="2.5" opacity="0.7"/>
+  <circle cx="110" cy="34" r="11" fill="none" stroke="url(#g)" stroke-width="4"/>
+  <circle cx="110" cy="34" r="5" fill="url(#g)"/>
+  <polygon points="65,90 110,72 155,90" fill="none" stroke="url(#g)" stroke-width="4"/>
+  <rect x="65" y="90" width="90" height="6" fill="url(#g)"/>
+  <rect x="72" y="100" width="7" height="38" fill="url(#g2)"/>
+  <rect x="100" y="100" width="7" height="38" fill="url(#g2)"/>
+  <rect x="128" y="100" width="7" height="38" fill="url(#g2)"/>
+  <rect x="148" y="100" width="7" height="38" fill="url(#g2)"/>
+  <rect x="65" y="138" width="90" height="6" fill="url(#g)"/>
+  <circle cx="110" cy="84" r="3.5" fill="url(#g)"/>
+  <rect x="78" y="158" width="78" height="32" rx="3" fill="none" stroke="url(#g)" stroke-width="3"/>
+  <rect x="84" y="166" width="14" height="9" rx="1" fill="url(#g2)"/>
+  <text x="142" y="184" font-family="serif" font-weight="700" font-size="16" fill="url(#g)">∞</text>
+</svg>

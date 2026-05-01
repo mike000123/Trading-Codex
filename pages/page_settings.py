@@ -16,7 +16,7 @@ from ui.components import render_mode_banner
 
 def render() -> None:
     render_mode_banner()
-    st.title("⚙️ Settings")
+    st.title("Settings")
 
     tab_mode, tab_risk, tab_creds, tab_about = st.tabs(
         ["🔄 Trading Mode", "🛡️ Risk Controls", "🔑 Credentials", "ℹ️ About"]
@@ -112,7 +112,7 @@ ALPACA_LIVE_SECRET_KEY=""",
 
     # ── About ─────────────────────────────────────────────────────────────────
     with tab_about:
-        st.subheader("AlgoTrader Pro")
+        st.subheader("MRMI Platform")
         st.markdown("""
 **Architecture Overview**
 

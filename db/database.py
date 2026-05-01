@@ -54,6 +54,7 @@ class TradeRow(Base):
     created_at = Column(String, default=lambda: datetime.utcnow().isoformat())
 
     # ── Broker-order lifecycle (NULL for local-sim rows) ────────────────
+    origin              = Column(String, nullable=True)
     broker_order_id     = Column(String, nullable=True, index=True)
     broker_status       = Column(String, nullable=True)
     broker_submitted_at = Column(String, nullable=True)
@@ -125,6 +126,7 @@ class Database:
         """
         expected_new_cols = {
             # column name → SQL type
+            "origin":              "TEXT",
             "broker_order_id":     "TEXT",
             "broker_status":       "TEXT",
             "broker_submitted_at": "TEXT",
@@ -189,6 +191,7 @@ class Database:
             row.notes = trade.notes
 
             # ── Broker-order lifecycle (getattr → safe for legacy stand-ins) ──
+            row.origin              = getattr(trade, "origin",              None)
             row.broker_order_id     = getattr(trade, "broker_order_id",     None)
             row.broker_status       = getattr(trade, "broker_status",       None)
             row.broker_submitted_at = _iso(getattr(trade, "broker_submitted_at", None))

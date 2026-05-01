@@ -30,7 +30,7 @@ def _altair_price_chart(
     title: str = "Price",
 ) -> alt.LayerChart:
     """Pure Altair candlestick-style close-line chart with markers."""
-    base = alt.Chart(data).mark_line(color="#4a9eff").encode(
+    base = alt.Chart(data).mark_line(color="#d4af37").encode(
         x=alt.X("date:T", title="Date"),
         y=alt.Y("close:Q", title="Close", scale=alt.Scale(zero=False)),
         tooltip=["date:T", "close:Q"],
@@ -41,9 +41,9 @@ def _altair_price_chart(
     # TP / SL horizontal rules
     if take_profit is not None:
         tp_df = pd.DataFrame({"y": [take_profit], "label": [f"TP {take_profit:.4f}"]})
-        tp_rule = alt.Chart(tp_df).mark_rule(color="#26a69a", strokeDash=[4, 4]).encode(y="y:Q")
+        tp_rule = alt.Chart(tp_df).mark_rule(color="#2faa6a", strokeDash=[4, 4]).encode(y="y:Q")
         tp_text = alt.Chart(tp_df).mark_text(
-            color="#26a69a", align="right", dx=-4, dy=-6, fontSize=11
+            color="#2faa6a", align="right", dx=-4, dy=-6, fontSize=11
         ).encode(
             y="y:Q",
             x=alt.value(560),
@@ -53,9 +53,9 @@ def _altair_price_chart(
 
     if stop_loss is not None:
         sl_df = pd.DataFrame({"y": [stop_loss], "label": [f"SL {stop_loss:.4f}"]})
-        sl_rule = alt.Chart(sl_df).mark_rule(color="#ef5350", strokeDash=[4, 4]).encode(y="y:Q")
+        sl_rule = alt.Chart(sl_df).mark_rule(color="#c64242", strokeDash=[4, 4]).encode(y="y:Q")
         sl_text = alt.Chart(sl_df).mark_text(
-            color="#ef5350", align="right", dx=-4, dy=-6, fontSize=11
+            color="#c64242", align="right", dx=-4, dy=-6, fontSize=11
         ).encode(
             y="y:Q",
             x=alt.value(560),
@@ -74,7 +74,7 @@ def _altair_price_chart(
         marker_df = pd.DataFrame(marker_rows)
         colour_scale = alt.Scale(
             domain=["Entry", "Exit"],
-            range=["#26a69a", "#ef5350"],
+            range=["#2faa6a", "#c64242"],
         )
         rules = (
             alt.Chart(marker_df)
@@ -100,7 +100,7 @@ def _altair_price_chart(
     return (
         alt.layer(*layers)
         .properties(title=title, height=320)
-        .configure_view(strokeOpacity=0)
+        .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
         .configure_axis(gridColor="#1e2130", labelColor="#c9d8f5", titleColor="#c9d8f5")
         .configure_title(color="#c9d8f5")
     )
@@ -179,7 +179,7 @@ def _suggest_levels(
 
 def render() -> None:
     render_mode_banner()
-    st.title("📊 Historical Trade Outcome Simulator")
+    st.title("Historical Trade Outcome Simulator")
     st.caption("Load OHLC data, then test leveraged long/short scenarios from any historical date.")
 
     prices = render_data_source_selector()

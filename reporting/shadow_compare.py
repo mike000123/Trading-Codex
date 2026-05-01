@@ -82,14 +82,31 @@ def find_pairs(paper_trades: list[dict], alpaca_trades: list[dict]) -> list[Shad
 # ── Per-pair metrics ────────────────────────────────────────────────────────
 
 def _parse_dt(v) -> Optional[datetime]:
+    """Parse a datetime-like value into a tz-NAIVE UTC datetime.
+
+    Subtracting a tz-aware datetime from a tz-naive one raises TypeError.
+    Some sim trade rows arrive naive (older backtest output); Alpaca's
+    broker timestamps come back tz-aware ("Z" suffix). Normalise so the
+    pair_metrics latency arithmetic always works.
+    """
     if v is None:
         return None
+    dt: Optional[datetime] = None
     if isinstance(v, datetime):
-        return v
-    try:
-        return datetime.fromisoformat(str(v).replace("Z", "+00:00"))
-    except Exception:
+        dt = v
+    else:
+        try:
+            dt = datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+        except Exception:
+            return None
+    if dt is None:
         return None
+    if dt.tzinfo is not None:
+        try:
+            dt = dt.astimezone(tz=None).replace(tzinfo=None)
+        except Exception:
+            dt = dt.replace(tzinfo=None)
+    return dt
 
 
 def _directional_bps(sim_px: float, alpaca_px: float, direction: str) -> float:

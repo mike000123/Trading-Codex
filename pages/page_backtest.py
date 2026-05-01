@@ -30,20 +30,20 @@ from ui.components import (
     render_strategy_params,
 )
 
-_GREEN = "#26a69a"
-_RED = "#ef5350"
-_BLUE = "#4a9eff"
+_GREEN = "#2faa6a"
+_RED = "#c64242"
+_BLUE = "#d4af37"
 _GOLD = "#ffd54f"
 _ORANGE = "#ff9800"
 _PURPLE = "#ab47bc"
 _AXIS = dict(
-    gridColor="#2a2d3e",
-    labelColor="#d0d4f0",
-    titleColor="#d0d4f0",
+    gridColor="rgba(212,175,55,0.18)",
+    labelColor="#a89c80",
+    titleColor="#a89c80",
     labelFontSize=12,
     titleFontSize=13,
 )
-_TITLE = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
+_TITLE = dict(color="#e8c566", fontSize=14, fontWeight="bold")
 _MAX_CHART_PTS = 5_000
 _BT_RESULT_CFG_KEY = "backtester_last_result_v1"
 
@@ -347,7 +347,7 @@ def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl
         return (
             alt.layer(*layers)
             .properties(title=alt.TitleParams(f"{symbol} – Price", **_TITLE), height=320)
-            .configure_view(strokeOpacity=0)
+            .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
             .configure_axis(**_AXIS)
             .configure_title(**_TITLE)
         )
@@ -417,7 +417,7 @@ def _price_chart(prices, trades, symbol, show_long, show_short, show_tp, show_sl
     return (
         alt.layer(*layers)
         .properties(title=alt.TitleParams(f"{symbol} – Price  ▲ Long  ▼ Short  ✕ Exit", **_TITLE), height=320)
-        .configure_view(strokeOpacity=0)
+        .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
         .configure_axis(**_AXIS)
         .configure_title(**_TITLE)
     )
@@ -484,7 +484,7 @@ def _rsi_chart(prices, trades, period, buy_levels, sell_levels, symbol, show_lon
     return (
         alt.layer(*layers)
         .properties(title=alt.TitleParams(f"{symbol} – RSI ({period})  Buy≤{buy_levels}  Sell≥{sell_levels}", **_TITLE), height=300)
-        .configure_view(strokeOpacity=0)
+        .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
         .configure_axis(**_AXIS)
         .configure_title(**_TITLE)
     )
@@ -500,7 +500,7 @@ def _equity_chart(equity_curve: pd.DataFrame, symbol: str):
         y=alt.Y("equity:Q", title="Equity ($)", scale=alt.Scale(zero=False), axis=alt.Axis(**_AXIS)),
         tooltip=["date:T", alt.Tooltip("equity:Q", format="$,.2f", title="Portfolio Value")],
     )
-    return alt.layer(line).properties(title=alt.TitleParams(f"{symbol} – Portfolio Equity", **_TITLE), height=300).configure_view(strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE)
+    return alt.layer(line).properties(title=alt.TitleParams(f"{symbol} – Portfolio Equity", **_TITLE), height=300).configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0).configure_axis(**_AXIS).configure_title(**_TITLE)
 
 
 @st.cache_data(show_spinner=False)
@@ -551,13 +551,13 @@ def _fair_value_chart(frame: pd.DataFrame, symbol: str):
                     domain=[f"{symbol} actual", f"{symbol} fair value", f"{symbol} structural fair value"],
                     range=[_BLUE, _GOLD, _ORANGE],
                 ),
-                legend=alt.Legend(title=None, labelColor="#d0d4f0"),
+                legend=alt.Legend(title=None, labelColor="#a89c80"),
             ),
             tooltip=["date:T", "series:N", alt.Tooltip("price:Q", format=".2f")],
         )
         .properties(title=alt.TitleParams(f"{symbol} – Actual vs Fair Value (optimized slow macro fit)"  
                                           f" - fair value = structural fair value + market adjustment", **_TITLE), height=320)
-        .configure_view(strokeOpacity=0)
+        .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
         .configure_axis(**_AXIS)
         .configure_title(**_TITLE)
     )
@@ -575,7 +575,7 @@ def _fair_gap_chart(frame: pd.DataFrame, symbol: str):
             color=alt.Color(
                 "gap_sign:N",
                 scale=alt.Scale(domain=["Undervalued", "Overvalued"], range=[_GREEN, _RED]),
-                legend=alt.Legend(title=None, labelColor="#d0d4f0"),
+                legend=alt.Legend(title=None, labelColor="#a89c80"),
             ),
             tooltip=[
                 "date:T",
@@ -589,7 +589,7 @@ def _fair_gap_chart(frame: pd.DataFrame, symbol: str):
     return (
         alt.layer(bars, zero)
         .properties(title=alt.TitleParams(f"{symbol} – Fair Value Gap", **_TITLE), height=180)
-        .configure_view(strokeOpacity=0)
+        .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
         .configure_axis(**_AXIS)
         .configure_title(**_TITLE)
     )
@@ -597,7 +597,7 @@ def _fair_gap_chart(frame: pd.DataFrame, symbol: str):
 
 def render() -> None:
     render_mode_banner()
-    st.title("⏪ Backtester")
+    st.title("Backtester")
     st.session_state.setdefault("bt_strategy", "Bollinger + RSI (Spike-Aware)")
     prices = render_data_source_selector()
     if prices is not None:
@@ -629,42 +629,56 @@ def render() -> None:
         st.session_state["bt_strategy"] = (
             default_strategy_name if default_strategy_name in strategy_names else strategy_names[0]
         )
-    col_cfg, col_risk = st.columns(2)
-    with col_cfg:
-        selected_name = st.selectbox("Strategy", strategy_names, key="bt_strategy")
-        selected_id = strat_names[selected_name]
-        leverage = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="bt_lev")
-        capital_per_trade = st.number_input("Capital per trade ($)", 100.0, value=1000.0, key="bt_cap")
-        starting_equity = st.number_input("Starting equity ($)", 1000.0, value=1000.0, key="bt_equity")
-        direction_filter = st.selectbox("Direction filter", ["Both", "Long only", "Short only"], key="bt_dir")
+    # ── Configuration tabs ──────────────────────────────────────────────────
+    # Strategy & Sizing | Risk & Costs | Execution Rules. Pure layout: each
+    # widget keeps its existing key/value/default so backtester state and
+    # behavior are byte-identical to the previous two-column layout.
+    tab_strategy, tab_risk, tab_exec = st.tabs([
+        "Strategy & Sizing",
+        "Risk & Costs",
+        "Execution Rules",
+    ])
+
+    with tab_strategy:
+        s_col1, s_col2 = st.columns(2)
+        with s_col1:
+            selected_name = st.selectbox("Strategy", strategy_names, key="bt_strategy")
+            selected_id = strat_names[selected_name]
+            leverage = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="bt_lev")
+            capital_per_trade = st.number_input("Capital per trade ($)", 100.0, value=1000.0, key="bt_cap")
+        with s_col2:
+            starting_equity = st.number_input("Starting equity ($)", 1000.0, value=1000.0, key="bt_equity")
+            direction_filter = st.selectbox("Direction filter", ["Both", "Long only", "Short only"], key="bt_dir")
+
         show_gld_candidates = selected_id == "bollinger_rsi" and str(symbol).upper() == "GLD"
         candidate_name, candidate_payload = _resolve_gld_candidate_for_leverage(leverage) if show_gld_candidates else (None, {})
         optional_preset_payload: dict[str, object] = {}
         if show_gld_candidates:
-            use_rsi_spike_fade_short = st.checkbox(
-                "Use RSI spike-fade short (research)",
-                value=False,
-                key="bt_gld_rsi_spike_fade_short",
-                help="Optional GLD research overlay. This layers the researched RSI spike-fade short rule on top of the current default or leverage-specific GLD preset.",
-            )
-            use_fair_gap_fade_short = st.checkbox(
-                "Use fair-gap fade short (research)",
-                value=False,
-                key="bt_gld_fair_gap_fade_short",
-                help="Optional GLD research overlay. This shorts GLD only when price is materially above fair value, daily RSI is overbought, and the minute chart starts rolling over.",
-            )
-            use_weak_0800_filter = st.checkbox(
-                "Use weak 08:00 ET filter (research)",
-                value=False,
-                key="bt_gld_weak_0800_filter",
-                help="Optional GLD research overlay. This blocks the weak 08:00-08:29 ET shock-reversal short entries identified in the narrower time-of-day study.",
-            )
-            if use_rsi_spike_fade_short:
-                optional_preset_payload.update(get_candidate("gld_rsi_spike_fade_short_20260426"))
-            if use_fair_gap_fade_short:
-                optional_preset_payload.update(get_candidate("gld_fair_gap_fade_short_20260426"))
-            if use_weak_0800_filter:
-                optional_preset_payload.update(get_candidate("gld_weak_0800_shock_reversal_filter_20260426"))
+            with st.expander("GLD research overlays (optional)", expanded=False):
+                use_rsi_spike_fade_short = st.checkbox(
+                    "Use RSI spike-fade short (research)",
+                    value=False,
+                    key="bt_gld_rsi_spike_fade_short",
+                    help="Optional GLD research overlay. This layers the researched RSI spike-fade short rule on top of the current default or leverage-specific GLD preset.",
+                )
+                use_fair_gap_fade_short = st.checkbox(
+                    "Use fair-gap fade short (research)",
+                    value=False,
+                    key="bt_gld_fair_gap_fade_short",
+                    help="Optional GLD research overlay. This shorts GLD only when price is materially above fair value, daily RSI is overbought, and the minute chart starts rolling over.",
+                )
+                use_weak_0800_filter = st.checkbox(
+                    "Use weak 08:00 ET filter (research)",
+                    value=False,
+                    key="bt_gld_weak_0800_filter",
+                    help="Optional GLD research overlay. This blocks the weak 08:00-08:29 ET shock-reversal short entries identified in the narrower time-of-day study.",
+                )
+                if use_rsi_spike_fade_short:
+                    optional_preset_payload.update(get_candidate("gld_rsi_spike_fade_short_20260426"))
+                if use_fair_gap_fade_short:
+                    optional_preset_payload.update(get_candidate("gld_fair_gap_fade_short_20260426"))
+                if use_weak_0800_filter:
+                    optional_preset_payload.update(get_candidate("gld_weak_0800_shock_reversal_filter_20260426"))
         candidate_param_overrides = {
             k: v for k, v in candidate_payload.items() if k not in {"leverage", "risk_max_loss_pct_of_capital"}
         }
@@ -696,26 +710,32 @@ def render() -> None:
                 if use_weak_0800_filter:
                     captions.append("`weak 08:00 ET filter` (blocks `shock_reversal_short` only)")
                 st.caption("Optional GLD preset active: adds " + " + ".join(captions) + ".")
-    with col_risk:
-        st.markdown("**Risk Controls**")
-        use_risk = st.checkbox("Apply risk manager", value=True, key="bt_risk")
-        max_loss = st.slider("Max loss per trade (% of capital)", 5, 100, 50, key="bt_maxloss")
-        st.markdown("---")
-        counter_signal_exit = st.checkbox(
-            "Counter-signal exit",
-            value=True,
-            key="bt_counter",
-            help="When ON: opposing RSI signal closes the current trade and opens reverse.",
-        )
-        st.markdown("---")
-        st.markdown("**Transaction Costs**")
-        st.caption("UVXY realistic costs: spread ~0.06%, slippage ~0.02%.  \nLeave at 0 for gross return.")
-        spread_pct = st.number_input("Spread % (round-trip)", 0.0, 2.0, 0.06, step=0.01, format="%.2f", key="bt_spread")
-        slippage_pct = st.number_input("Slippage % (round-trip)", 0.0, 2.0, 0.02, step=0.01, format="%.2f", key="bt_slip")
-        commission = st.number_input("Commission per trade ($)", 0.0, 10.0, 0.0, step=0.10, format="%.2f", key="bt_comm")
 
-        st.markdown("---")
-        st.markdown("**Execution logic**")
+    with tab_risk:
+        r_col1, r_col2 = st.columns(2)
+        with r_col1:
+            st.markdown("**Risk Manager**")
+            use_risk = st.checkbox("Apply risk manager", value=True, key="bt_risk")
+            max_loss = st.slider("Max loss per trade (% of capital)", 5, 100, 50, key="bt_maxloss")
+            counter_signal_exit = st.checkbox(
+                "Counter-signal exit",
+                value=True,
+                key="bt_counter",
+                help="When ON: opposing RSI signal closes the current trade and opens reverse.",
+            )
+            if show_gld_candidates and candidate_payload:
+                st.caption(
+                    f"Preset risk note: leverage `{float(candidate_payload.get('leverage', leverage)):.1f}x`, "
+                    f"max capital loss cap `{float(candidate_payload.get('risk_max_loss_pct_of_capital', max_loss)):.0f}%`."
+                )
+        with r_col2:
+            st.markdown("**Transaction Costs**")
+            st.caption("Typical retail-broker round-trip: spread 0.02-0.10%, slippage 0.01-0.05%. UVXY-style ETFs sit near the higher end; large ETFs like GLD or SPY closer to the lower end. Leave at 0 for gross return.")
+            spread_pct = st.number_input("Spread % (round-trip)", 0.0, 2.0, 0.06, step=0.01, format="%.2f", key="bt_spread")
+            slippage_pct = st.number_input("Slippage % (round-trip)", 0.0, 2.0, 0.02, step=0.01, format="%.2f", key="bt_slip")
+            commission = st.number_input("Commission per trade ($)", 0.0, 10.0, 0.0, step=0.10, format="%.2f", key="bt_comm")
+
+    with tab_exec:
         _bt_policy_opts = available_policies()            # [(name, label), ...]
         _bt_policy_labels = [lbl for _, lbl in _bt_policy_opts]
         _bt_policy_names = [nm for nm, _ in _bt_policy_opts]
@@ -735,6 +755,7 @@ def render() -> None:
         execution_logic = _bt_policy_names[_bt_policy_labels.index(_bt_chosen_label)]
         _is_alpaca_bt = execution_logic == "alpaca"
         if _is_alpaca_bt:
+            st.markdown("**Alpaca-realistic rules**")
             bt_ac1, bt_ac2, bt_ac3 = st.columns(3)
             with bt_ac1:
                 bt_enforce_rth = st.checkbox(
@@ -781,12 +802,6 @@ def render() -> None:
             key="bt_monday_open_delay",
             help="Block all entries from the NYSE open until 10:00 ET on Mondays, regardless of strategy.",
         )
-
-        if show_gld_candidates and candidate_payload:
-            st.caption(
-                f"Preset risk note: leverage `{float(candidate_payload.get('leverage', leverage)):.1f}x`, "
-                f"max capital loss cap `{float(candidate_payload.get('risk_max_loss_pct_of_capital', max_loss)):.0f}%`."
-            )
 
     st.divider()
     params = render_strategy_params(
@@ -914,7 +929,7 @@ def _show_results() -> None:
     prices_r = st.session_state.get("bt_prices_live")
     closed = [t for t in result.trades if t.leveraged_return_pct is not None]
 
-    st.subheader("📊 Results")
+    st.subheader("Results")
     s = result.summary()
     render_metrics_row(
         {
@@ -968,19 +983,19 @@ def _show_results() -> None:
         prices_plot = _downsample(prices_r)
         n_bars = len(prices_r)
         label_extra = f"  ·  *{len(prices_plot):,} of {n_bars:,} bars shown*" if len(prices_plot) < n_bars else ""
-        st.markdown(f"#### 📈 Price{label_extra}")
+        st.markdown(f"#### Price{label_extra}")
         st.altair_chart(_price_chart(prices_plot, result.trades, symbol_r, show_long, show_short, show_tp, show_sl, show_trail, show_sig), width='stretch')
         if selected_id_r in ("rsi_threshold", "atr_rsi", "vwap_rsi", "bollinger_rsi", "ema_trend_rsi"):
             period = int(params_r.get("rsi_period", 9))
             buy_levels = _parse_levels(params_r.get("buy_levels", "30"))
             sell_levels = _parse_levels(params_r.get("sell_levels", "70"))
-            st.markdown(f"#### 📉 RSI ({period})")
+            st.markdown(f"#### RSI ({period})")
             st.altair_chart(_rsi_chart(prices_plot, result.trades, period, buy_levels, sell_levels, symbol_r, show_long, show_short, show_tp, show_sl, show_trail, show_sig), width='stretch')
     else:
         st.info("ℹ️ Price chart not available — reload data to see charts.")
 
     if closed:
-        st.markdown("#### 💰 Equity Curve")
+        st.markdown("#### Equity Curve")
         st.altair_chart(_equity_chart(result.equity_curve, symbol_r), width='stretch')
 
     if closed:
@@ -1003,9 +1018,9 @@ def _show_results() -> None:
                 for t in closed
             ]
         )
-        st.markdown("#### 📊 Per-Trade Return")
+        st.markdown("#### Per-Trade Return")
         st.altair_chart(pnl_distribution(trades_df), width='stretch')
-        with st.expander("📋 Trade Log", expanded=False):
+        with st.expander("Trade Log", expanded=False):
             st.dataframe(
                 trades_df.rename(
                     columns={
@@ -1021,7 +1036,7 @@ def _show_results() -> None:
         st.caption(st.session_state["bt_db_msg"])
 
     if symbol_r.upper() == "GLD":
-        st.markdown("#### 🪙 Macro Fair Value")
+        st.markdown("#### Macro Fair Value")
         st.caption(
             "This is a slow diagnostic model for GLD only. It fits an optimized fair-value proxy from cached macro and peer series, "
             "so we can judge the macro layer by fit quality before using it for trading bias."

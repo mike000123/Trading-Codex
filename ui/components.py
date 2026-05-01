@@ -208,7 +208,7 @@ def _alpaca_safe_request_end(end_exclusive: pd.Timestamp, interval: str | None) 
 
 def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.DataFrame]:
     _restore_loaded_dataset_state()
-    st.sidebar.subheader("📡 Data Source")
+    st.sidebar.subheader("Data Source")
     source = st.sidebar.radio("Source", ["Yahoo Finance", "CSV Upload", "Alpaca"], index=2, key="data_source")
     data: Optional[pd.DataFrame] = None
 
@@ -377,7 +377,7 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
             else:
                 st.sidebar.caption(
                     "💡 **Alpaca SIP feed** — ~5 years of 1-min history, with recent intraday bars delayed by account permissions.  \n"
-                    "For UVXY: start **2020-01-01** to get ~6 years."
+                    "Pick a window wide enough to cover the strategy's warm-up plus a meaningful sample (e.g. start **2020-01-01** for a multi-year backtest)."
                 )
 
             if st.sidebar.button("🔄 Fetch / Update from Alpaca", key="alp_fetch"):
@@ -455,7 +455,7 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                     f"{entry['from']} → {entry['to']} · "
                     f"{entry['bars']:,} bars · {entry['size_kb']} KB"
                 )
-                if col_b.button("🗑", key=f"del_{entry['source']}_{entry['symbol']}_{entry['timeframe']}", help="Delete this cache entry"):
+                if col_b.button("Delete", key=f"del_{entry['source']}_{entry['symbol']}_{entry['timeframe']}", help="Delete this cache entry"):
                     cache.delete(entry["source"], entry["symbol"].replace("=", "_"), entry["timeframe"])
                     st.rerun()
 
@@ -493,7 +493,7 @@ _PARAM_META: dict[str, dict] = {
     "trend_peer_strength_weight": {"label": "Trend peer weight", "help": "Score contribution from the precious-metals peer, such as SLV, for the trend-continuation leg."},
     "trend_miners_strength_weight": {"label": "Trend miners weight", "help": "Score contribution from the miners proxy, such as GDX, for the trend-continuation leg."},
     "trend_riskoff_strength_weight": {"label": "Trend risk-off weight", "help": "Score contribution from a risk-off proxy, such as VIXY, when it supports the gold trend."},
-    "intraday_pullback_short_enabled": {"label": "Intraday pullback short", "help": "Enable a short module that fades intraday overbought bursts only after downside confirmation. Useful for symbols like UVXY when RSI spikes into exhaustion and then starts rolling over."},
+    "intraday_pullback_short_enabled": {"label": "Intraday pullback short", "help": "Enable a short module that fades intraday overbought bursts only after downside confirmation. Useful on high-volatility instruments when RSI spikes into exhaustion and then starts rolling over."},
     "intraday_pullback_rsi_trigger": {"label": "Pullback RSI trigger", "help": "Recent RSI must have reached at least this level before the intraday pullback short can arm."},
     "intraday_pullback_rsi_fade_pts": {"label": "Pullback RSI fade pts", "help": "Minimum number of RSI points price must fade from the recent RSI peak before the pullback short is allowed."},
     "intraday_pullback_lookback_bars": {"label": "Pullback lookback bars", "help": "Lookback used to measure the recent high and the highest RSI for the intraday pullback-short setup."},
@@ -637,10 +637,10 @@ _PARAM_META: dict[str, dict] = {
     "event_target_sl_pct": {"label": "Event short SL %", "help": "Hard stop for the event-target short, measured above the short entry price."},
     "event_target_profit_giveback_frac": {"label": "Event profit giveback frac", "help": "After the event short has meaningful open profit, close it if price gives back this fraction of the best unrealized gain."},
     "event_target_profit_giveback_min_pct": {"label": "Event giveback min %", "help": "Minimum open profit required before the event short's giveback-protection exit becomes active."},
-    "spy_selloff_assist_ret_30": {"label": "Benchmark selloff 30-bar %", "help": "The companion equity benchmark's 30-bar return must be at or below this level before UVXY spike-momentum longs can use the selloff-assist path."},
-    "spy_selloff_assist_ret_120": {"label": "Benchmark selloff 120-bar %", "help": "The companion equity benchmark's 120-bar return must be at or below this level before UVXY spike-momentum longs can use the selloff-assist path."},
-    "spy_rebound_block_ret_30": {"label": "Benchmark rebound 30-bar %", "help": "If the companion equity benchmark rebounds by at least this much over 30 bars and reclaims its EMAs, UVXY longs are blocked during active spike phases."},
-    "spy_rebound_block_ret_120": {"label": "Benchmark rebound 120-bar %", "help": "Medium-horizon rebound filter used with the 30-bar benchmark rebound rule to avoid buying UVXY while equities are already stabilizing."},
+    "spy_selloff_assist_ret_30": {"label": "Benchmark selloff 30-bar %", "help": "The companion equity benchmark's 30-bar return must be at or below this level before spike-momentum longs can use the selloff-assist path."},
+    "spy_selloff_assist_ret_120": {"label": "Benchmark selloff 120-bar %", "help": "The companion equity benchmark's 120-bar return must be at or below this level before spike-momentum longs can use the selloff-assist path."},
+    "spy_rebound_block_ret_30": {"label": "Benchmark rebound 30-bar %", "help": "If the companion equity benchmark rebounds by at least this much over 30 bars and reclaims its EMAs, spike-momentum longs are blocked during active spike phases."},
+    "spy_rebound_block_ret_120": {"label": "Benchmark rebound 120-bar %", "help": "Medium-horizon rebound filter used with the 30-bar benchmark rebound rule to avoid buying spike-momentum longs while equities are already stabilizing."},
     "dollar_strength_block_ret_30": {"label": "Dollar strength block 30-bar %", "help": "Block gold momentum longs when the dollar benchmark is rising by at least this much over 30 bars and is in an uptrend. Neutral high values disable this filter."},
     "dollar_strength_block_ret_120": {"label": "Dollar strength block 120-bar %", "help": "Medium-horizon dollar-strength threshold used with the 30-bar dollar filter for GLD-style presets."},
     "rates_weakness_block_ret_30": {"label": "Rates weakness block 30-bar %", "help": "Block gold momentum longs when the rates benchmark is falling by at least this much over 30 bars and is in a downtrend. Neutral very-low values disable this filter."},
@@ -710,7 +710,7 @@ _PARAM_META: dict[str, dict] = {
     "decay_cooldown": {"label": "Decay cooldown", "help": "Bars between decay re-entry shorts."},
     "decay_max_entries": {"label": "Decay max entries", "help": "Maximum decay re-entry shorts per episode."},
     "decay_floor": {"label": "Decay floor", "help": "Skip decay shorts below this absolute price."},
-    "low_price_chop_price": {"label": "Low-price chop price", "help": "Below this price, the strategy treats UVXY as being in a late low-price chop regime and suppresses some normal trades to avoid whipsaw clusters."},
+    "low_price_chop_price": {"label": "Low-price chop price", "help": "Below this price, the strategy treats the symbol as being in a late low-price chop regime (typical for decay-prone vol ETFs at the bottom of their range) and suppresses some normal trades to avoid whipsaw clusters."},
     "low_price_chop_bandwidth_pct": {"label": "Low-price chop BW %", "help": "Maximum Bollinger band width percent for the low-price chop guard. Narrower low-price action below this threshold is treated as whipsaw noise."},
 }
 
@@ -1080,12 +1080,12 @@ def render_strategy_params(
             st.session_state[f"p_{strategy_id}_{param}"] = default
         st.session_state[signature_key] = defaults_signature
 
-    st.subheader(f"⚙️ {cls.name} Parameters")
+    st.subheader(f"{cls.name} Parameters")
     st.caption(cls.description)
 
     if strategy_id == "bollinger_rsi":
         st.info(
-            "📉 **Bollinger + RSI (Spike-Aware)** — UVXY mean reversion plus explicit spike episode handling.  \n"
+            "**Bollinger + RSI (Spike-Aware)** — Mean reversion with spike-aware overlays. Works across vol products (UVXY/VXX/VXZ), gold (GLD), and oil (USO) via per-symbol presets.  \n"
             "**Episode flow:** `idle → spike → decay → idle`  \n"
             "• 🟢 **Normal** — Bollinger mean reversion outside spike episodes  \n"
             "• 🟡 **Spike** — rare dedicated spike-long logic plus a momentum long for true expansion bars; normal shorts suppressed  \n"
@@ -1138,16 +1138,32 @@ def render_strategy_params(
     st.markdown(
             """
         <style>
-        div[data-testid="stExpander"] details summary p {
-            color: #FFFFFF !important;
-            font-weight: 700 !important;
+        /* The summary-p / label colour rules used to live here, but they
+           competed with the MRMI Gold gradient title and produced ghost
+           text. Per-theme typography is now handled in ui/themes.py. */
+        /* Make the help-tooltip ⓘ icon visible on the dark background.
+           Streamlit ships it as an inline SVG that inherits a near-grey
+           stroke colour by default, which disappears against #1E1E1E.
+           Paint it the same near-white as the labels so the icon is
+           clearly clickable, then brighten on hover. */
+        div[data-testid="stExpander"] [data-testid="stTooltipIcon"] svg,
+        div[data-testid="stExpander"] [data-testid="stTooltipHoverTarget"] svg,
+        div[data-testid="stExpander"] [data-baseweb="tooltip"] svg,
+        div[data-testid="stExpander"] [aria-label="help"] svg,
+        div[data-testid="stExpander"] [aria-label="Help"] svg {
+            color: #C9D4F0 !important;
+            fill:  #C9D4F0 !important;
+            stroke: #C9D4F0 !important;
+            opacity: 1 !important;
         }
-        div[data-testid="stExpander"] label p,
-        div[data-testid="stExpander"] .stNumberInput label p,
-        div[data-testid="stExpander"] .stTextInput label p,
-        div[data-testid="stExpander"] .stCheckbox label p {
+        div[data-testid="stExpander"] [data-testid="stTooltipIcon"]:hover svg,
+        div[data-testid="stExpander"] [data-testid="stTooltipHoverTarget"]:hover svg,
+        div[data-testid="stExpander"] [data-baseweb="tooltip"]:hover svg,
+        div[data-testid="stExpander"] [aria-label="help"]:hover svg,
+        div[data-testid="stExpander"] [aria-label="Help"]:hover svg {
             color: #FFFFFF !important;
-            font-weight: 700 !important;
+            fill:  #FFFFFF !important;
+            stroke: #FFFFFF !important;
         }
         </style>
         """,
@@ -1163,36 +1179,28 @@ def render_strategy_params(
             label = meta.get("label", param)
             help_ = meta.get("help", "") or None
             key = f"p_{strategy_id}_{param}"
-            head_a, head_b = st.columns([0.88, 0.12], vertical_alignment="center")
-            with head_a:
-                st.markdown(
-                    (
-                        "<div style='color:#FFFFFF;font-weight:700;font-size:0.95rem;margin-bottom:0.20rem;'>"
-                        f"{label} <span style='color:#C9D4F0;font-weight:500;'>({param})</span>"
-                        "</div>"
-                    ),
-                    unsafe_allow_html=True,
-                )
-            if help_:
-                with head_b:
-                    with st.popover("?", width='stretch'):
-                        st.caption(help_)
+            # Show the parameter's machine name as a subtle suffix on the label
+            # so users can map UI fields to preset keys when tuning. The widget
+            # uses Streamlit's built-in label + help= so the standard ⓘ tooltip
+            # appears (matching Alpaca rules, execution policy, etc.) instead of
+            # the heavier popover-button look the previous custom layout had.
+            display_label = f"{label}  ({param})"
             if isinstance(default, bool):
-                filled[param] = st.checkbox("Enabled", value=default, key=key, label_visibility="collapsed")
+                filled[param] = st.checkbox(display_label, value=default, key=key, help=help_)
             elif isinstance(default, int):
-                filled[param] = st.number_input(label, value=int(default), step=1, key=key, label_visibility="collapsed")
+                filled[param] = st.number_input(display_label, value=int(default), step=1, key=key, help=help_)
             elif isinstance(default, float):
                 min_value = None if default < 0 else 0.0
                 filled[param] = st.number_input(
-                    label,
+                    display_label,
                     value=float(default),
                     format="%.2f",
                     min_value=min_value,
                     key=key,
-                    label_visibility="collapsed",
+                    help=help_,
                 )
             else:
-                filled[param] = st.text_input(label, value=str(default), key=key, label_visibility="collapsed")
+                filled[param] = st.text_input(display_label, value=str(default), key=key, help=help_)
 
         for title, caption, params_in_group in _PARAM_GROUPS:
             group_items = [(param, defaults[param]) for param in params_in_group if param in defaults and param in remaining]

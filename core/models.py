@@ -105,6 +105,7 @@ class TradeRecord:
     # ── Broker-order lifecycle (populated only for alpaca_paper / live) ───
     # These mirror what Alpaca's Order object returns so we can reconcile
     # our internal trade_id with the broker's view.
+    origin:              Optional[str]      = None  # app instance / channel that created the broker order
     broker_order_id:     Optional[str]      = None  # Alpaca order UUID
     broker_status:       Optional[str]      = None  # new / accepted / filled / canceled / …
     broker_submitted_at: Optional[datetime] = None  # when we submitted to the broker
