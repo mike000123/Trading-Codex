@@ -14,6 +14,7 @@ All timestamps stored as UTC ISO-8601 strings for portability.
 from __future__ import annotations
 
 import json
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -105,7 +106,21 @@ class ConfigRow(Base):
 class Database:
     """Thread-safe SQLite database manager."""
 
+    _instances: dict[str, "Database"] = {}
+    _instances_lock = threading.Lock()
+
+    def __new__(cls, db_path: Path):
+        key = str(Path(db_path))
+        with cls._instances_lock:
+            inst = cls._instances.get(key)
+            if inst is None:
+                inst = super().__new__(cls)
+                cls._instances[key] = inst
+        return inst
+
     def __init__(self, db_path: Path) -> None:
+        if getattr(self, "_initialized", False):
+            return
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self._engine = create_engine(
             f"sqlite:///{db_path}",
@@ -118,6 +133,7 @@ class Database:
         self._migrate_schema()
         self._Session = sessionmaker(bind=self._engine, expire_on_commit=False)
         log.info(f"Database ready: {db_path}")
+        self._initialized = True
 
     def _migrate_schema(self) -> None:
         """

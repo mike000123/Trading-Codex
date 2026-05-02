@@ -216,18 +216,22 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
         from data.cache import DataCache
 
         _yc = DataCache()
-        ticker = st.sidebar.text_input("Ticker", value="UVXY", key="yf_ticker")
-        interval = st.sidebar.selectbox("Interval", ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"], index=0, key="yf_interval")
-        col1, col2 = st.sidebar.columns(2)
-        start = col1.date_input("Start", value=pd.Timestamp("2026-03-23").date(), key="yf_start")
-        end = col2.date_input("End", value=pd.Timestamp.today().date(), key="yf_end")
+        with st.sidebar.form("yf_data_form", clear_on_submit=False):
+            ticker = st.text_input("Ticker", value="UVXY", key="yf_ticker")
+            interval = st.selectbox("Interval", ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"], index=0, key="yf_interval")
+            col1, col2 = st.columns(2)
+            start = col1.date_input("Start", value=pd.Timestamp("2026-03-23").date(), key="yf_start")
+            end = col2.date_input("End", value=pd.Timestamp.today().date(), key="yf_end")
+            _render_companion_hint(ticker, "yfinance", interval, strategy_id)
+            st.caption("Edit these fields freely, then submit once to load from cache or fetch fresh bars.")
+            yf_apply = st.form_submit_button("Load From Cache")
+            yf_fetch = st.form_submit_button("Fetch / Update", type="primary")
+
         start_ts = pd.Timestamp(start)
         end_ts = pd.Timestamp(end)
         end_exclusive = end_ts + pd.Timedelta(days=1)
-        _render_companion_hint(ticker, "yfinance", interval, strategy_id)
 
-        _yf_key = f"yf_loaded_{ticker}_{interval}_{start}_{end}"
-        if _yf_key not in st.session_state:
+        if yf_apply:
             cached_df = _yc.load("yfinance", ticker.upper(), interval)
             if cached_df is not None and not cached_df.empty:
                 mask = (cached_df["date"] >= start_ts) & (cached_df["date"] < end_exclusive)
@@ -247,13 +251,16 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                         start=start_ts,
                         end=pd.Timestamp(in_range["date"].max()),
                     )
-                    st.session_state[_yf_key] = True
-                    st.sidebar.success(f"✓ {len(in_range):,} bars from cache")
+                    st.sidebar.success(f"✓ Loaded {len(in_range):,} bars from Yahoo cache")
+                else:
+                    st.sidebar.info("No cached Yahoo bars cover that exact range yet. Use Fetch / Update to load them.")
+            else:
+                st.sidebar.info("No Yahoo cache exists for that ticker/interval yet. Use Fetch / Update to load it.")
 
-        if st.sidebar.button("🔄 Fetch / Update", type="primary", key="yf_fetch"):
+        if yf_fetch:
             from data.ingestion import load_from_ticker, prefetch_strategy_companions
 
-            with st.spinner("Fetching…"):
+            with st.spinner("Fetching bars and warming companion caches…"):
                 try:
                     data = load_from_ticker(ticker, interval, start_ts, end_exclusive)
                     st.session_state["loaded_data"] = data
@@ -270,9 +277,6 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                         start=start_ts,
                         end=pd.Timestamp(data["date"].max()) if not data.empty else end_exclusive,
                     )
-                    for k in list(st.session_state.keys()):
-                        if k.startswith(f"yf_loaded_{ticker}_{interval}"):
-                            del st.session_state[k]
                     warmed = prefetch_strategy_companions(
                         _companion_strategy(strategy_id),
                         primary_symbol=ticker.upper(),
@@ -318,8 +322,8 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
             from data.cache import DataCache
 
             _ac = DataCache()
-            symbol = st.sidebar.text_input("Symbol", value="UVXY", key="alp_symbol")
-            tf = st.sidebar.selectbox("Timeframe", ["1Min", "5Min", "15Min", "30Min", "1Hour", "1Day"], index=0, key="alp_tf")
+            symbol = str(st.session_state.get("alp_symbol") or "UVXY")
+            tf = str(st.session_state.get("alp_tf") or "1Min")
             cached_df = _ac.load("alpaca", symbol, tf)
             if cached_df is not None and not cached_df.empty:
                 default_start_date = pd.Timestamp(cached_df["date"].min()).date()
@@ -327,16 +331,22 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
             else:
                 default_start_date = (pd.Timestamp.today() - pd.Timedelta(days=730)).date()
                 default_end_date = pd.Timestamp.today().date()
-            col1, col2 = st.sidebar.columns(2)
-            start = col1.date_input("Start", value=default_start_date, key="alp_start")
-            end = col2.date_input("End", value=default_end_date, key="alp_end")
+            with st.sidebar.form("alp_data_form", clear_on_submit=False):
+                symbol = st.text_input("Symbol", value=symbol, key="alp_symbol")
+                tf = st.selectbox("Timeframe", ["1Min", "5Min", "15Min", "30Min", "1Hour", "1Day"], index=["1Min", "5Min", "15Min", "30Min", "1Hour", "1Day"].index(tf if tf in {"1Min", "5Min", "15Min", "30Min", "1Hour", "1Day"} else "1Min"), key="alp_tf")
+                col1, col2 = st.columns(2)
+                start = col1.date_input("Start", value=default_start_date, key="alp_start")
+                end = col2.date_input("End", value=default_end_date, key="alp_end")
+                _render_companion_hint(symbol, "alpaca", tf, strategy_id)
+            st.caption("Edit these fields freely, then submit once to load from cache or fetch from Alpaca.")
+            alp_apply = st.form_submit_button("Load From Cache")
+            alp_fetch = st.form_submit_button("Fetch / Update from Alpaca", type="primary")
+
             start_ts = pd.Timestamp(start)
             end_ts = pd.Timestamp(end)
             end_exclusive = end_ts + pd.Timedelta(days=1)
-            _render_companion_hint(symbol, "alpaca", tf, strategy_id)
 
-            _cache_key = f"alp_loaded_{symbol}_{tf}_{start}_{end}"
-            if _cache_key not in st.session_state:
+            if alp_apply:
                 if cached_df is not None and not cached_df.empty:
                     mask = (cached_df["date"] >= start_ts) & (cached_df["date"] < end_exclusive)
                     in_range = cached_df[mask]
@@ -355,16 +365,19 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                             start=start_ts,
                             end=pd.Timestamp(in_range["date"].max()),
                         )
-                        st.session_state[_cache_key] = True
                         st.sidebar.success(
-                            f"✓ Loaded {len(in_range):,} bars from local cache  \n"
+                            f"✓ Loaded {len(in_range):,} bars from Alpaca cache  \n"
                             f"({in_range['date'].iloc[0].date()} → {in_range['date'].iloc[-1].date()})"
                         )
+                    else:
+                        st.sidebar.info("No cached Alpaca bars cover that exact range yet. Use Fetch / Update to load them.")
                 elif _ac.exists("alpaca", symbol, tf):
                     st.sidebar.warning(
                         "⚠️ The local intraday cache appears corrupted and was ignored. "
                         "Press Fetch / Update from Alpaca to rebuild it with full timestamps."
                     )
+                else:
+                    st.sidebar.info("No Alpaca cache exists for that ticker/timeframe yet. Use Fetch / Update to load it.")
 
             existing = _ac.load("alpaca", symbol, tf)
             if existing is not None and not existing.empty:
@@ -380,13 +393,13 @@ def render_data_source_selector(strategy_id: str | None = None) -> Optional[pd.D
                     "Pick a window wide enough to cover the strategy's warm-up plus a meaningful sample (e.g. start **2020-01-01** for a multi-year backtest)."
                 )
 
-            if st.sidebar.button("🔄 Fetch / Update from Alpaca", key="alp_fetch"):
+            if alp_fetch:
                 from data.ingestion import load_from_alpaca_history, prefetch_strategy_companions
 
                 creds = settings.alpaca
                 key_ = creds.paper_api_key if not settings.is_live() else creds.live_api_key
                 sec_ = creds.paper_secret_key if not settings.is_live() else creds.live_secret_key
-                with st.spinner("Checking for new bars…"):
+                with st.spinner("Checking for new Alpaca bars and warming companion caches…"):
                     try:
                         request_end, capped_recent = _alpaca_safe_request_end(end_exclusive, tf)
                         if request_end <= start_ts:

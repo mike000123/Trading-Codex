@@ -9,6 +9,7 @@ Usage:
 """
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 # ─── Theme definitions ────────────────────────────────────────────────────────
@@ -81,6 +82,86 @@ _THEMES: dict[str, dict[str, str]] = {
 }
 
 THEME_NAMES: list[str] = list(_THEMES.keys())
+
+
+def current_theme_name(default: str = "Dark") -> str:
+    """Return the active theme name from session state."""
+    return st.session_state.get("theme_selector") or st.session_state.get("theme") or default
+
+
+def themed_dataframe_style(
+    df: pd.DataFrame | None,
+    *,
+    theme_name: str | None = None,
+    hide_index: bool = False,
+):
+    """Return a reusable dataframe styler aligned with the active app theme."""
+    active_name = theme_name or current_theme_name()
+    theme = _THEMES.get(active_name, _THEMES["Dark"])
+    safe_df = (df if df is not None else pd.DataFrame()).copy()
+    bg_primary = theme.get("--bg-primary", "#0e1117")
+    bg_secondary = theme.get("--bg-secondary", "#1a1d27")
+    bg_card = theme.get("--bg-card", "#1e2130")
+    text_primary = theme.get("--text-primary", "#e8eaf6")
+    text_secondary = theme.get("--text-secondary", "#9e9eb8")
+    accent = theme.get("--accent", "#7c83fd")
+    border = theme.get("--border", "#2a2d3e")
+    row_even = bg_card
+    row_odd = bg_secondary if bg_secondary != bg_card else bg_primary
+
+    styler = safe_df.style.format(na_rep="—")
+
+    def _row_style(row):
+        bg = row_even if int(getattr(row, "name", 0)) % 2 == 0 else row_odd
+        return [
+            f"background-color: {bg}; color: {text_primary}; border-color: {border};"
+            for _ in row
+        ]
+
+    styler = styler.apply(_row_style, axis=1).set_table_styles(
+        [
+            {
+                "selector": "table",
+                "props": [
+                    ("background-color", bg_card),
+                    ("color", text_primary),
+                    ("border", f"1px solid {border}"),
+                    ("border-collapse", "collapse"),
+                ],
+            },
+            {
+                "selector": "thead th",
+                "props": [
+                    ("background-color", bg_secondary),
+                    ("color", accent),
+                    ("border", f"1px solid {border}"),
+                    ("font-weight", "600"),
+                ],
+            },
+            {
+                "selector": "tbody td",
+                "props": [
+                    ("border", f"1px solid {border}"),
+                    ("color", text_primary),
+                ],
+            },
+            {
+                "selector": "tbody th",
+                "props": [
+                    ("background-color", bg_secondary),
+                    ("color", text_secondary),
+                    ("border", f"1px solid {border}"),
+                ],
+            },
+        ],
+        overwrite=False,
+    )
+    if hide_index:
+        try:
+            styler = styler.hide(axis="index")
+        except Exception:
+            pass
+    return styler
 
 
 def apply_theme(theme_name: str) -> None:

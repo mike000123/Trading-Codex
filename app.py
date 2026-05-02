@@ -13,6 +13,10 @@ import streamlit as st
 # Results are always computed and stored correctly despite these messages.
 logging.getLogger("tornado.websocket").setLevel(logging.CRITICAL)
 logging.getLogger("tornado.iostream").setLevel(logging.CRITICAL)
+# Streamlit fragments used for page-local auto-refresh can legitimately be
+# removed during a full-app rerun when the user navigates to another page.
+# Streamlit logs that as INFO from app_session, but it's expected and noisy.
+logging.getLogger("streamlit.runtime.app_session").setLevel(logging.WARNING)
 
 st.set_page_config(
     page_title="MRMI Platform",
@@ -23,6 +27,7 @@ st.set_page_config(
 
 # ── Theme must be applied before any other st.* calls ──────────────────────
 from ui.themes import apply_theme, THEME_NAMES
+from core.startup_preload import maybe_run_startup_preload
 
 # The selectbox below uses key="theme_selector". Streamlit syncs that key
 # to st.session_state at the START of every rerun (before any script line
@@ -37,6 +42,9 @@ st.session_state["theme"] = _current_theme
 # Theme applied immediately so subsequent st.* calls inherit the styling.
 # The selector itself renders later in the sidebar (under the logo).
 apply_theme(_current_theme)
+
+if maybe_run_startup_preload():
+    st.stop()
 
 from config.settings import settings
 from db.database import Database

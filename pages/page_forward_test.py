@@ -17,6 +17,7 @@ import streamlit as st
 
 from config.strategy_presets.bollinger_rsi.gld_candidates import get_candidate
 from config.settings import settings
+from core.logger import log
 from core.models import Direction, SignalAction
 from data.ingestion import load_forward_blended_data, prepare_strategy_data
 from db.database import Database
@@ -161,6 +162,67 @@ def _fetch(symbol: str, interval: str, lookback: int) -> pd.DataFrame:
         clock_multiplier = 2
     start = end - delta * max(lookback * clock_multiplier, 500)
     return load_forward_blended_data(symbol, interval, start, end, lookback=lookback)
+
+
+def _preload_run_cache(symbol: str, run: dict) -> int:
+    lookback = int(run.get("lookback") or 2000)
+    prices = _fetch(symbol, run["interval"], lookback)
+    if prices is None or prices.empty:
+        raise ValueError(f"No bars returned for {symbol}/{run['interval']}")
+
+    cls = get_strategy(run["strategy_id"])
+    strategy = cls(params=run["params"])
+    prepared_prices = prepare_strategy_data(
+        prices,
+        strategy,
+        primary_symbol=symbol,
+        source="forward_blend",
+        interval=run["interval"],
+        start=prices["date"].min() if not prices.empty else None,
+        end=prices["date"].max() if not prices.empty else None,
+    )
+    prepared_prices.attrs["_strategy_symbol"] = str(symbol or "").strip().upper()
+    prepared_prices.attrs["_strategy_source"] = "forward_blend"
+    prepared_prices.attrs["_strategy_interval"] = str(run["interval"] or "").strip().lower()
+    st.session_state[_CACHE][symbol] = prepared_prices
+    return int(len(prepared_prices))
+
+
+def startup_preload(status_cb=None) -> dict:
+    """
+    Restore saved Forward Test runs and warm their prepared price caches.
+
+    This intentionally avoids opening/closing trades. It only fetches and
+    prepares the frames the page expects so the UI opens warm.
+    """
+    _init_state()
+    restored = _restore_state_config()
+    runs = st.session_state.get(_RUNS) or {}
+    if not runs:
+        return {"ok": True, "loaded": 0, "message": "No saved Forward Test runs to preload."}
+
+    loaded: list[dict] = []
+    errors: list[str] = []
+    for symbol, run in runs.items():
+        try:
+            if status_cb is not None:
+                status_cb(f"Forward Test: warming {symbol} ({run.get('interval')}, {run.get('lookback')} bars)")
+            bars = _preload_run_cache(symbol, run)
+            loaded.append({"symbol": symbol, "bars": bars})
+        except Exception as exc:  # noqa: BLE001
+            log.warning(f"Forward Test startup preload failed for {symbol}: {exc}")
+            errors.append(f"{symbol}: {exc}")
+
+    if loaded:
+        st.session_state["_ft_skip_next_auto_tick"] = True
+
+    return {
+        "ok": True,
+        "restored": bool(restored),
+        "loaded": len(loaded),
+        "symbols": [row["symbol"] for row in loaded],
+        "errors": errors,
+    }
 
 
 def _leveraged_ret(entry: float, exit_p: float,
@@ -839,11 +901,14 @@ def render() -> None:
         closed_this_session = []
 
     # ── Per-symbol refresh ────────────────────────────────────────────────────
-    if refresh_all or (auto):
+    skip_auto_tick = bool(st.session_state.pop("_ft_skip_next_auto_tick", False))
+    if refresh_all or (auto and not skip_auto_tick):
         for symbol, run in runs.items():
             if run.get("active"):
                 _run_tick(symbol, run, closed_this_session)
         st.rerun() if not auto else None
+    elif auto and skip_auto_tick:
+        st.caption("Using startup-preloaded Forward Test data. Auto-refresh resumes on the next rerun.")
 
     st.divider()
 

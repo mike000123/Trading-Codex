@@ -14,6 +14,8 @@ Cache behaviour:
 from __future__ import annotations
 
 import io
+import threading
+import time
 from typing import Optional
 
 import pandas as pd
@@ -26,6 +28,54 @@ from data.cache import DataCache
 from data.fair_value import prepare_gld_fair_value_context
 
 _cache = DataCache()
+_REQUEST_LOCKS: dict[tuple, threading.Lock] = {}
+_REQUEST_LOCKS_GUARD = threading.Lock()
+_RECENT_RESULT_CACHE: dict[tuple, tuple[float, pd.DataFrame]] = {}
+_RECENT_RESULT_TTL_S = 45.0
+
+
+def _request_key(
+    source: str,
+    ticker: str,
+    interval: str,
+    start_date: pd.Timestamp,
+    end_date: pd.Timestamp,
+    use_cache: bool,
+) -> tuple:
+    return (
+        str(source).lower(),
+        str(ticker).upper(),
+        str(interval).lower(),
+        pd.Timestamp(start_date).isoformat(),
+        pd.Timestamp(end_date).isoformat(),
+        bool(use_cache),
+    )
+
+
+def _request_lock(key: tuple) -> threading.Lock:
+    with _REQUEST_LOCKS_GUARD:
+        lock = _REQUEST_LOCKS.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _REQUEST_LOCKS[key] = lock
+        return lock
+
+
+def _recent_result_get(key: tuple) -> Optional[pd.DataFrame]:
+    payload = _RECENT_RESULT_CACHE.get(key)
+    if payload is None:
+        return None
+    at, frame = payload
+    if (time.monotonic() - at) > _RECENT_RESULT_TTL_S:
+        _RECENT_RESULT_CACHE.pop(key, None)
+        return None
+    return frame.copy()
+
+
+def _recent_result_put(key: tuple, frame: pd.DataFrame) -> pd.DataFrame:
+    copied = frame.copy()
+    _RECENT_RESULT_CACHE[key] = (time.monotonic(), copied)
+    return copied.copy()
 
 
 # ─── Internal helpers ────────────────────────────────────────────────────────
@@ -133,6 +183,12 @@ def load_from_ticker(
         raise ValueError("End date must be on or after start date.")
 
     source = "yfinance"
+    request_key = _request_key(source, ticker, interval, start_date, end_date, use_cache)
+
+    cached_recent = _recent_result_get(request_key)
+    if cached_recent is not None:
+        log.debug(f"yfinance MEMO HIT: {ticker}/{interval}")
+        return cached_recent
 
     # ── Cache check ───────────────────────────────────────────────────────────
     if use_cache:
@@ -145,84 +201,104 @@ def load_from_ticker(
                       (cached["date"] <= end_date))
             log.info(f"yfinance CACHE HIT: {ticker}/{interval} — "
                      f"serving from cache, no download needed")
-            return cached[mask].reset_index(drop=True)
+            return _recent_result_put(request_key, cached[mask].reset_index(drop=True))
     else:
         fetch_start, fetch_end = start_date, end_date
 
-    log.info(f"yfinance FETCH: {ticker} {interval} "
-             f"{fetch_start.date()} → {fetch_end.date()}")
+    lock = _request_lock(request_key)
+    with lock:
+        cached_recent = _recent_result_get(request_key)
+        if cached_recent is not None:
+            log.debug(f"yfinance MEMO HIT(after-lock): {ticker}/{interval}")
+            return cached_recent
 
-    fetch_failed: Exception | None = None
-    try:
-        data = yf.download(
-            ticker,
-            start     = fetch_start.strftime("%Y-%m-%d"),
-            end       = (fetch_end + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
-            interval  = interval,
-            auto_adjust = False,
-            progress  = False,
-        )
-    except Exception as exc:  # offline / DNS / 429 / yfinance internal
-        fetch_failed = exc
-        data = None
-
-    # Cache fallback path: serve cached range when fresh fetch is unavailable
-    # OR when it returned nothing. Without this branch, an offline backtest
-    # would raise even with a fully populated data_cache.
-    if fetch_failed is not None or data is None or data.empty:
         if use_cache:
-            cached = _cache.load(source, ticker, interval)
-            if cached is not None and not cached.empty:
+            fetch_start, fetch_end = _cache.missing_range(
+                source, ticker, interval, start_date, end_date)
+            if fetch_start is None:
+                cached = _cache.load(source, ticker, interval)
                 mask = ((cached["date"] >= start_date) &
                         (cached["date"] <= end_date))
-                sliced = cached[mask].reset_index(drop=True)
-                if not sliced.empty:
-                    if fetch_failed is not None:
-                        log.warning(f"yfinance fetch failed for {ticker}/{interval} "
-                                    f"({fetch_failed.__class__.__name__}: {fetch_failed}). "
-                                    f"Serving {len(sliced)} cached bars instead.")
-                    else:
-                        log.warning(f"yfinance returned no new data for {ticker}/{interval}. "
-                                    f"Serving {len(sliced)} cached bars.")
-                    return sliced
-        if fetch_failed is not None:
-            raise ValueError(
-                f"yfinance fetch failed for {ticker}/{interval} and no cached "
-                f"data is available for {start_date.date()} → {end_date.date()}: "
-                f"{fetch_failed.__class__.__name__}: {fetch_failed}"
+                log.info(f"yfinance CACHE HIT: {ticker}/{interval} — "
+                         f"serving from cache, no download needed")
+                return _recent_result_put(request_key, cached[mask].reset_index(drop=True))
+        else:
+            fetch_start, fetch_end = start_date, end_date
+
+        log.info(f"yfinance FETCH: {ticker} {interval} "
+                 f"{fetch_start.date()} → {fetch_end.date()}")
+
+        fetch_failed: Exception | None = None
+        try:
+            data = yf.download(
+                ticker,
+                start     = fetch_start.strftime("%Y-%m-%d"),
+                end       = (fetch_end + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
+                interval  = interval,
+                auto_adjust = False,
+                progress  = False,
             )
-        raise ValueError(f"No data returned for {ticker} / {interval}.")
+        except Exception as exc:  # offline / DNS / 429 / yfinance internal
+            fetch_failed = exc
+            data = None
 
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.get_level_values(0)
+        # Cache fallback path: serve cached range when fresh fetch is unavailable
+        # OR when it returned nothing. Without this branch, an offline backtest
+        # would raise even with a fully populated data_cache.
+        if fetch_failed is not None or data is None or data.empty:
+            if use_cache:
+                cached = _cache.load(source, ticker, interval)
+                if cached is not None and not cached.empty:
+                    mask = ((cached["date"] >= start_date) &
+                            (cached["date"] <= end_date))
+                    sliced = cached[mask].reset_index(drop=True)
+                    if not sliced.empty:
+                        if fetch_failed is not None:
+                            log.warning(f"yfinance fetch failed for {ticker}/{interval} "
+                                        f"({fetch_failed.__class__.__name__}: {fetch_failed}). "
+                                        f"Serving {len(sliced)} cached bars instead.")
+                        else:
+                            log.warning(f"yfinance returned no new data for {ticker}/{interval}. "
+                                        f"Serving {len(sliced)} cached bars.")
+                        return _recent_result_put(request_key, sliced)
+            if fetch_failed is not None:
+                raise ValueError(
+                    f"yfinance fetch failed for {ticker}/{interval} and no cached "
+                    f"data is available for {start_date.date()} → {end_date.date()}: "
+                    f"{fetch_failed.__class__.__name__}: {fetch_failed}"
+                )
+            raise ValueError(f"No data returned for {ticker} / {interval}.")
 
-    required = ["Open", "High", "Low", "Close"]
-    for col in required:
-        if col not in data.columns:
-            raise ValueError(f"Fetched data missing column: {col}")
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.get_level_values(0)
 
-    vol_col = "Volume" if "Volume" in data.columns else None
-    raw     = data.copy()
-    raw["_date"] = (pd.to_datetime(data.index, errors="coerce", utc=True)
-                    .tz_localize(None))
-    col_map = {"date": "_date", "open": "Open",
-               "high": "High",  "low": "Low", "close": "Close"}
-    if vol_col:
-        col_map["volume"] = vol_col
+        required = ["Open", "High", "Low", "Close"]
+        for col in required:
+            if col not in data.columns:
+                raise ValueError(f"Fetched data missing column: {col}")
 
-    new_data = _normalize_df(raw, col_map)
-    if new_data.empty:
-        raise ValueError("No valid rows after fetching ticker data.")
+        vol_col = "Volume" if "Volume" in data.columns else None
+        raw     = data.copy()
+        raw["_date"] = (pd.to_datetime(data.index, errors="coerce", utc=True)
+                        .tz_localize(None))
+        col_map = {"date": "_date", "open": "Open",
+                   "high": "High",  "low": "Low", "close": "Close"}
+        if vol_col:
+            col_map["volume"] = vol_col
 
-    # ── Cache update ──────────────────────────────────────────────────────────
-    if use_cache:
-        merged = _cache.append(source, ticker, interval, new_data)
-        # Return only the requested range
-        mask   = ((merged["date"] >= start_date) &
-                  (merged["date"] <= end_date))
-        return merged[mask].reset_index(drop=True)
+        new_data = _normalize_df(raw, col_map)
+        if new_data.empty:
+            raise ValueError("No valid rows after fetching ticker data.")
 
-    return new_data
+        # ── Cache update ──────────────────────────────────────────────────────────
+        if use_cache:
+            merged = _cache.append(source, ticker, interval, new_data)
+            # Return only the requested range
+            mask   = ((merged["date"] >= start_date) &
+                      (merged["date"] <= end_date))
+            return _recent_result_put(request_key, merged[mask].reset_index(drop=True))
+
+        return _recent_result_put(request_key, new_data)
 
 
 # ─── Alpaca ───────────────────────────────────────────────────────────────────

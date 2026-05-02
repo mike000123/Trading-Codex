@@ -12,7 +12,12 @@ from config.strategy_presets.bollinger_rsi.gld_candidates import get_candidate
 from config.settings import settings
 from core.models import Direction, TradeOutcome, TradeRecord
 from data.fair_value import compute_gld_fair_value_diagnostics, fair_value_cache_fingerprint
-from data.ingestion import prepare_strategy_data
+from data.ingestion import (
+    load_forward_blended_data,
+    load_from_ticker,
+    prefetch_strategy_companions,
+    prepare_strategy_data,
+)
 from db.database import Database
 from reporting.backtest import BacktestEngine, BacktestResult
 from risk.manager import RiskManager
@@ -24,6 +29,7 @@ import execution.entry_policy_classic  # noqa: F401
 import execution.entry_policy_alpaca   # noqa: F401
 from ui.charts import pnl_distribution
 from ui.components import (
+    _companion_strategy,
     render_data_source_selector,
     render_metrics_row,
     render_mode_banner,
@@ -61,10 +67,10 @@ def _iso(v) -> str | None:
 def _selection_snapshot(symbol: str) -> dict:
     return {
         "symbol": symbol,
-        "source": st.session_state.get("loaded_source"),
-        "interval": st.session_state.get("loaded_interval"),
-        "start": _iso(st.session_state.get("loaded_start")),
-        "end": _iso(st.session_state.get("loaded_end")),
+        "source": st.session_state.get("bt_source_live") or st.session_state.get("loaded_source"),
+        "interval": st.session_state.get("bt_interval_live") or st.session_state.get("loaded_interval"),
+        "start": _iso(st.session_state.get("bt_start_live") or st.session_state.get("loaded_start")),
+        "end": _iso(st.session_state.get("bt_end_live") or st.session_state.get("loaded_end")),
     }
 
 
@@ -233,6 +239,235 @@ def _resolve_gld_candidate_for_leverage(leverage: float) -> tuple[str | None, di
     else:
         return None, {}
     return name, get_candidate(name)
+
+
+def _set_backtest_dataset(
+    prices: pd.DataFrame,
+    *,
+    symbol: str,
+    source: str | None,
+    interval: str | None,
+    start,
+    end,
+) -> None:
+    st.session_state["bt_prices_live"] = prices
+    st.session_state["bt_symbol_live"] = str(symbol or "DATA").upper()
+    st.session_state["bt_source_live"] = source
+    st.session_state["bt_interval_live"] = interval
+    st.session_state["bt_start_live"] = pd.Timestamp(start) if start is not None else None
+    st.session_state["bt_end_live"] = pd.Timestamp(end) if end is not None else None
+
+
+def _is_backtest_intraday_interval(interval: str | None) -> bool:
+    if not interval:
+        return False
+    key = str(interval).lower()
+    return any(token in key for token in ("m", "h", "min", "hour")) and "day" not in key and "wk" not in key
+
+
+def _load_backtest_target(
+    *,
+    symbol: str,
+    interval: str | None,
+    start_ts: pd.Timestamp | None,
+    end_ts: pd.Timestamp | None,
+    strategy_id: str | None,
+) -> tuple[pd.DataFrame, str, str | None, pd.Timestamp | None, pd.Timestamp | None]:
+    sym = str(symbol or "").upper().strip()
+    if not sym:
+        raise ValueError("Ticker cannot be empty.")
+    if start_ts is None or end_ts is None:
+        raise ValueError("Start and end dates are required.")
+    if end_ts < start_ts:
+        raise ValueError("End date must be on or after start date.")
+
+    companion_strategy = _companion_strategy(strategy_id)
+    end_exclusive = pd.Timestamp(end_ts) + pd.Timedelta(days=1)
+
+    if not interval:
+        raise ValueError("Interval is required.")
+
+    if _is_backtest_intraday_interval(interval):
+        data = load_forward_blended_data(
+            sym,
+            interval,
+            pd.Timestamp(start_ts),
+            end_exclusive,
+            lookback=None,
+        )
+        source_key = "forward_blend"
+    else:
+        data = load_from_ticker(sym, interval, pd.Timestamp(start_ts), end_exclusive)
+        source_key = "yfinance"
+
+    prefetch_strategy_companions(
+        companion_strategy,
+        primary_symbol=sym,
+        source=source_key,
+        interval=interval,
+        start=pd.Timestamp(start_ts),
+        end=end_exclusive,
+    )
+    actual_end = pd.Timestamp(data["date"].max()) if not data.empty else end_exclusive
+    return data, sym, source_key, interval, pd.Timestamp(start_ts), actual_end
+
+
+def _apply_backtest_target(
+    *,
+    symbol: str,
+    interval: str | None,
+    start_ts: pd.Timestamp | None,
+    end_ts: pd.Timestamp | None,
+    strategy_id: str | None,
+) -> tuple[bool, str]:
+    data, actual_symbol, actual_source, actual_interval, actual_start, actual_end = _load_backtest_target(
+        symbol=symbol,
+        interval=interval,
+        start_ts=start_ts,
+        end_ts=end_ts,
+        strategy_id=strategy_id,
+    )
+    _set_backtest_dataset(
+        data,
+        symbol=actual_symbol,
+        source=actual_source,
+        interval=actual_interval,
+        start=actual_start,
+        end=actual_end,
+    )
+    return (
+        True,
+        f"Loaded backtest target: {actual_symbol} · {len(data):,} bars"
+        + (f" · {actual_interval}" if actual_interval else ""),
+    )
+
+
+def startup_preload(status_cb=None) -> dict:
+    """
+    Warm the last saved Backtester target into session state.
+
+    This is intentionally data-only: it restores the target dataset and
+    companion context so the Backtester page opens warm, but it does not run
+    a backtest automatically.
+    """
+    try:
+        payload = _db().load_config(_BT_RESULT_CFG_KEY) or {}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+    selection = payload.get("selection") or {}
+    symbol = str(selection.get("symbol") or "").upper().strip()
+    interval = selection.get("interval")
+    start_raw = selection.get("start")
+    end_raw = selection.get("end")
+    strategy_id = payload.get("selected_id")
+
+    if not symbol or not interval or not start_raw or not end_raw:
+        return {"ok": True, "loaded": 0, "message": "No saved Backtester target to preload."}
+
+    start_ts = pd.Timestamp(start_raw)
+    end_ts = pd.Timestamp(end_raw)
+    if status_cb is not None:
+        status_cb(f"Backtester: loading {symbol} {interval} from {start_ts.date()} to {end_ts.date()}")
+
+    data, actual_symbol, actual_source, actual_interval, actual_start, actual_end = _load_backtest_target(
+        symbol=symbol,
+        interval=interval,
+        start_ts=start_ts,
+        end_ts=end_ts,
+        strategy_id=strategy_id,
+    )
+    _set_backtest_dataset(
+        data,
+        symbol=actual_symbol,
+        source=actual_source,
+        interval=actual_interval,
+        start=actual_start,
+        end=actual_end,
+    )
+    return {
+        "ok": True,
+        "loaded": int(len(data)),
+        "symbol": actual_symbol,
+        "interval": actual_interval,
+    }
+
+
+def _render_backtest_target_selector() -> dict:
+    st.subheader("Backtest Target")
+    st.caption(
+        "Choose the exact ticker, interval, and dates for the backtest here. "
+        "The loader automatically reuses cache, pulls the most recent intraday bars from Yahoo when useful, "
+        "and fills older intraday history from Alpaca when needed."
+    )
+
+    current_symbol = (
+        st.session_state.get("bt_symbol_live")
+        or st.session_state.get("loaded_symbol")
+        or "UVXY"
+    )
+    current_start = st.session_state.get("bt_start_live") or st.session_state.get("loaded_start")
+    current_end = st.session_state.get("bt_end_live") or st.session_state.get("loaded_end")
+
+    action = {"run_requested": False}
+    with st.form("bt_target_form", clear_on_submit=False):
+        tcol1, tcol2, tcol3, tcol4 = st.columns(4)
+        with tcol1:
+            bt_symbol = st.text_input(
+                "Ticker",
+                value=str(current_symbol).upper(),
+                key="bt_target_symbol",
+            )
+        with tcol2:
+            interval_options = ["1m", "5m", "15m", "30m", "1h", "1d", "1wk"]
+            current_interval = st.session_state.get("bt_interval_live") or st.session_state.get("loaded_interval") or "1m"
+            default_interval = current_interval if current_interval in interval_options else "1m"
+            bt_interval = st.selectbox(
+                "Interval",
+                interval_options,
+                index=interval_options.index(default_interval),
+                key="bt_target_interval",
+            )
+        with tcol3:
+            bt_start = st.date_input(
+                "Start",
+                value=(pd.Timestamp(current_start).date() if current_start is not None else pd.Timestamp("2026-03-23").date()),
+                key="bt_target_start",
+            )
+        with tcol4:
+            bt_end = st.date_input(
+                "End",
+                value=(pd.Timestamp(current_end).date() if current_end is not None else pd.Timestamp.today().date()),
+                key="bt_target_end",
+            )
+
+        st.caption(
+            "These target fields are grouped so you can edit them without triggering a full page rerun on every keystroke. "
+            "Sidebar fetches are still useful for warming cache or working offline, but the Backtester can now load this target on demand."
+        )
+        bcol1, bcol2 = st.columns([1, 1])
+        load_clicked = bcol1.form_submit_button("Apply Backtest Target", type="secondary")
+        run_target_clicked = bcol2.form_submit_button("Apply Target + Run", type="primary")
+
+    if load_clicked or run_target_clicked:
+        available = list_strategies()
+        name_to_id = {item["name"]: item["id"] for item in available}
+        selected_strategy_id = name_to_id.get(st.session_state.get("bt_strategy"))
+        with st.spinner("Loading the backtest target dataset and warming companion context…"):
+            try:
+                _, message = _apply_backtest_target(
+                    symbol=bt_symbol,
+                    interval=bt_interval,
+                    start_ts=pd.Timestamp(bt_start),
+                    end_ts=pd.Timestamp(bt_end),
+                    strategy_id=selected_strategy_id,
+                )
+                st.success(message)
+                action["run_requested"] = bool(run_target_clicked)
+            except Exception as exc:
+                st.error(str(exc))
+
+    return action
 
 
 def _downsample(df: pd.DataFrame, max_pts: int = _MAX_CHART_PTS) -> pd.DataFrame:
@@ -599,13 +834,20 @@ def render() -> None:
     render_mode_banner()
     st.title("Backtester")
     st.session_state.setdefault("bt_strategy", "Bollinger + RSI (Spike-Aware)")
-    prices = render_data_source_selector()
-    if prices is not None:
-        st.session_state["bt_prices_live"] = prices
-        st.session_state["bt_symbol_live"] = st.session_state.get("loaded_symbol", "DATA")
+    sidebar_prices = render_data_source_selector()
+    if st.session_state.get("bt_prices_live") is None and sidebar_prices is not None:
+        _set_backtest_dataset(
+            sidebar_prices,
+            symbol=st.session_state.get("loaded_symbol", "DATA"),
+            source=st.session_state.get("loaded_source"),
+            interval=st.session_state.get("loaded_interval"),
+            start=st.session_state.get("loaded_start"),
+            end=st.session_state.get("loaded_end"),
+        )
+    target_action = _render_backtest_target_selector()
     prices = st.session_state.get("bt_prices_live")
     if prices is None:
-        st.info("← Select a data source in the sidebar to begin.")
+        st.info("Load a backtest target above, or use the sidebar to fetch/cache a dataset first.")
         if "bt_result" in st.session_state:
             st.divider()
             _show_results()
@@ -809,11 +1051,11 @@ def render() -> None:
         leverage=leverage,
         max_capital_loss_pct=float(max_loss),
         symbol=symbol,
-        source=st.session_state.get("loaded_source"),
-        interval=st.session_state.get("loaded_interval"),
+        source=st.session_state.get("bt_source_live") or st.session_state.get("loaded_source"),
+        interval=st.session_state.get("bt_interval_live") or st.session_state.get("loaded_interval"),
         base_overrides=combined_param_overrides if show_gld_candidates and combined_param_overrides else None,
     )
-    run_clicked = st.button("▶ Run Backtest", type="primary", key="bt_run")
+    run_clicked = bool(target_action.get("run_requested")) or st.button("▶ Run Backtest", type="primary", key="bt_run")
     if "bt_result" in st.session_state and not run_clicked:
         st.divider()
         _show_results()
@@ -857,15 +1099,15 @@ def render() -> None:
             fill_diagnostic=bool(bt_fill_diag),
             enforce_monday_open_delay=bool(bt_enforce_monday_open_delay),
         )
-        with st.spinner(f"Preparing context and running backtest on {len(prices):,} bars…"):
+        with st.spinner(f"Preparing strategy context and running backtest on {len(prices):,} bars…"):
             prepared_prices = prepare_strategy_data(
                 prices,
                 strategy,
                 primary_symbol=symbol,
-                source=st.session_state.get("loaded_source"),
-                interval=st.session_state.get("loaded_interval"),
-                start=st.session_state.get("loaded_start"),
-                end=st.session_state.get("loaded_end"),
+                source=st.session_state.get("bt_source_live") or st.session_state.get("loaded_source"),
+                interval=st.session_state.get("bt_interval_live") or st.session_state.get("loaded_interval"),
+                start=st.session_state.get("bt_start_live") or st.session_state.get("loaded_start"),
+                end=st.session_state.get("bt_end_live") or st.session_state.get("loaded_end"),
             )
             result = engine.run(
                 data=prepared_prices,

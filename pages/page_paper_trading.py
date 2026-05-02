@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import threading
 import socket
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import altair as alt
@@ -37,6 +37,7 @@ from config.settings import settings, TradingMode
 from core import kill_switch as ks
 from core.logger import log
 from core.models import Direction, SignalAction, TradeOutcome
+from core import runtime_cache
 from data.ingestion import load_forward_blended_data, prepare_strategy_data
 from db.database import Database
 from execution.router import OrderRouter, ROUTE_ALPACA_PAPER, ROUTE_SIM
@@ -54,6 +55,7 @@ from strategies import list_strategies, get_strategy
 from ui.autorefresh import render_autorefresh_timer
 from ui.components import render_mode_banner, render_strategy_params
 from ui.charts import rsi_chart
+from ui.themes import themed_dataframe_style
 
 
 # ── Styling (matches forward test) ───────────────────────────────────────────
@@ -84,6 +86,11 @@ _SIGNALS_CFG_KEY = "paper_trading_signals_v1"
 _TRAIL_CFG_KEY = "paper_trading_trail_v1"
 _MAX_PERSISTED_SIGNALS = 500
 _MAX_PERSISTED_SIGNALS_TOTAL = 5000
+# Roughly five months of 1-minute trading context. Kept as a central floor so
+# live paper/worker runs have deeper context even if the manual warm-up input
+# is left untouched.
+_PAPER_1M_CONTEXT_FLOOR_BARS = 40000
+_RUNTIME_CACHE_NS = "paper_trading_prepared_frames_v1"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -219,6 +226,34 @@ def _trail_state_dict() -> dict:
 
 def _cache_state() -> dict:
     return _state_dict(_CACHE, dict)
+
+
+def _publish_runtime_cache(symbol: str, prepared_prices: pd.DataFrame) -> None:
+    sym = str(symbol or "").upper().strip()
+    if not sym or prepared_prices is None:
+        return
+    runtime_cache.put(_RUNTIME_CACHE_NS, sym, prepared_prices)
+
+
+def _hydrate_runtime_cache(symbols: list[str] | None = None) -> int:
+    cache = _cache_state()
+    if symbols:
+        loaded = 0
+        for symbol in symbols:
+            sym = str(symbol or "").upper().strip()
+            if not sym:
+                continue
+            frame = runtime_cache.get(_RUNTIME_CACHE_NS, sym)
+            if frame is None:
+                continue
+            cache[sym] = frame
+            loaded += 1
+        return loaded
+
+    snapshot = runtime_cache.snapshot(_RUNTIME_CACHE_NS)
+    for sym, frame in snapshot.items():
+        cache[sym] = frame
+    return len(snapshot)
 
 
 def bind_worker_state(state: dict) -> None:
@@ -458,6 +493,67 @@ def _restore_trail_config() -> bool:
     return True
 
 
+def _sync_session_from_persisted_state() -> dict:
+    """
+    Refresh the page-thread session state from the DB-persisted Paper Trading
+    state without doing any heavy price fetches.
+
+    This is used on lightweight auto-refresh passes when the background worker
+    is already handling live ticks.
+    """
+    summary = {"runs": 0, "signals": 0, "trail": 0}
+
+    try:
+        runs_payload = _db().load_config(_RUNS_CFG_KEY) or {}
+    except Exception as exc:
+        log.warning(f"Paper runs sync load failed: {exc}")
+        runs_payload = {}
+    runs = runs_payload.get("runs") or {}
+    if isinstance(runs, dict):
+        refreshed_runs: dict[str, dict] = {}
+        for symbol, cfg in runs.items():
+            if not isinstance(cfg, dict):
+                continue
+            sym = str(cfg.get("symbol") or symbol or "").upper().strip()
+            if not sym:
+                continue
+            clean_cfg = dict(cfg)
+            clean_cfg["symbol"] = sym
+            clean_cfg.setdefault("active", True)
+            clean_cfg.setdefault("started_at", datetime.utcnow().isoformat())
+            refreshed_runs[sym] = clean_cfg
+        if refreshed_runs:
+            _state_set(_RUNS, refreshed_runs)
+            summary["runs"] = len(refreshed_runs)
+
+    try:
+        signals_payload = _db().load_config(_SIGNALS_CFG_KEY) or {}
+    except Exception as exc:
+        log.warning(f"Paper signals sync load failed: {exc}")
+        signals_payload = {}
+    signals = signals_payload.get("signals") or []
+    if isinstance(signals, list):
+        refreshed_signals = _trim_signal_rows(
+            [_normalize_signal_row(s) for s in signals if isinstance(s, dict)]
+        )
+        _state_set(_SIGNALS, refreshed_signals)
+        summary["signals"] = len(refreshed_signals)
+
+    try:
+        trail_payload = _db().load_config(_TRAIL_CFG_KEY) or {}
+    except Exception as exc:
+        log.warning(f"Paper trail sync load failed: {exc}")
+        trail_payload = {}
+    trail = trail_payload.get("trail") or {}
+    if isinstance(trail, dict):
+        refreshed_trail = {str(k): dict(v) for k, v in trail.items() if isinstance(v, dict)}
+        _state_set(_TRAIL, refreshed_trail)
+        summary["trail"] = len(refreshed_trail)
+
+    _hydrate_runtime_cache(list((_runs_state() or {}).keys()))
+    return summary
+
+
 def _interval_td(interval: str) -> timedelta:
     return {"1m": timedelta(minutes=1), "2m": timedelta(minutes=2),
             "5m": timedelta(minutes=5), "15m": timedelta(minutes=15),
@@ -512,6 +608,13 @@ def _local_tz():
     display. Fall back to the process timezone for desktop runs (where
     process tz == user tz) or older Streamlit installs.
     """
+    # Worker thread: never touch Streamlit request context. There is no
+    # browser session bound there, and probing it emits the
+    # "missing ScriptRunContext" warning. Persist backend timestamps in UTC;
+    # page renders convert them to the viewer's local timezone later.
+    if getattr(_worker_state_local, "state", None) is not None:
+        return timezone.utc
+
     # Prefer the browser tz from Streamlit's request context.
     try:
         ctx = getattr(st, "context", None)
@@ -1940,6 +2043,102 @@ def _rebuild_recent_signals_for_run(
     _state_set(_SIGNALS, _trim_signal_rows(kept))
 
 
+def _effective_lookback_for_run(symbol: str, run: dict) -> int:
+    """Return the safe fetch lookback for a paper-trading run."""
+    try:
+        _cls_for_warmup = get_strategy(run["strategy_id"])
+        _strategy_warm = _cls_for_warmup(params=run.get("params") or {})
+        _need = int(
+            _strategy_warm.min_warmup_bars(
+                symbol=symbol,
+                source="forward_blend",
+                interval=run["interval"],
+            )
+        )
+    except Exception:
+        _need = 0
+    _user_lb = int(run.get("lookback") or 0)
+    effective_lookback = max(_user_lb, _need + 50)
+    if (
+        bool(run.get("context_floor_enabled", run.get("two_month_context_floor", True)))
+        and str(run.get("interval") or "").strip().lower() in {"1m", "1min"}
+    ):
+        effective_lookback = max(effective_lookback, _PAPER_1M_CONTEXT_FLOOR_BARS)
+    return int(effective_lookback)
+
+
+def _preload_run_cache(symbol: str, run: dict) -> int:
+    effective_lookback = _effective_lookback_for_run(symbol, run)
+    prices = _fetch(symbol, run["interval"], effective_lookback)
+    if prices is None or prices.empty:
+        raise ValueError(f"No bars returned for {symbol}/{run['interval']}")
+
+    cls = get_strategy(run["strategy_id"])
+    strategy = cls(params=run.get("params") or {})
+    prepared_full = prepare_strategy_data(
+        prices,
+        strategy,
+        primary_symbol=symbol,
+        source="forward_blend",
+        interval=run["interval"],
+        start=prices["date"].min(),
+        end=prices["date"].max(),
+    )
+    if prepared_full is None or prepared_full.empty:
+        raise ValueError(f"Prepared strategy data is empty for {symbol}/{run['interval']}")
+
+    prepared_full.attrs["_strategy_symbol"] = str(symbol or "").strip().upper()
+    prepared_full.attrs["_strategy_source"] = "forward_blend"
+    prepared_full.attrs["_strategy_interval"] = str(run["interval"] or "").strip().lower()
+    _cache_state()[symbol] = prepared_full
+    _publish_runtime_cache(symbol, prepared_full)
+    _refresh_last_signal_snapshot(symbol, run, cls, strategy, prepared_full)
+    return int(len(prepared_full))
+
+
+def startup_preload(status_cb=None) -> dict:
+    """
+    Restore saved Paper Trading runs and warm their prepared price caches.
+
+    This preload does not process bars or submit trades. It only prepares the
+    frames the page and charts already expect so the page opens warm.
+    """
+    _init_state()
+    restored_runs = _restore_runs_config()
+    _restore_signals_config()
+    _restore_trail_config()
+
+    runs = _runs_state() or {}
+    if not runs:
+        return {"ok": True, "loaded": 0, "message": "No saved Paper Trading runs to preload."}
+
+    loaded: list[dict] = []
+    errors: list[str] = []
+    for symbol, run in runs.items():
+        try:
+            lookback = _effective_lookback_for_run(symbol, run)
+            if status_cb is not None:
+                status_cb(f"Paper Trading: warming {symbol} ({run.get('interval')}, ~{lookback:,} bars)")
+            bars = _preload_run_cache(symbol, run)
+            loaded.append({"symbol": symbol, "bars": bars})
+        except Exception as exc:  # noqa: BLE001
+            log.warning(f"Paper Trading startup preload failed for {symbol}: {exc}")
+            errors.append(f"{symbol}: {exc}")
+
+    if loaded:
+        _persist_runs_config()
+        _persist_signals_config()
+        st.session_state["_pt_skip_next_auto_tick"] = True
+
+    return {
+        "ok": True,
+        "restored": bool(restored_runs),
+        "loaded": len(loaded),
+        "symbols": [row["symbol"] for row in loaded],
+        "errors": errors,
+    }
+
+
 def _run_tick(symbol: str, run: dict) -> None:
     # Auto-floor the lookback to whatever the chosen strategy actually needs
     # for warm-up. The user-set "Warm-up bars" value still acts as a manual
@@ -1949,16 +2148,7 @@ def _run_tick(symbol: str, run: dict) -> None:
     # for the first ~3 trading days. min_warmup_bars defaults to 100 on
     # BaseStrategy and is overridden per-strategy with the actual indicator
     # window math.
-    try:
-        _cls_for_warmup = get_strategy(run["strategy_id"])
-        _strategy_warm = _cls_for_warmup(params=run.get("params") or {})
-        _need = int(_strategy_warm.min_warmup_bars(
-            symbol=symbol, source="forward_blend", interval=run["interval"],
-        ))
-    except Exception:
-        _need = 0
-    _user_lb = int(run.get("lookback") or 0)
-    effective_lookback = max(_user_lb, _need + 50)
+    effective_lookback = _effective_lookback_for_run(symbol, run)
 
     try:
         prices = _fetch(symbol, run["interval"], effective_lookback)
@@ -1985,6 +2175,7 @@ def _run_tick(symbol: str, run: dict) -> None:
     prepared_full.attrs["_strategy_interval"] = str(run["interval"] or "").strip().lower()
 
     _cache_state()[symbol] = prepared_full
+    _publish_runtime_cache(symbol, prepared_full)
     _rebuild_recent_signals_for_run(symbol, run, cls, strategy, prepared_full)
 
     positions = _bar_positions_to_process(prepared_full["date"], run.get("_last_processed_bar"))
@@ -2377,6 +2568,7 @@ def render() -> None:
     _restored_runs = _restore_runs_config()
     _restored_signals = _restore_signals_config()
     _restore_trail_config()
+    _hydrate_runtime_cache(list((_runs_state() or {}).keys()))
     render_mode_banner()
 
     # Pre-flight banner + kill switch sit above everything else so the user
@@ -2396,7 +2588,8 @@ def render() -> None:
     st.info(
         "**Flow:** Backtester → Forward Test → **Paper Trading** ← you are here → Live  \n"
         "Paper Trading = real-time data + strategy auto-execution + DB persistence (mode=`paper`).  \n"
-        "HOLD simply means _no entry this bar_ — the strategy is re-evaluated on every refresh."
+        "HOLD simply means _no entry this bar_ — the strategy is re-evaluated on every live tick, "
+        "with the background worker carrying the heavy fetch/processing path when available."
     )
     if _restored_runs:
         st.caption("Restored active paper-trading symbols from saved server state after reconnect/refresh.")
@@ -2408,10 +2601,12 @@ def render() -> None:
     # this browser session, so phone-locked / refreshed pages keep getting
     # bars processed. Show heartbeat + last error so the user can confirm
     # the backstop is alive.
+    _worker_running = False
     try:
         from execution import paper_worker as _pw
         _hb = _pw.get_heartbeat() or {}
         _status = _pw.get_status()
+        _worker_running = bool(_status.get("running"))
         if _status.get("running"):
             _at = _hb.get("at") or _status.get("last_tick_at") or "—"
             _dur = _hb.get("duration_s") or _status.get("last_tick_duration_s")
@@ -2447,12 +2642,16 @@ def render() -> None:
                                         ["1m","2m","5m","15m","30m","1h","1d"],
                                         index=0, key="pt_new_interval")
         with col2:
-            new_lookback = st.number_input("Warm-up bars", 50, 5000, 2000, 50, key="pt_new_lb",
-                                            help="Floor only — the run automatically requests at least the strategy's required warm-up window (e.g. 1182 for Bollinger+RSI on GLD), so the first tick can emit a real signal.")
+            new_lookback = st.number_input("Warm-up bars", 50, 60000, _PAPER_1M_CONTEXT_FLOOR_BARS, 50, key="pt_new_lb",
+                                            help="Floor only — the run automatically requests at least the strategy's required warm-up window. The default now targets roughly five months of 1-minute context.")
             new_capital  = st.number_input("Capital / trade ($)", 10.0, value=500.0, key="pt_new_cap")
         with col3:
             new_leverage = st.number_input("Leverage", 1.0, 100.0, 1.0, 0.5, key="pt_new_lev")
             new_max_loss = st.slider("Max capital loss %", 5, 100, 50, key="pt_new_ml")
+        st.caption(
+            "1-minute Paper Trading runs automatically request about five months of context "
+            "(~40,000 bars) so the strategy sees deeper recent history."
+        )
 
         c_cost1, c_cost2, c_cost3 = st.columns(3)
         with c_cost1:
@@ -2653,6 +2852,8 @@ def render() -> None:
                 "symbol":       new_symbol,
                 "interval":     new_interval,
                 "lookback":     new_lookback,
+                "context_floor_enabled": True,
+                "two_month_context_floor": True,  # legacy key kept for old saved runs
                 "capital":      new_capital,
                 "leverage":     new_leverage,
                 "max_loss":     new_max_loss,
@@ -2679,7 +2880,10 @@ def render() -> None:
             }
             st.session_state[_RUNS][new_symbol] = run_cfg
             _persist_runs_config()
-            _run_tick(new_symbol, run_cfg)   # prime cache + possibly first entry
+            with st.spinner(
+                f"Loading {new_symbol} history, preparing strategy context, and priming the first paper-trading tick…"
+            ):
+                _run_tick(new_symbol, run_cfg)   # prime cache + possibly first entry
             st.rerun()
 
     runs = st.session_state[_RUNS]
@@ -2699,7 +2903,15 @@ def render() -> None:
         _persist_trail_config()
         st.rerun()
 
-    if refresh_all or auto:
+    skip_auto_tick = bool(st.session_state.pop("_pt_skip_next_auto_tick", False))
+    if refresh_all or (auto and not skip_auto_tick):
+        if refresh_all:
+            st.info("Refreshing all active paper-trading symbols and rebuilding their latest signals…")
+        elif _worker_running:
+            st.caption(
+                "Auto-refresh is following the background paper-trading worker, "
+                "so heavy symbol fetches stay off the UI thread."
+            )
         # ── Alpaca-paper status poll (Step 4) ────────────────────────────────
         # Runs BEFORE per-symbol ticks so any terminal-state transitions
         # (filled, rejected, canceled, expired) are already reflected in the
@@ -2750,11 +2962,17 @@ def render() -> None:
                     "at": datetime.utcnow(),
                 }
 
-        for symbol, run in runs.items():
-            if run.get("active"):
-                _run_tick(symbol, run)
+        if refresh_all or not _worker_running:
+            for symbol, run in runs.items():
+                if run.get("active"):
+                    _run_tick(symbol, run)
+        else:
+            _sync_session_from_persisted_state()
+            runs = _runs_state() or {}
         if not auto:
             st.rerun()
+    elif auto and skip_auto_tick:
+        st.caption("Using startup-preloaded Paper Trading data. Auto-refresh resumes on the next rerun.")
 
     # ── Alpaca sync indicator ────────────────────────────────────────────────
     _sync_info = st.session_state.get(_SYNC) or {}
@@ -2958,7 +3176,8 @@ def render() -> None:
             # Per-symbol controls
             c1, c2, c3, c4 = st.columns(4)
             if c1.button(f"Refresh {symbol}", key=f"pt_ref_{symbol}"):
-                _run_tick(symbol, run)
+                with st.spinner(f"Refreshing {symbol} bars and recalculating the paper-trading signal…"):
+                    _run_tick(symbol, run)
                 st.rerun()
             if c2.button(f"{'⏸ Pause' if run.get('active') else '▶ Resume'}",
                           key=f"pt_toggle_{symbol}"):
@@ -3125,14 +3344,14 @@ def render() -> None:
                     if "date" in sig_df.columns:
                         sig_df["date"] = _to_local_series(sig_df["date"])
                         sig_df = sig_df.sort_values("date", ascending=False)
-                    st.dataframe(sig_df, width='stretch')
+                    st.dataframe(themed_dataframe_style(sig_df), width='stretch')
                 else:
                     st.info("No signals yet — press Refresh.")
 
             with st.expander("📋 Trades for this symbol", expanded=False):
                 sym_trades = [t for t in all_paper if t.get("symbol") == symbol]
                 if sym_trades:
-                    st.dataframe(pd.DataFrame(sym_trades), width='stretch')
+                    st.dataframe(themed_dataframe_style(pd.DataFrame(sym_trades)), width='stretch')
                 else:
                     st.info("No paper trades for this symbol yet.")
 
@@ -3153,7 +3372,7 @@ def render() -> None:
                             "`Market` orders in `Shares (qty)` with `DAY` time-in-force. "
                             "Bracket means Alpaca accepted attached TP + SL; otherwise it was sent as a plain market order."
                         )
-                        st.dataframe(shadow_df, width='stretch')
+                        st.dataframe(themed_dataframe_style(shadow_df), width='stretch')
                     else:
                         st.info("No mirrored Alpaca-paper orders for this symbol yet.")
 
@@ -3166,7 +3385,7 @@ def render() -> None:
                 hist_df["entry_time"] = _to_local_series(hist_df["entry_time"])
             if "exit_time" in hist_df.columns:
                 hist_df["exit_time"] = _to_local_series(hist_df["exit_time"])
-            st.dataframe(hist_df, width='stretch')
+            st.dataframe(themed_dataframe_style(hist_df), width='stretch')
         else:
             st.info("No closed paper trades yet.")
 
