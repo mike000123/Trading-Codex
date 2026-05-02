@@ -443,13 +443,11 @@ def _render_backtest_target_selector() -> dict:
 
         st.caption(
             "These target fields are grouped so you can edit them without triggering a full page rerun on every keystroke. "
-            "Sidebar fetches are still useful for warming cache or working offline, but the Backtester can now load this target on demand."
+            "Sidebar fetches are still useful for warming cache or working offline, but the Backtester now loads and uses this target in one step."
         )
-        bcol1, bcol2 = st.columns([1, 1])
-        load_clicked = bcol1.form_submit_button("Apply Backtest Target", type="secondary")
-        run_target_clicked = bcol2.form_submit_button("Apply Target + Run", type="primary")
+        run_target_clicked = st.form_submit_button("Apply Target + Run", type="primary")
 
-    if load_clicked or run_target_clicked:
+    if run_target_clicked:
         available = list_strategies()
         name_to_id = {item["name"]: item["id"] for item in available}
         selected_strategy_id = name_to_id.get(st.session_state.get("bt_strategy"))
@@ -463,7 +461,7 @@ def _render_backtest_target_selector() -> dict:
                     strategy_id=selected_strategy_id,
                 )
                 st.success(message)
-                action["run_requested"] = bool(run_target_clicked)
+                action["run_requested"] = True
             except Exception as exc:
                 st.error(str(exc))
 
