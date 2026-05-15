@@ -1,0 +1,139 @@
+{
+  "window_start": "2024-04-04 00:00:00",
+  "window_end": "2026-04-23 23:59:00",
+  "ticker_count": 36,
+  "sleeve_capital": 1000.0,
+  "baseline_full_benchmark_total_pnl": 5109.261532627092,
+  "baseline_full_benchmark_total_return_pct": 14.192393146186365,
+  "baseline_literal_1k_total_pnl": 3405.7471135202404,
+  "baseline_literal_1k_total_return_pct": 9.460408648667334,
+  "dynamic_sizing": true,
+  "runs": [
+    {
+      "starting_equity": 2000.0,
+      "capital_per_trade": 1000.0,
+      "max_open_positions": 2,
+      "managed_total_pnl": 2327.6794715903757,
+      "managed_total_return_pct": 116.38397357951877,
+      "managed_total_trades": 166,
+      "managed_candidate_entries": 960,
+      "managed_skipped_entries": 793,
+      "managed_replaced_positions": 0,
+      "managed_peak_open_positions": 2,
+      "dynamic_sizing": true,
+      "capture_vs_full_36k_benchmark_pct": 45.558041151859456,
+      "capture_vs_literal_1k_sum_pct": 68.3456344233511,
+      "top_symbol_contributors": [
+        {
+          "ticker": "GLD",
+          "pnl": 1379.9739121846108
+        },
+        {
+          "ticker": "USO",
+          "pnl": 261.2125800460765
+        },
+        {
+          "ticker": "MRVL",
+          "pnl": 181.6588076201138
+        },
+        {
+          "ticker": "MSTR",
+          "pnl": 167.09631999999985
+        },
+        {
+          "ticker": "SPY",
+          "pnl": 146.46622803622552
+        },
+        {
+          "ticker": "APLD",
+          "pnl": 87.24497815999949
+        },
+        {
+          "ticker": "SNPS",
+          "pnl": 76.10432799999994
+        },
+        {
+          "ticker": "UVXY",
+          "pnl": 40.92541559469612
+        },
+        {
+          "ticker": "XLF",
+          "pnl": 38.400000000000055
+        },
+        {
+          "ticker": "TSLA",
+          "pnl": 23.670618386388206
+        }
+      ],
+      "elapsed_sec": 74.0326936999918
+    },
+    {
+      "starting_equity": 3000.0,
+      "capital_per_trade": 1000.0,
+      "max_open_positions": 3,
+      "managed_total_pnl": 2945.635733809745,
+      "managed_total_return_pct": 98.18785779365817,
+      "managed_total_trades": 167,
+      "managed_candidate_entries": 959,
+      "managed_skipped_entries": 791,
+      "managed_replaced_positions": 0,
+      "managed_peak_open_positions": 3,
+      "dynamic_sizing": true,
+      "capture_vs_full_36k_benchmark_pct": 57.65286656396999,
+      "capture_vs_literal_1k_sum_pct": 86.49014843515741,
+      "top_symbol_contributors": [
+        {
+          "ticker": "GLD",
+          "pnl": 1363.2117389041086
+        },
+        {
+          "ticker": "USO",
+          "pnl": 306.5720574478936
+        },
+        {
+          "ticker": "SNPS",
+          "pnl": 304.4173119999998
+        },
+        {
+          "ticker": "SPY",
+          "pnl": 195.2883040483007
+        },
+        {
+          "ticker": "MRVL",
+          "pnl": 181.6588076201138
+        },
+        {
+          "ticker": "MSTR",
+          "pnl": 167.09631999999985
+        },
+        {
+          "ticker": "APLD",
+          "pnl": 125.20994743999951
+        },
+        {
+          "ticker": "TXN",
+          "pnl": 87.06455206912251
+        },
+        {
+          "ticker": "TSLA",
+          "pnl": 71.72375923970428
+        },
+        {
+          "ticker": "UVXY",
+          "pnl": 53.53669724446187
+        }
+      ],
+      "elapsed_sec": 35.618933599995216
+    }
+  ],
+  "notes": [
+    "These scarce-capital checks use the current bucket-aware allocator with replacement OFF.",
+    "When dynamic_sizing is true, the engine may use 0.5x, 1.0x, 1.5x, or 2.0x of the base trade capital.",
+    "They are intended to isolate allocator quality under scarce capital with the current sizing mode.",
+    "Managed Normalized Return % is still expressed per 1000-dollar base sleeve for cross-ticker comparison, while managed_total_return_pct is the actual portfolio return on the chosen starting equity."
+  ],
+  "timing_sec": {
+    "prepare": 11.543170499993721,
+    "total_managed": 109.65162729998701
+  }
+}

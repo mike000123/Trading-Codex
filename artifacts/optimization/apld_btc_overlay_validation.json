@@ -1,0 +1,134 @@
+{
+  "symbol": "APLD",
+  "source": "alpaca",
+  "interval": "1Min",
+  "window": {
+    "start": "2024-04-01T00:00:00",
+    "end": "2026-05-01T07:34:33.045502"
+  },
+  "sessions": 522,
+  "prepared_rows": 340271,
+  "short_rule": {
+    "name": "apld_btc_confirm_short",
+    "side": "short",
+    "gap_metric": "relative_gap_pct",
+    "btc_threshold": 1.0,
+    "gap_threshold": 0.5,
+    "entry_offset_min": 15,
+    "peak_threshold": 0.5,
+    "trough_threshold": null,
+    "pullback_threshold": 0.25,
+    "rebound_threshold": null,
+    "confirm_close_threshold": -0.25
+  },
+  "long_rule": {
+    "name": "apld_btc_confirm_long",
+    "side": "long",
+    "gap_metric": "apld_gap_pct",
+    "btc_threshold": 1.0,
+    "gap_threshold": 0.5,
+    "entry_offset_min": 5,
+    "peak_threshold": null,
+    "trough_threshold": 0.5,
+    "pullback_threshold": null,
+    "rebound_threshold": 0.25,
+    "confirm_close_threshold": -1.0
+  },
+  "best_short_overlay": {
+    "rule_name": "apld_btc_confirm_short",
+    "family": "close_only",
+    "side": "short",
+    "stop_loss_pct": null,
+    "trail_pct": null,
+    "trail_activation_pct": null,
+    "signals": 34,
+    "win_rate_pct": 73.52941176470588,
+    "mean_return_pct": 2.6019963358878138,
+    "median_return_pct": 3.105262950654425,
+    "compounded_return_pct": 126.8222326532499,
+    "score": 138.03110951002282
+  },
+  "best_long_overlay": {
+    "rule_name": "apld_btc_confirm_long",
+    "family": "close_only",
+    "side": "long",
+    "stop_loss_pct": null,
+    "trail_pct": null,
+    "trail_activation_pct": null,
+    "signals": 46,
+    "win_rate_pct": 63.04347826086957,
+    "mean_return_pct": 2.0204506540601455,
+    "median_return_pct": 2.71032322151753,
+    "compounded_return_pct": 130.76745950567653,
+    "score": 142.58943983459284
+  },
+  "best_short_breakdown": {
+    "2024": {
+      "signals": 13,
+      "win_rate_pct": 61.53846153846154,
+      "mean_return_pct": 1.594843457645074,
+      "compounded_return_pct": 19.461369148466765
+    },
+    "2025": {
+      "signals": 17,
+      "win_rate_pct": 88.23529411764706,
+      "mean_return_pct": 4.018464919822627,
+      "compounded_return_pct": 91.6224623160456
+    },
+    "2026": {
+      "signals": 4,
+      "win_rate_pct": 50.0,
+      "mean_return_pct": -0.14474829154623448,
+      "compounded_return_pct": -0.9141323625123876
+    },
+    "first_half": {
+      "signals": 18,
+      "win_rate_pct": 72.22222222222221,
+      "mean_return_pct": 2.902716770953128,
+      "compounded_return_pct": 61.1003141184496
+    },
+    "second_half": {
+      "signals": 16,
+      "win_rate_pct": 75.0,
+      "mean_return_pct": 2.263685846439336,
+      "compounded_return_pct": 40.795648906356675
+    }
+  },
+  "best_long_breakdown": {
+    "2024": {
+      "signals": 15,
+      "win_rate_pct": 73.33333333333333,
+      "mean_return_pct": 2.739411006993278,
+      "compounded_return_pct": 47.35604570680791
+    },
+    "2025": {
+      "signals": 21,
+      "win_rate_pct": 57.14285714285714,
+      "mean_return_pct": 2.1321949794272332,
+      "compounded_return_pct": 47.83675556682538
+    },
+    "2026": {
+      "signals": 10,
+      "win_rate_pct": 60.0,
+      "mean_return_pct": 0.7073470413895622,
+      "compounded_return_pct": 5.931272021434664
+    },
+    "first_half": {
+      "signals": 23,
+      "win_rate_pct": 65.21739130434783,
+      "mean_return_pct": 1.8267883267380602,
+      "compounded_return_pct": 46.75128449909249
+    },
+    "second_half": {
+      "signals": 23,
+      "win_rate_pct": 60.86956521739131,
+      "mean_return_pct": 2.2141129813822307,
+      "compounded_return_pct": 57.25072546612262
+    }
+  },
+  "notes": [
+    "This pass turns the best short and long BTC-confirmation rules into research-only overlays with explicit hard-stop, trailing-stop, and session-close exits.",
+    "The goal is not immediate promotion; it is to check whether the BTC-open edge survives once exits become more realistic.",
+    "Any successful overlay from this pass should still be validated for sensitivity before being integrated into the live strategy stack."
+  ]
+}

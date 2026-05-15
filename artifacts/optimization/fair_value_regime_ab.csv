@@ -1,0 +1,2 @@
+window,start,end,bars,off_total_return_pct,on_total_return_pct,d_total_return_pct,off_sharpe,on_sharpe,d_sharpe,off_max_dd_pct,on_max_dd_pct,d_max_dd_pct,off_win_rate_pct,on_win_rate_pct,d_win_rate_pct,off_total_trades,on_total_trades,d_total_trades
+FULL,2024-04-04,2026-04-02,315063,91.228,84.558,-6.6699999999999875,3.8497,3.5236,-0.32609999999999983,-3.087,-3.087,0.0,56.9,48.1,-8.799999999999997,51,52,1

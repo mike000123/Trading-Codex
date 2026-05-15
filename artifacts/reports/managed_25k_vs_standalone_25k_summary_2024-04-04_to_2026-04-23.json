@@ -1,0 +1,9 @@
+{
+  "standalone_25k_total_pnl": 4536.0064780629855,
+  "standalone_25k_total_trades": 781,
+  "managed_25k_total_pnl": 5078.757775951727,
+  "managed_25k_total_trades": 822,
+  "managed_25k_capture_vs_standalone_25k_pct": 111.96539953180387,
+  "managed_5k_total_pnl": 1493.2276114036613,
+  "managed_5k_total_trades": 166
+}

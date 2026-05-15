@@ -1,0 +1,134 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "labeled_events": 845,
+  "positive_overshoot_dump_labels": 280,
+  "negative_overshoot_rebound_labels": 71,
+  "positive_peak_vs_prev_close_ge_15": 56,
+  "positive_peak_vs_prev_close_ge_20": 28,
+  "best_variant": {
+    "variant": "overshoot_pc20_start720_end780_pull1.5_vwap0.0_rev0.5",
+    "trades": 4,
+    "win_rate_pct": 75.0,
+    "mean_return_pct": 2.14663583440215,
+    "median_return_pct": 3.2462007164711704,
+    "compounded_return_pct": 8.757561120877222,
+    "long_trades": 0,
+    "short_trades": 4,
+    "labeled_overshoot_match_pct": 75.0
+  },
+  "top_variants": [
+    {
+      "variant": "overshoot_pc20_start720_end780_pull1.5_vwap0.0_rev0.5",
+      "trades": 4,
+      "win_rate_pct": 75.0,
+      "mean_return_pct": 2.14663583440215,
+      "median_return_pct": 3.2462007164711704,
+      "compounded_return_pct": 8.757561120877222,
+      "long_trades": 0,
+      "short_trades": 4,
+      "labeled_overshoot_match_pct": 75.0
+    },
+    {
+      "variant": "overshoot_pc20_start720_end780_pull3.0_vwap0.0_rev0.5",
+      "trades": 3,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 2.680682173596416,
+      "median_return_pct": 3.219767433593923,
+      "compounded_return_pct": 8.237223908161905,
+      "long_trades": 0,
+      "short_trades": 3,
+      "labeled_overshoot_match_pct": 66.66666666666666
+    },
+    {
+      "variant": "overshoot_pc20_start720_end780_pull1.5_vwap0.5_rev0.5",
+      "trades": 4,
+      "win_rate_pct": 75.0,
+      "mean_return_pct": 1.947023476996393,
+      "median_return_pct": 2.853866222591167,
+      "compounded_return_pct": 7.9210293885543015,
+      "long_trades": 0,
+      "short_trades": 4,
+      "labeled_overshoot_match_pct": 75.0
+    },
+    {
+      "variant": "overshoot_pc20_start720_end780_pull3.0_vwap0.5_rev0.5",
+      "trades": 3,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 2.4145323637220737,
+      "median_return_pct": 3.0080283031704957,
+      "compounded_return_pct": 7.404694459316641,
+      "long_trades": 0,
+      "short_trades": 3,
+      "labeled_overshoot_match_pct": 66.66666666666666
+    },
+    {
+      "variant": "overshoot_pc20_start720_end780_pull3.0_vwap1.0_rev0.5",
+      "trades": 3,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 2.4145323637220737,
+      "median_return_pct": 3.0080283031704957,
+      "compounded_return_pct": 7.404694459316641,
+      "long_trades": 0,
+      "short_trades": 3,
+      "labeled_overshoot_match_pct": 66.66666666666666
+    },
+    {
+      "variant": "overshoot_pc20_start720_end780_pull1.5_vwap1.0_rev0.5",
+      "trades": 4,
+      "win_rate_pct": 75.0,
+      "mean_return_pct": 1.7316097842809492,
+      "median_return_pct": 2.709503765828569,
+      "compounded_return_pct": 7.023582251071336,
+      "long_trades": 0,
+      "short_trades": 4,
+      "labeled_overshoot_match_pct": 75.0
+    },
+    {
+      "variant": "overshoot_pc20_start720_end780_pull1.5_vwap0.0_rev1.0",
+      "trades": 2,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 3.2530909374026806,
+      "median_return_pct": 3.2530909374026806,
+      "compounded_return_pct": 6.6089455118223395,
+      "long_trades": 0,
+      "short_trades": 2,
+      "labeled_overshoot_match_pct": 100.0
+    },
+    {
+      "variant": "overshoot_pc20_start720_end780_pull1.5_vwap0.5_rev1.0",
+      "trades": 2,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 2.853866222591167,
+      "median_return_pct": 2.853866222591167,
+      "compounded_return_pct": 5.788940309875912,
+      "long_trades": 0,
+      "short_trades": 2,
+      "labeled_overshoot_match_pct": 100.0
+    },
+    {
+      "variant": "overshoot_pc20_start720_end840_pull5.0_vwap0.0_rev0.5",
+      "trades": 5,
+      "win_rate_pct": 60.0,
+      "mean_return_pct": 1.1313151351600914,
+      "median_return_pct": 1.2598794519488088,
+      "compounded_return_pct": 5.672931811231341,
+      "long_trades": 1,
+      "short_trades": 4,
+      "labeled_overshoot_match_pct": 80.0
+    },
+    {
+      "variant": "overshoot_pc20_start720_end840_pull5.0_vwap0.0_rev1.0",
+      "trades": 5,
+      "win_rate_pct": 60.0,
+      "mean_return_pct": 0.8891287699783558,
+      "median_return_pct": 0.04894762604013003,
+      "compounded_return_pct": 4.409225820666562,
+      "long_trades": 1,
+      "short_trades": 4,
+      "labeled_overshoot_match_pct": 80.0
+    }
+  ]
+}

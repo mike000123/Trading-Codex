@@ -7,6 +7,18 @@ Timestamp bug in the installed Plotly version on the server.
 """
 from __future__ import annotations
 
+def _theme_chart_color(key: str = "primary") -> str:
+    """Active-theme palette shim — reads ui.charts._palette() so this page's
+    chart colours follow the user's theme selection. key in {"primary",
+    "axis_label", "axis_title", "axis_grid"}. Falls back to gold."""
+    try:
+        from ui.charts import _palette
+        return _palette().get(key, "#d4af37")
+    except Exception:
+        return "#d4af37"
+
+
+
 from typing import Optional, Tuple
 
 import altair as alt
@@ -15,6 +27,7 @@ import streamlit as st
 
 from core.models import Direction, TradeOutcome
 from risk.manager import RiskManager
+from risk.runtime_controls import get_effective_risk_config
 from config.settings import settings
 from ui.components import render_mode_banner, render_data_source_selector
 
@@ -30,7 +43,7 @@ def _altair_price_chart(
     title: str = "Price",
 ) -> alt.LayerChart:
     """Pure Altair candlestick-style close-line chart with markers."""
-    base = alt.Chart(data).mark_line(color="#4a9eff").encode(
+    base = alt.Chart(data).mark_line(color=_theme_chart_color("primary")).encode(
         x=alt.X("date:T", title="Date"),
         y=alt.Y("close:Q", title="Close", scale=alt.Scale(zero=False)),
         tooltip=["date:T", "close:Q"],
@@ -41,9 +54,9 @@ def _altair_price_chart(
     # TP / SL horizontal rules
     if take_profit is not None:
         tp_df = pd.DataFrame({"y": [take_profit], "label": [f"TP {take_profit:.4f}"]})
-        tp_rule = alt.Chart(tp_df).mark_rule(color="#26a69a", strokeDash=[4, 4]).encode(y="y:Q")
+        tp_rule = alt.Chart(tp_df).mark_rule(color="#2faa6a", strokeDash=[4, 4]).encode(y="y:Q")
         tp_text = alt.Chart(tp_df).mark_text(
-            color="#26a69a", align="right", dx=-4, dy=-6, fontSize=11
+            color="#2faa6a", align="right", dx=-4, dy=-6, fontSize=11
         ).encode(
             y="y:Q",
             x=alt.value(560),
@@ -53,9 +66,9 @@ def _altair_price_chart(
 
     if stop_loss is not None:
         sl_df = pd.DataFrame({"y": [stop_loss], "label": [f"SL {stop_loss:.4f}"]})
-        sl_rule = alt.Chart(sl_df).mark_rule(color="#ef5350", strokeDash=[4, 4]).encode(y="y:Q")
+        sl_rule = alt.Chart(sl_df).mark_rule(color="#c64242", strokeDash=[4, 4]).encode(y="y:Q")
         sl_text = alt.Chart(sl_df).mark_text(
-            color="#ef5350", align="right", dx=-4, dy=-6, fontSize=11
+            color="#c64242", align="right", dx=-4, dy=-6, fontSize=11
         ).encode(
             y="y:Q",
             x=alt.value(560),
@@ -74,7 +87,7 @@ def _altair_price_chart(
         marker_df = pd.DataFrame(marker_rows)
         colour_scale = alt.Scale(
             domain=["Entry", "Exit"],
-            range=["#26a69a", "#ef5350"],
+            range=["#2faa6a", "#c64242"],
         )
         rules = (
             alt.Chart(marker_df)
@@ -100,9 +113,13 @@ def _altair_price_chart(
     return (
         alt.layer(*layers)
         .properties(title=title, height=320)
-        .configure_view(strokeOpacity=0)
-        .configure_axis(gridColor="#1e2130", labelColor="#c9d8f5", titleColor="#c9d8f5")
-        .configure_title(color="#c9d8f5")
+        .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
+        .configure_axis(
+            gridColor=_theme_chart_color("axis_grid"),
+            labelColor=_theme_chart_color("axis_label"),
+            titleColor=_theme_chart_color("axis_title"),
+        )
+        .configure_title(color=_theme_chart_color("title"))
     )
 
 
@@ -179,7 +196,7 @@ def _suggest_levels(
 
 def render() -> None:
     render_mode_banner()
-    st.title("📊 Historical Trade Outcome Simulator")
+    st.title("Historical Trade Outcome Simulator")
     st.caption("Load OHLC data, then test leveraged long/short scenarios from any historical date.")
 
     prices = render_data_source_selector()
@@ -195,7 +212,7 @@ def render() -> None:
 
     with st.expander("📋 Data Preview", expanded=False):
         st.caption(f"{len(prices)} rows total")
-        st.dataframe(prices, use_container_width=True)
+        st.dataframe(prices, width='stretch')
 
     st.divider()
     controls, results = st.columns([1.1, 0.9])
@@ -232,7 +249,7 @@ def render() -> None:
                 ceiling = entry_close * (1 + move_limit / 100)
                 st.caption(f"Entry close: **{entry_close:.4f}** · Maximum SL ceiling: **{ceiling:.4f}**")
 
-        risk = RiskManager(settings.risk)
+        risk = RiskManager(get_effective_risk_config())
 
         # ── Mode 1 ──────────────────────────────────────────────────────────
         if mode.startswith("1"):
@@ -265,7 +282,7 @@ def render() -> None:
                     stop_loss=eff_sl,
                     title=f"{symbol} – Simulation",
                 )
-                st.altair_chart(fig, use_container_width=True)
+                st.altair_chart(fig, width='stretch')
 
         # ── Mode 2 ──────────────────────────────────────────────────────────
         else:
@@ -300,7 +317,7 @@ def render() -> None:
                     stop_loss=eff_sl if take else None,
                     title=f"{symbol} – Suggested Levels",
                 )
-                st.altair_chart(fig, use_container_width=True)
+                st.altair_chart(fig, width='stretch')
 
 
 # ─── Result display helpers ───────────────────────────────────────────────────

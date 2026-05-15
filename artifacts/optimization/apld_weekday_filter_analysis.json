@@ -1,0 +1,455 @@
+{
+  "symbol": "APLD",
+  "window": {
+    "start": "2024-04-04T00:00:00",
+    "end": "2026-05-01T23:59:59"
+  },
+  "prepared_rows": 338931,
+  "baseline": {
+    "label": "baseline",
+    "blocked_weekdays": [],
+    "total_return_pct": 45.131,
+    "max_drawdown_pct": -9.833,
+    "sharpe_ratio": 2.2011,
+    "win_rate_pct": 52.7,
+    "total_trades": 74,
+    "avg_win_pct": 3.394,
+    "avg_loss_pct": -2.323,
+    "score": 42.83555
+  },
+  "weekday_trade_summary": [
+    {
+      "entry_weekday": "Monday",
+      "trades": 17,
+      "total_pnl": 355.9245462442591,
+      "avg_pnl": 20.93673801436818,
+      "mean_return_pct": 2.1724875355906086,
+      "win_rate_pct": 76.47058823529412,
+      "compounded_return_pct": 42.906446352762885
+    },
+    {
+      "entry_weekday": "Tuesday",
+      "trades": 20,
+      "total_pnl": -175.11739290064614,
+      "avg_pnl": -8.755869645032307,
+      "mean_return_pct": -0.7965468969150449,
+      "win_rate_pct": 30.0,
+      "compounded_return_pct": -15.273782128575109
+    },
+    {
+      "entry_weekday": "Wednesday",
+      "trades": 13,
+      "total_pnl": 72.63432894376815,
+      "avg_pnl": 5.58725607259755,
+      "mean_return_pct": 0.63859993203077,
+      "win_rate_pct": 46.15384615384615,
+      "compounded_return_pct": 8.005964567023739
+    },
+    {
+      "entry_weekday": "Thursday",
+      "trades": 12,
+      "total_pnl": 129.2052843986088,
+      "avg_pnl": 10.7671070332174,
+      "mean_return_pct": 1.159341479180738,
+      "win_rate_pct": 58.333333333333336,
+      "compounded_return_pct": 13.983366006072618
+    },
+    {
+      "entry_weekday": "Friday",
+      "trades": 12,
+      "total_pnl": 68.66169063995845,
+      "avg_pnl": 5.721807553329871,
+      "mean_return_pct": 0.6549147408009591,
+      "win_rate_pct": 58.333333333333336,
+      "compounded_return_pct": 7.29908640907464
+    }
+  ],
+  "variants_ranked": [
+    {
+      "label": "block_Friday_Tuesday",
+      "blocked_weekdays": [
+        "Friday",
+        "Tuesday"
+      ],
+      "total_return_pct": 58.641,
+      "max_drawdown_pct": -8.988,
+      "sharpe_ratio": 4.5446,
+      "win_rate_pct": 63.6,
+      "total_trades": 44,
+      "avg_win_pct": 3.551,
+      "avg_loss_pct": -2.329,
+      "score": 76.09479999999999
+    },
+    {
+      "label": "block_Tuesday",
+      "blocked_weekdays": [
+        "Tuesday"
+      ],
+      "total_return_pct": 63.001,
+      "max_drawdown_pct": -8.918,
+      "sharpe_ratio": 3.8182,
+      "win_rate_pct": 60.7,
+      "total_trades": 56,
+      "avg_win_pct": 3.503,
+      "avg_loss_pct": -2.344,
+      "score": 75.1611
+    },
+    {
+      "label": "block_Tuesday_Wednesday",
+      "blocked_weekdays": [
+        "Tuesday",
+        "Wednesday"
+      ],
+      "total_return_pct": 54.629,
+      "max_drawdown_pct": -7.033,
+      "sharpe_ratio": 4.1721,
+      "win_rate_pct": 64.3,
+      "total_trades": 42,
+      "avg_win_pct": 3.552,
+      "avg_loss_pct": -2.527,
+      "score": 73.44154999999999
+    },
+    {
+      "label": "block_Thursday_Tuesday",
+      "blocked_weekdays": [
+        "Thursday",
+        "Tuesday"
+      ],
+      "total_return_pct": 50.08,
+      "max_drawdown_pct": -10.183,
+      "sharpe_ratio": 3.7638,
+      "win_rate_pct": 61.4,
+      "total_trades": 44,
+      "avg_win_pct": 3.43,
+      "avg_loss_pct": -2.294,
+      "score": 58.59864999999999
+    },
+    {
+      "label": "baseline",
+      "blocked_weekdays": [],
+      "total_return_pct": 45.131,
+      "max_drawdown_pct": -9.833,
+      "sharpe_ratio": 2.2011,
+      "win_rate_pct": 52.7,
+      "total_trades": 74,
+      "avg_win_pct": 3.394,
+      "avg_loss_pct": -2.323,
+      "score": 42.83555
+    },
+    {
+      "label": "block_Monday_Tuesday",
+      "blocked_weekdays": [
+        "Monday",
+        "Tuesday"
+      ],
+      "total_return_pct": 29.165,
+      "max_drawdown_pct": -7.17,
+      "sharpe_ratio": 2.6715,
+      "win_rate_pct": 55.0,
+      "total_trades": 40,
+      "avg_win_pct": 3.318,
+      "avg_loss_pct": -2.254,
+      "score": 35.6045
+    },
+    {
+      "label": "block_Wednesday",
+      "blocked_weekdays": [
+        "Wednesday"
+      ],
+      "total_return_pct": 37.042,
+      "max_drawdown_pct": -9.845,
+      "sharpe_ratio": 2.1078,
+      "win_rate_pct": 53.2,
+      "total_trades": 62,
+      "avg_win_pct": 3.345,
+      "avg_loss_pct": -2.356,
+      "score": 33.613150000000005
+    },
+    {
+      "label": "block_Friday",
+      "blocked_weekdays": [
+        "Friday"
+      ],
+      "total_return_pct": 34.952,
+      "max_drawdown_pct": -9.916,
+      "sharpe_ratio": 2.0475,
+      "win_rate_pct": 50.0,
+      "total_trades": 64,
+      "avg_win_pct": 3.465,
+      "avg_loss_pct": -2.213,
+      "score": 30.940999999999995
+    },
+    {
+      "label": "block_Friday_Wednesday",
+      "blocked_weekdays": [
+        "Friday",
+        "Wednesday"
+      ],
+      "total_return_pct": 27.512,
+      "max_drawdown_pct": -8.567,
+      "sharpe_ratio": 1.9624,
+      "win_rate_pct": 51.0,
+      "total_trades": 51,
+      "avg_win_pct": 3.419,
+      "avg_loss_pct": -2.286,
+      "score": 25.465449999999997
+    },
+    {
+      "label": "block_Thursday",
+      "blocked_weekdays": [
+        "Thursday"
+      ],
+      "total_return_pct": 31.68,
+      "max_drawdown_pct": -11.869,
+      "sharpe_ratio": 1.8259,
+      "win_rate_pct": 50.8,
+      "total_trades": 63,
+      "avg_win_pct": 3.309,
+      "avg_loss_pct": -2.222,
+      "score": 21.47195
+    },
+    {
+      "label": "block_Thursday_Wednesday",
+      "blocked_weekdays": [
+        "Thursday",
+        "Wednesday"
+      ],
+      "total_return_pct": 23.121,
+      "max_drawdown_pct": -9.186,
+      "sharpe_ratio": 1.6466,
+      "win_rate_pct": 51.0,
+      "total_trades": 51,
+      "avg_win_pct": 3.227,
+      "avg_loss_pct": -2.235,
+      "score": 17.155299999999997
+    },
+    {
+      "label": "block_Friday_Thursday",
+      "blocked_weekdays": [
+        "Friday",
+        "Thursday"
+      ],
+      "total_return_pct": 21.618,
+      "max_drawdown_pct": -11.989,
+      "sharpe_ratio": 1.5937,
+      "win_rate_pct": 48.1,
+      "total_trades": 52,
+      "avg_win_pct": 3.376,
+      "avg_loss_pct": -2.157,
+      "score": 8.952349999999996
+    },
+    {
+      "label": "block_Monday",
+      "blocked_weekdays": [
+        "Monday"
+      ],
+      "total_return_pct": 5.89,
+      "max_drawdown_pct": -12.069,
+      "sharpe_ratio": 0.524,
+      "win_rate_pct": 43.3,
+      "total_trades": 60,
+      "avg_win_pct": 3.264,
+      "avg_loss_pct": -2.181,
+      "score": -15.27325
+    },
+    {
+      "label": "block_Friday_Monday",
+      "blocked_weekdays": [
+        "Friday",
+        "Monday"
+      ],
+      "total_return_pct": 2.224,
+      "max_drawdown_pct": -11.386,
+      "sharpe_ratio": 0.3322,
+      "win_rate_pct": 42.9,
+      "total_trades": 49,
+      "avg_win_pct": 3.142,
+      "avg_loss_pct": -2.137,
+      "score": -19.266899999999996
+    },
+    {
+      "label": "block_Monday_Wednesday",
+      "blocked_weekdays": [
+        "Monday",
+        "Wednesday"
+      ],
+      "total_return_pct": -2.64,
+      "max_drawdown_pct": -16.309,
+      "sharpe_ratio": -0.0333,
+      "win_rate_pct": 42.6,
+      "total_trades": 47,
+      "avg_win_pct": 3.123,
+      "avg_loss_pct": -2.239,
+      "score": -38.19165
+    },
+    {
+      "label": "block_Monday_Thursday",
+      "blocked_weekdays": [
+        "Monday",
+        "Thursday"
+      ],
+      "total_return_pct": -8.225,
+      "max_drawdown_pct": -18.977,
+      "sharpe_ratio": -0.5072,
+      "win_rate_pct": 39.6,
+      "total_trades": 48,
+      "avg_win_pct": 3.072,
+      "avg_loss_pct": -2.123,
+      "score": -53.54085
+    }
+  ],
+  "best_single_weekday_blocks": [
+    {
+      "label": "block_Tuesday",
+      "blocked_weekdays": [
+        "Tuesday"
+      ],
+      "total_return_pct": 63.001,
+      "max_drawdown_pct": -8.918,
+      "sharpe_ratio": 3.8182,
+      "win_rate_pct": 60.7,
+      "total_trades": 56,
+      "avg_win_pct": 3.503,
+      "avg_loss_pct": -2.344,
+      "score": 75.1611
+    },
+    {
+      "label": "block_Wednesday",
+      "blocked_weekdays": [
+        "Wednesday"
+      ],
+      "total_return_pct": 37.042,
+      "max_drawdown_pct": -9.845,
+      "sharpe_ratio": 2.1078,
+      "win_rate_pct": 53.2,
+      "total_trades": 62,
+      "avg_win_pct": 3.345,
+      "avg_loss_pct": -2.356,
+      "score": 33.613150000000005
+    },
+    {
+      "label": "block_Friday",
+      "blocked_weekdays": [
+        "Friday"
+      ],
+      "total_return_pct": 34.952,
+      "max_drawdown_pct": -9.916,
+      "sharpe_ratio": 2.0475,
+      "win_rate_pct": 50.0,
+      "total_trades": 64,
+      "avg_win_pct": 3.465,
+      "avg_loss_pct": -2.213,
+      "score": 30.940999999999995
+    },
+    {
+      "label": "block_Thursday",
+      "blocked_weekdays": [
+        "Thursday"
+      ],
+      "total_return_pct": 31.68,
+      "max_drawdown_pct": -11.869,
+      "sharpe_ratio": 1.8259,
+      "win_rate_pct": 50.8,
+      "total_trades": 63,
+      "avg_win_pct": 3.309,
+      "avg_loss_pct": -2.222,
+      "score": 21.47195
+    },
+    {
+      "label": "block_Monday",
+      "blocked_weekdays": [
+        "Monday"
+      ],
+      "total_return_pct": 5.89,
+      "max_drawdown_pct": -12.069,
+      "sharpe_ratio": 0.524,
+      "win_rate_pct": 43.3,
+      "total_trades": 60,
+      "avg_win_pct": 3.264,
+      "avg_loss_pct": -2.181,
+      "score": -15.27325
+    }
+  ],
+  "best_multi_weekday_blocks": [
+    {
+      "label": "block_Friday_Tuesday",
+      "blocked_weekdays": [
+        "Friday",
+        "Tuesday"
+      ],
+      "total_return_pct": 58.641,
+      "max_drawdown_pct": -8.988,
+      "sharpe_ratio": 4.5446,
+      "win_rate_pct": 63.6,
+      "total_trades": 44,
+      "avg_win_pct": 3.551,
+      "avg_loss_pct": -2.329,
+      "score": 76.09479999999999
+    },
+    {
+      "label": "block_Tuesday_Wednesday",
+      "blocked_weekdays": [
+        "Tuesday",
+        "Wednesday"
+      ],
+      "total_return_pct": 54.629,
+      "max_drawdown_pct": -7.033,
+      "sharpe_ratio": 4.1721,
+      "win_rate_pct": 64.3,
+      "total_trades": 42,
+      "avg_win_pct": 3.552,
+      "avg_loss_pct": -2.527,
+      "score": 73.44154999999999
+    },
+    {
+      "label": "block_Thursday_Tuesday",
+      "blocked_weekdays": [
+        "Thursday",
+        "Tuesday"
+      ],
+      "total_return_pct": 50.08,
+      "max_drawdown_pct": -10.183,
+      "sharpe_ratio": 3.7638,
+      "win_rate_pct": 61.4,
+      "total_trades": 44,
+      "avg_win_pct": 3.43,
+      "avg_loss_pct": -2.294,
+      "score": 58.59864999999999
+    },
+    {
+      "label": "block_Monday_Tuesday",
+      "blocked_weekdays": [
+        "Monday",
+        "Tuesday"
+      ],
+      "total_return_pct": 29.165,
+      "max_drawdown_pct": -7.17,
+      "sharpe_ratio": 2.6715,
+      "win_rate_pct": 55.0,
+      "total_trades": 40,
+      "avg_win_pct": 3.318,
+      "avg_loss_pct": -2.254,
+      "score": 35.6045
+    },
+    {
+      "label": "block_Friday_Wednesday",
+      "blocked_weekdays": [
+        "Friday",
+        "Wednesday"
+      ],
+      "total_return_pct": 27.512,
+      "max_drawdown_pct": -8.567,
+      "sharpe_ratio": 1.9624,
+      "win_rate_pct": 51.0,
+      "total_trades": 51,
+      "avg_win_pct": 3.419,
+      "avg_loss_pct": -2.286,
+      "score": 25.465449999999997
+    }
+  ],
+  "notes": [
+    "This pass keeps the APLD BTC-opening overlay unchanged and only blocks fresh entries on selected weekdays.",
+    "Because the overlay closes by session end, muting entries by weekday is a fair way to test whether certain days are structurally dragging the edge down.",
+    "Single-weekday blocks are easier to trust; multi-weekday combinations are more exploratory and should be treated as overfit-sensitive."
+  ]
+}

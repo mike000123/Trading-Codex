@@ -1,0 +1,193 @@
+{
+  "baseline": {
+    "label": "baseline_current_default",
+    "total_return_pct": 95.68,
+    "max_drawdown_pct": -2.816,
+    "sharpe_ratio": 3.9223,
+    "win_rate_pct": 59.3,
+    "total_trades": 54,
+    "score": 146.31019999999998,
+    "regime_loss_guard_rules": {}
+  },
+  "best": {
+    "label": "baseline_current_default",
+    "total_return_pct": 95.68,
+    "max_drawdown_pct": -2.816,
+    "sharpe_ratio": 3.9223,
+    "win_rate_pct": 59.3,
+    "total_trades": 54,
+    "score": 146.31019999999998,
+    "regime_loss_guard_rules": {}
+  },
+  "search_count": 11,
+  "history": [
+    {
+      "label": "baseline_current_default",
+      "total_return_pct": 95.68,
+      "max_drawdown_pct": -2.816,
+      "sharpe_ratio": 3.9223,
+      "win_rate_pct": 59.3,
+      "total_trades": 54,
+      "score": 146.31019999999998,
+      "regime_loss_guard_rules": {}
+    },
+    {
+      "label": "shock_rebound_after_2_losses_cooldown_195",
+      "total_return_pct": 95.68,
+      "max_drawdown_pct": -2.816,
+      "sharpe_ratio": 3.9223,
+      "win_rate_pct": 59.3,
+      "total_trades": 54,
+      "score": 146.31019999999998,
+      "regime_loss_guard_rules": {
+        "shock_rebound_long": {
+          "trigger_losses": 2,
+          "cooldown_bars": 195
+        }
+      }
+    },
+    {
+      "label": "shock_rebound_after_2_losses_cooldown_390",
+      "total_return_pct": 95.68,
+      "max_drawdown_pct": -2.816,
+      "sharpe_ratio": 3.9223,
+      "win_rate_pct": 59.3,
+      "total_trades": 54,
+      "score": 146.31019999999998,
+      "regime_loss_guard_rules": {
+        "shock_rebound_long": {
+          "trigger_losses": 2,
+          "cooldown_bars": 390
+        }
+      }
+    },
+    {
+      "label": "shock_rebound_after_2_losses_cooldown_780",
+      "total_return_pct": 95.68,
+      "max_drawdown_pct": -2.816,
+      "sharpe_ratio": 3.9223,
+      "win_rate_pct": 59.3,
+      "total_trades": 54,
+      "score": 146.31019999999998,
+      "regime_loss_guard_rules": {
+        "shock_rebound_long": {
+          "trigger_losses": 2,
+          "cooldown_bars": 780
+        }
+      }
+    },
+    {
+      "label": "spike_momentum_after_3_losses_cooldown_390",
+      "total_return_pct": 94.15,
+      "max_drawdown_pct": -3.634,
+      "sharpe_ratio": 3.8467,
+      "win_rate_pct": 57.4,
+      "total_trades": 54,
+      "score": 142.0858,
+      "regime_loss_guard_rules": {
+        "spike_momentum_long": {
+          "trigger_losses": 3,
+          "cooldown_bars": 390
+        }
+      }
+    },
+    {
+      "label": "spike_momentum_after_3_losses_cooldown_780",
+      "total_return_pct": 94.15,
+      "max_drawdown_pct": -3.634,
+      "sharpe_ratio": 3.8467,
+      "win_rate_pct": 57.4,
+      "total_trades": 54,
+      "score": 142.0858,
+      "regime_loss_guard_rules": {
+        "spike_momentum_long": {
+          "trigger_losses": 3,
+          "cooldown_bars": 780
+        }
+      }
+    },
+    {
+      "label": "shock_rebound_2loss_390_plus_spike_momentum_3loss_390",
+      "total_return_pct": 94.15,
+      "max_drawdown_pct": -3.634,
+      "sharpe_ratio": 3.8467,
+      "win_rate_pct": 57.4,
+      "total_trades": 54,
+      "score": 142.0858,
+      "regime_loss_guard_rules": {
+        "shock_rebound_long": {
+          "trigger_losses": 2,
+          "cooldown_bars": 390
+        },
+        "spike_momentum_long": {
+          "trigger_losses": 3,
+          "cooldown_bars": 390
+        }
+      }
+    },
+    {
+      "label": "shock_rebound_2loss_390_plus_spike_momentum_3loss_780",
+      "total_return_pct": 94.15,
+      "max_drawdown_pct": -3.634,
+      "sharpe_ratio": 3.8467,
+      "win_rate_pct": 57.4,
+      "total_trades": 54,
+      "score": 142.0858,
+      "regime_loss_guard_rules": {
+        "shock_rebound_long": {
+          "trigger_losses": 2,
+          "cooldown_bars": 390
+        },
+        "spike_momentum_long": {
+          "trigger_losses": 3,
+          "cooldown_bars": 780
+        }
+      }
+    },
+    {
+      "label": "global_after_2_losses_cooldown_195",
+      "total_return_pct": 94.102,
+      "max_drawdown_pct": -2.729,
+      "sharpe_ratio": 3.9317,
+      "win_rate_pct": 58.5,
+      "total_trades": 53,
+      "score": 145.0128,
+      "regime_loss_guard_rules": {
+        "__all__": {
+          "trigger_losses": 2,
+          "cooldown_bars": 195
+        }
+      }
+    },
+    {
+      "label": "global_after_2_losses_cooldown_390",
+      "total_return_pct": 94.102,
+      "max_drawdown_pct": -2.729,
+      "sharpe_ratio": 3.9317,
+      "win_rate_pct": 58.5,
+      "total_trades": 53,
+      "score": 145.0128,
+      "regime_loss_guard_rules": {
+        "__all__": {
+          "trigger_losses": 2,
+          "cooldown_bars": 390
+        }
+      }
+    },
+    {
+      "label": "global_after_3_losses_cooldown_390",
+      "total_return_pct": 94.431,
+      "max_drawdown_pct": -3.626,
+      "sharpe_ratio": 3.8602,
+      "win_rate_pct": 57.4,
+      "total_trades": 54,
+      "score": 142.57179999999997,
+      "regime_loss_guard_rules": {
+        "__all__": {
+          "trigger_losses": 3,
+          "cooldown_bars": 390
+        }
+      }
+    }
+  ]
+}

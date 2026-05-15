@@ -35,10 +35,11 @@ def get_strategy(strategy_id: str) -> Type["BaseStrategy"]:
     return _REGISTRY[strategy_id]
 
 
-def list_strategies() -> list[dict[str, str]]:
+def list_strategies(visible_only: bool = True) -> list[dict[str, str]]:
     return [
         {"id": sid, "name": cls.name, "description": cls.description}
         for sid, cls in _REGISTRY.items()
+        if not visible_only or not bool(getattr(cls, "ui_hidden", False))
     ]
 
 
@@ -60,6 +61,7 @@ class BaseStrategy(ABC):
     strategy_id: ClassVar[str] = ""
     name: ClassVar[str] = "Unnamed Strategy"
     description: ClassVar[str] = ""
+    ui_hidden: ClassVar[bool] = False
 
     def __init__(self, params: Optional[dict[str, Any]] = None) -> None:
         self.params: dict[str, Any] = params or {}
@@ -99,6 +101,108 @@ class BaseStrategy(ABC):
         """Return {param_name: default_value} for UI form generation."""
         return {}
 
+    def symbol_param_overrides(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """
+        Optional symbol-specific default overrides.
+
+        Use this for instrument families that benefit from the same strategy
+        architecture but need different baseline thresholds.
+        """
+        return {}
+
+    def effective_default_params(
+        self,
+        symbol: Optional[str] = None,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> dict[str, Any]:
+        params = dict(self.default_params())
+        if symbol:
+            params.update(self.symbol_param_overrides(symbol, source=source, interval=interval))
+        return params
+
+    def resolve_params(
+        self,
+        symbol: Optional[str] = None,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> dict[str, Any]:
+        params = self.effective_default_params(symbol=symbol, source=source, interval=interval)
+        params.update(self.params)
+        return params
+
     def validate_params(self) -> list[str]:
         """Return list of validation error strings (empty = valid)."""
+        return []
+
+    def min_warmup_bars(
+        self,
+        symbol: Optional[str] = None,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> int:
+        """Minimum number of bars the strategy needs before it can emit a real
+        (non-warm-up) signal. The Paper-Trading and Forward-Test runners use
+        this to size the historical-bar prefetch when a run starts, so the
+        first worker tick already evaluates the indicator stack instead of
+        spending the first ~3 trading days returning HOLD.
+
+        Default is intentionally generous (100) and covers the small RSI /
+        MACD / MA-crossover strategies. Strategies whose longest internal
+        window exceeds this should override.
+        """
+        return 100
+
+    def companion_symbols(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Optional companion symbols required by the strategy.
+
+        The data pipeline can use this to fetch/algn extra market context
+        before the strategy runs in backtests, forward tests, or paper trading.
+        """
+        return []
+
+    def companion_contexts(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Generic context dependencies requested by the strategy.
+
+        Example:
+            ["equity_benchmark"]
+
+        The data pipeline resolves these context types to real symbols using the
+        primary ticker's symbol profile.
+        """
+        return []
+
+    def derived_contexts(
+        self,
+        symbol: str,
+        source: Optional[str] = None,
+        interval: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Optional derived context datasets built locally by the data pipeline.
+
+        Example:
+            ["gold_fair_value"]
+
+        Unlike companion contexts, these do not map to another tradable symbol.
+        They are locally derived features or model outputs merged onto the
+        primary dataset before the strategy runs.
+        """
         return []

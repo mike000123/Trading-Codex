@@ -17,18 +17,38 @@ from db.database import Database
 from ui.components import render_mode_banner, render_metrics_row
 from ui.charts import equity_curve_chart, pnl_distribution, portfolio_allocation_pie
 
-_GREEN = "#26a69a"
-_RED = "#ef5350"
-_BLUE = "#4a9eff"
-_GREY = "#9e9eb8"
-_AXIS = dict(gridColor="#2a2d3e", labelColor="#d0d4f0", titleColor="#d0d4f0",
-             labelFontSize=12, titleFontSize=13)
-_TITLE = dict(color="#e8eaf6", fontSize=14, fontWeight="bold")
+
+def _theme_chart_color(key: str = "primary") -> str:
+    """Active-theme palette shim — reads ui.charts._palette() so this page's
+    chart colours follow the user's theme selection. Falls back to gold."""
+    try:
+        from ui.charts import _palette
+        return _palette().get(key, "#d4af37")
+    except Exception:
+        return "#d4af37"
+
+
+_GREEN = "#2faa6a"
+_RED = "#c64242"
+_BLUE = "#d4af37"  # (gold default — chart funcs override via _theme_chart_color)
+_GREY = "#a89c80"
+def _axis_cfg() -> dict:
+    return dict(
+        gridColor=_theme_chart_color("axis_grid"),
+        labelColor=_theme_chart_color("axis_label"),
+        titleColor=_theme_chart_color("axis_title"),
+        labelFontSize=12,
+        titleFontSize=13,
+    )
+
+
+def _title_cfg() -> dict:
+    return dict(color=_theme_chart_color("title"), fontSize=14, fontWeight="bold")
 
 MODE_NAV = {
-    "forward_test": "🔭 Forward Test",
-    "paper": "📝 Paper Trading",
-    "live": "🔴 Live Trading",
+    "forward_test": "Forward Test",
+    "paper": "Paper Trading",
+    "live": "Live Trading",
 }
 
 
@@ -108,28 +128,30 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
 
     if not closed.empty and "exit_time" in closed.columns:
         eq = closed[["exit_time", "pnl"]].dropna().copy()
-        eq["exit_time"] = pd.to_datetime(eq["exit_time"])
+        eq["exit_time"] = pd.to_datetime(
+            eq["exit_time"], errors="coerce", utc=True, format="mixed"
+        ).dt.tz_localize(None)
         eq = eq.sort_values("exit_time")
         eq["equity"] = 10_000 + eq["pnl"].cumsum()
         st.altair_chart(
             equity_curve_chart(eq.rename(columns={"exit_time": "date"}), f"Cumulative P&L – {mode or 'All'}"),
-            use_container_width=True,
+            width='stretch',
         )
 
     if not closed.empty:
-        st.altair_chart(pnl_distribution(closed), use_container_width=True)
+        st.altair_chart(pnl_distribution(closed), width='stretch')
 
     open_pos = df[df["outcome"] == "Open"].to_dict("records")
     if open_pos:
         col1, col2 = st.columns([0.4, 0.6])
         with col1:
-            st.altair_chart(portfolio_allocation_pie(open_pos), use_container_width=True)
+            st.altair_chart(portfolio_allocation_pie(open_pos), width='stretch')
         with col2:
             st.subheader("Open Positions")
             open_df = pd.DataFrame(open_pos)
             show = [c for c in ["symbol", "direction", "entry_price", "capital_allocated",
                                 "strategy_id", "mode"] if c in open_df.columns]
-            st.dataframe(open_df[show], use_container_width=True)
+            st.dataframe(open_df[show], width='stretch')
 
     if "strategy_id" in closed.columns and not closed.empty:
         with st.expander("📊 Per-Strategy Breakdown", expanded=False):
@@ -144,7 +166,7 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
                 .reset_index()
             )
             bd["win_rate"] = (bd["wins"] / bd["trades"] * 100).round(1)
-            st.dataframe(bd, use_container_width=True)
+            st.dataframe(bd, width='stretch')
 
     with st.expander("📋 Trade Log", expanded=False):
         cols = [c for c in [
@@ -154,7 +176,7 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
         ] if c in df.columns]
         filt_sym = st.text_input("Filter by symbol", key=f"filt_{mode or 'all'}")
         fdf = df[df["symbol"].str.contains(filt_sym, case=False)] if filt_sym else df
-        st.dataframe(fdf[cols].sort_values("entry_time", ascending=False), use_container_width=True)
+        st.dataframe(fdf[cols].sort_values("entry_time", ascending=False), width='stretch')
         if st.button("📥 Export CSV", key=f"exp_{mode or 'all'}"):
             st.download_button("Download", fdf[cols].to_csv(index=False),
                                f"trades_{mode or 'all'}.csv", "text/csv")
@@ -162,10 +184,10 @@ def _render_mode_tab(mode: str | None, db: Database) -> None:
 
 def render() -> None:
     render_mode_banner()
-    st.title("💼 Portfolio Overview")
+    st.title("Portfolio Overview")
 
     db = _db()
-    st.subheader("🗂️ All Positions by Ticker")
+    st.subheader("All Positions by Ticker")
 
     all_trades = db.get_trades(mode=None, limit=2000)
     ft_open = st.session_state.get("ft_open_trades", {})
@@ -195,7 +217,7 @@ def render() -> None:
                 return f"color: {color}; font-weight: bold"
             return ""
 
-        st.dataframe(display_df.style.applymap(_pnl_style, subset=["Total P&L"]), use_container_width=True)
+        st.dataframe(display_df.style.applymap(_pnl_style, subset=["Total P&L"]), width='stretch')
 
         open_ticker_rows = ticker_df[ticker_df["Open"] > 0]
         if not open_ticker_rows.empty:
@@ -214,7 +236,7 @@ def render() -> None:
     st.divider()
 
     tab_ft, tab_paper, tab_bt, tab_live, tab_all = st.tabs(
-        ["🔭 Forward Test", "📝 Paper", "⏪ Backtest", "🔴 Live", "🌐 All"]
+        ["Forward Test", "Paper", "Backtest", "Live", "All"]
     )
     with tab_ft:
         _render_mode_tab("forward_test", db)

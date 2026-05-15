@@ -1,0 +1,4 @@
+fold,train_events,test_events,chosen_candidate,chosen_train_compounded_return_pct,oos_compounded_return_pct,oos_triggered_events,baseline_oos_compounded_return_pct,improved_oos_compounded_return_pct,params_json
+fold_1,211,211,baseline,29.48220751388513,21.359811376971717,7,21.359811376971717,21.359811376971717,{}
+fold_2,422,211,baseline,57.13936280559009,53.883625062338616,12,53.883625062338616,53.883625062338616,{}
+fold_3,633,211,baseline,141.81174788510228,27.567501843516595,9,27.567501843516595,27.567501843516595,{}

@@ -1,0 +1,102 @@
+{
+  "symbol": "APLD",
+  "context_symbols": {
+    "equity_benchmark": "QQQ",
+    "crypto_benchmark": "BTC-USD"
+  },
+  "source": "alpaca",
+  "interval": "1Min",
+  "window": {
+    "start": "2024-04-01T07:11:45.284826",
+    "end": "2026-05-01T07:11:45.284826"
+  },
+  "sessions": 522,
+  "prepared_rows": 340271,
+  "companion_columns": [
+    "benchmark_open",
+    "benchmark_high",
+    "benchmark_low",
+    "benchmark_close",
+    "benchmark_volume",
+    "crypto_open",
+    "crypto_high",
+    "crypto_low",
+    "crypto_close",
+    "crypto_volume"
+  ],
+  "correlations": {
+    "btc_vs_apld_gap": 0.35575689158318297,
+    "btc_vs_relative_gap": 0.2744263041829423,
+    "btc_vs_apld_30m": 0.04723542381011979,
+    "btc_vs_relative_30m": 0.05397273755156101,
+    "btc_vs_apld_60m": 0.011091771890793566,
+    "btc_vs_relative_60m": 0.01838571629096678,
+    "btc_vs_apld_close": -0.012031851735043154,
+    "btc_vs_relative_close": 0.003143014977060868
+  },
+  "directional_alignment_pct": {
+    "btc_vs_apld_gap": 68.39080459770115,
+    "btc_vs_relative_gap": 68.96551724137932,
+    "btc_vs_apld_30m": 50.95785440613027,
+    "btc_vs_apld_close": 50.95785440613027
+  },
+  "btc_overnight_>=1pct": {
+    "sessions": 162,
+    "apld_gap": {
+      "observations": 162,
+      "mean_pct": 1.9296165008923079,
+      "median_pct": 1.7974104620374187,
+      "win_rate_pct": 80.24691358024691
+    },
+    "apld_open_to_30m": {
+      "observations": 162,
+      "mean_pct": 0.17382580976929135,
+      "median_pct": -0.018436578171093787,
+      "win_rate_pct": 47.53086419753087
+    },
+    "apld_open_to_close": {
+      "observations": 162,
+      "mean_pct": -0.0914931005895027,
+      "median_pct": -0.2195512820512835,
+      "win_rate_pct": 49.382716049382715
+    },
+    "relative_open_to_close": {
+      "observations": 162,
+      "mean_pct": 0.020809578110185686,
+      "median_pct": 0.1702885231362694,
+      "win_rate_pct": 51.23456790123457
+    }
+  },
+  "btc_overnight_<=-1pct": {
+    "sessions": 145,
+    "apld_gap": {
+      "observations": 145,
+      "mean_pct": -0.9301542490185422,
+      "median_pct": -1.1933174224343812,
+      "win_rate_pct": 28.27586206896552
+    },
+    "apld_open_to_30m": {
+      "observations": 145,
+      "mean_pct": -0.18260517046596808,
+      "median_pct": -0.40650406504065817,
+      "win_rate_pct": 37.24137931034483
+    },
+    "apld_open_to_close": {
+      "observations": 145,
+      "mean_pct": 0.19024059386612105,
+      "median_pct": -0.16949152542373724,
+      "win_rate_pct": 49.6551724137931
+    },
+    "relative_open_to_close": {
+      "observations": 145,
+      "mean_pct": 0.11774861284374899,
+      "median_pct": -0.0585296436463878,
+      "win_rate_pct": 48.96551724137931
+    }
+  },
+  "notes": [
+    "This first pass reuses the existing companion-data framework rather than introducing a dedicated crypto model.",
+    "The default validation window uses Yahoo 5-minute data over the last 60 calendar days so BTC-USD and APLD can be aligned through the same cache-backed loader.",
+    "If the BTC overnight relationship looks promising here, the next step should be strategy gating around the APLD open rather than immediate full-day always-on trading."
+  ]
+}

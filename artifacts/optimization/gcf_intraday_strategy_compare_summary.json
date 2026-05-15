@@ -1,0 +1,203 @@
+{
+  "symbol": "GC=F",
+  "windows": [
+    {
+      "label": "60m_730d",
+      "interval": "60m",
+      "lookback_days": 730
+    },
+    {
+      "label": "5m_59d",
+      "interval": "5m",
+      "lookback_days": 59
+    },
+    {
+      "label": "1m_7d",
+      "interval": "1m",
+      "lookback_days": 7
+    }
+  ],
+  "strategy_results": [
+    {
+      "window_label": "60m_730d",
+      "interval": "60m",
+      "lookback_days": 730,
+      "bars": 11448,
+      "strategy_id": "vwap_rsi",
+      "strategy_name": "VWAP + RSI Confluence",
+      "window_start": "2024-05-09 04:00:00",
+      "window_end": "2026-05-08 11:00:00",
+      "total_return_pct": -24.502,
+      "win_rate_pct": 32.6,
+      "max_drawdown_pct": -26.314,
+      "sharpe_ratio": -1.6984,
+      "total_trades": 261,
+      "winning_trades": 85,
+      "losing_trades": 176,
+      "avg_win_pct": 0.634,
+      "avg_loss_pct": -0.343,
+      "params": "{\"atr_period\": 14, \"atr_sl_mult\": 1.5, \"atr_tp_mult\": 2.5, \"rsi_overbought\": 70, \"rsi_oversold\": 30, \"rsi_period\": 9}"
+    },
+    {
+      "window_label": "60m_730d",
+      "interval": "60m",
+      "lookback_days": 730,
+      "bars": 11448,
+      "strategy_id": "ema_trend_rsi",
+      "strategy_name": "EMA Crossover + RSI + Trend Filter",
+      "window_start": "2024-05-09 04:00:00",
+      "window_end": "2026-05-08 11:00:00",
+      "total_return_pct": -4.261,
+      "win_rate_pct": 35.9,
+      "max_drawdown_pct": -12.209,
+      "sharpe_ratio": -0.3725,
+      "total_trades": 103,
+      "winning_trades": 37,
+      "losing_trades": 66,
+      "avg_win_pct": 1.258,
+      "avg_loss_pct": -0.637,
+      "params": "{\"atr_min_filter\": 0.0, \"atr_period\": 14, \"atr_sl_mult\": 1.5, \"atr_tp_mult\": 3.0, \"fast_ema\": 9, \"rsi_gate\": 50.0, \"rsi_period\": 9, \"slow_ema\": 21, \"trend_ema\": 200}"
+    },
+    {
+      "window_label": "5m_59d",
+      "interval": "5m",
+      "lookback_days": 59,
+      "bars": 11581,
+      "strategy_id": "vwap_rsi",
+      "strategy_name": "VWAP + RSI Confluence",
+      "window_start": "2026-03-10 04:00:00",
+      "window_end": "2026-05-08 11:20:00",
+      "total_return_pct": -2.322,
+      "win_rate_pct": 27.8,
+      "max_drawdown_pct": -2.508,
+      "sharpe_ratio": -5.2502,
+      "total_trades": 18,
+      "winning_trades": 5,
+      "losing_trades": 13,
+      "avg_win_pct": 0.279,
+      "avg_loss_pct": -0.177,
+      "params": "{\"atr_period\": 14, \"atr_sl_mult\": 1.5, \"atr_tp_mult\": 2.5, \"rsi_overbought\": 70, \"rsi_oversold\": 30, \"rsi_period\": 9}"
+    },
+    {
+      "window_label": "5m_59d",
+      "interval": "5m",
+      "lookback_days": 59,
+      "bars": 11581,
+      "strategy_id": "ema_trend_rsi",
+      "strategy_name": "EMA Crossover + RSI + Trend Filter",
+      "window_start": "2026-03-10 04:00:00",
+      "window_end": "2026-05-08 11:20:00",
+      "total_return_pct": -2.85,
+      "win_rate_pct": 22.2,
+      "max_drawdown_pct": -2.883,
+      "sharpe_ratio": -5.5472,
+      "total_trades": 18,
+      "winning_trades": 4,
+      "losing_trades": 14,
+      "avg_win_pct": 0.397,
+      "avg_loss_pct": -0.216,
+      "params": "{\"atr_min_filter\": 0.0, \"atr_period\": 14, \"atr_sl_mult\": 1.5, \"atr_tp_mult\": 3.0, \"fast_ema\": 9, \"rsi_gate\": 50.0, \"rsi_period\": 9, \"slow_ema\": 21, \"trend_ema\": 200}"
+    },
+    {
+      "window_label": "1m_7d",
+      "interval": "1m",
+      "lookback_days": 7,
+      "bars": 7312,
+      "strategy_id": "vwap_rsi",
+      "strategy_name": "VWAP + RSI Confluence",
+      "window_start": "2026-05-01 04:00:00",
+      "window_end": "2026-05-08 11:22:00",
+      "total_return_pct": -0.216,
+      "win_rate_pct": 33.3,
+      "max_drawdown_pct": -0.219,
+      "sharpe_ratio": -4.9936,
+      "total_trades": 3,
+      "winning_trades": 1,
+      "losing_trades": 2,
+      "avg_win_pct": 0.172,
+      "avg_loss_pct": -0.074,
+      "params": "{\"atr_period\": 14, \"atr_sl_mult\": 1.5, \"atr_tp_mult\": 2.5, \"rsi_overbought\": 70, \"rsi_oversold\": 30, \"rsi_period\": 9}"
+    },
+    {
+      "window_label": "1m_7d",
+      "interval": "1m",
+      "lookback_days": 7,
+      "bars": 7312,
+      "strategy_id": "ema_trend_rsi",
+      "strategy_name": "EMA Crossover + RSI + Trend Filter",
+      "window_start": "2026-05-01 04:00:00",
+      "window_end": "2026-05-08 11:22:00",
+      "total_return_pct": 0.11,
+      "win_rate_pct": 66.7,
+      "max_drawdown_pct": -0.163,
+      "sharpe_ratio": 2.3937,
+      "total_trades": 3,
+      "winning_trades": 2,
+      "losing_trades": 1,
+      "avg_win_pct": 0.217,
+      "avg_loss_pct": -0.083,
+      "params": "{\"atr_min_filter\": 0.0, \"atr_period\": 14, \"atr_sl_mult\": 1.5, \"atr_tp_mult\": 3.0, \"fast_ema\": 9, \"rsi_gate\": 50.0, \"rsi_period\": 9, \"slow_ema\": 21, \"trend_ema\": 200}"
+    }
+  ],
+  "regime_summary": {
+    "1m_7d:ema_trend_rsi": {
+      "median_abs_trend_pct": 0.1445,
+      "avg_abs_trend_pct_on_trades": 0.1445,
+      "avg_range_pct_on_trades": 2.2209,
+      "low_trend_trade_return_pct": 0.1166,
+      "high_trend_trade_return_pct": null,
+      "profitable_trade_abs_trend_pct": 0.1445,
+      "losing_trade_abs_trend_pct": 0.1445
+    },
+    "1m_7d:vwap_rsi": {
+      "median_abs_trend_pct": 0.1445,
+      "avg_abs_trend_pct_on_trades": 0.1445,
+      "avg_range_pct_on_trades": 2.2209,
+      "low_trend_trade_return_pct": 0.0081,
+      "high_trend_trade_return_pct": null,
+      "profitable_trade_abs_trend_pct": 0.1445,
+      "losing_trade_abs_trend_pct": 0.1445
+    },
+    "5m_59d:ema_trend_rsi": {
+      "median_abs_trend_pct": 0.679,
+      "avg_abs_trend_pct_on_trades": 0.7356,
+      "avg_range_pct_on_trades": 2.7902,
+      "low_trend_trade_return_pct": -0.1558,
+      "high_trend_trade_return_pct": 0.0389,
+      "profitable_trade_abs_trend_pct": 0.8633,
+      "losing_trade_abs_trend_pct": 0.6991
+    },
+    "5m_59d:vwap_rsi": {
+      "median_abs_trend_pct": 0.7437,
+      "avg_abs_trend_pct_on_trades": 0.9965,
+      "avg_range_pct_on_trades": 3.0443,
+      "low_trend_trade_return_pct": -0.1118,
+      "high_trend_trade_return_pct": 0.0115,
+      "profitable_trade_abs_trend_pct": 0.9705,
+      "losing_trade_abs_trend_pct": 1.0065
+    },
+    "60m_730d:ema_trend_rsi": {
+      "median_abs_trend_pct": 0.53,
+      "avg_abs_trend_pct_on_trades": 0.8169,
+      "avg_range_pct_on_trades": 1.8359,
+      "low_trend_trade_return_pct": -0.0751,
+      "high_trend_trade_return_pct": 0.1613,
+      "profitable_trade_abs_trend_pct": 0.9409,
+      "losing_trade_abs_trend_pct": 0.7484
+    },
+    "60m_730d:vwap_rsi": {
+      "median_abs_trend_pct": 0.5597,
+      "avg_abs_trend_pct_on_trades": 0.8189,
+      "avg_range_pct_on_trades": 1.9445,
+      "low_trend_trade_return_pct": -0.1684,
+      "high_trend_trade_return_pct": 0.119,
+      "profitable_trade_abs_trend_pct": 1.0734,
+      "losing_trade_abs_trend_pct": 0.7257
+    }
+  },
+  "artifacts": {
+    "summary": "C:\\Users\\dimzo\\Documents\\ENTERTAINMENT\\Coding\\Forward_Simulation\\codex\\after-restart\\v2\\artifacts\\optimization\\gcf_intraday_strategy_compare_summary.csv",
+    "trades": "C:\\Users\\dimzo\\Documents\\ENTERTAINMENT\\Coding\\Forward_Simulation\\codex\\after-restart\\v2\\artifacts\\optimization\\gcf_intraday_strategy_compare_trades.csv",
+    "sessions": "C:\\Users\\dimzo\\Documents\\ENTERTAINMENT\\Coding\\Forward_Simulation\\codex\\after-restart\\v2\\artifacts\\optimization\\gcf_intraday_strategy_compare_sessions.csv"
+  }
+}

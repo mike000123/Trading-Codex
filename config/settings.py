@@ -77,9 +77,10 @@ def _get(env_key: str, st_section: str, st_key: str, default: str = "") -> str:
 # ── Config models ─────────────────────────────────────────────────────────────
 
 class TradingMode(str, Enum):
-    PAPER    = "paper"
-    LIVE     = "live"
-    BACKTEST = "backtest"
+    PAPER        = "paper"          # local simulation, no API calls
+    ALPACA_PAPER = "alpaca_paper"   # real Alpaca paper-account orders
+    LIVE         = "live"           # real-money Alpaca live orders
+    BACKTEST     = "backtest"
 
 
 class RiskConfig(BaseModel):
@@ -136,8 +137,13 @@ class AppSettings(BaseModel):
             log_dir = Path(_get("LOG_DIR",  "app", "log_dir",  "logs")),
         )
 
-    def is_live(self)  -> bool: return self.trading_mode == TradingMode.LIVE
-    def is_paper(self) -> bool: return self.trading_mode == TradingMode.PAPER
+    def is_live(self)          -> bool: return self.trading_mode == TradingMode.LIVE
+    def is_paper(self)         -> bool: return self.trading_mode == TradingMode.PAPER
+    def is_alpaca_paper(self)  -> bool: return self.trading_mode == TradingMode.ALPACA_PAPER
+    def is_backtest(self)      -> bool: return self.trading_mode == TradingMode.BACKTEST
+    def uses_real_alpaca(self) -> bool:
+        """True when the selected mode hits Alpaca's servers (paper or live)."""
+        return self.trading_mode in (TradingMode.ALPACA_PAPER, TradingMode.LIVE)
 
 
 # Singleton — import this everywhere

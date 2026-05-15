@@ -1,0 +1,43 @@
+         313711874 function calls (312020082 primitive calls) in 1643.535 seconds
+
+   Ordered by: cumulative time
+   List reduced from 1330 to 35 due to restriction <35>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1   65.954   65.954 1656.996 1656.996 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\managed_portfolio_backtest.py:190(run)
+       36   21.118    0.587 1415.407   39.317 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\managed_portfolio_backtest.py:530(_prepare_symbol_state)
+        9  976.915  108.546 1245.128  138.348 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\bollinger_rsi_strategy.py:823(generate_signals_bulk)
+   156750    1.291    0.000   81.393    0.001 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexing.py:1177(__getitem__)
+   156749    1.799    0.000   78.598    0.001 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexing.py:1720(_getitem_axis)
+       27   22.862    0.847   76.336    2.827 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\earnings_event_hybrid_strategy.py:73(generate_signals_bulk)
+   161468    2.471    0.000   71.425    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\frame.py:3994(_ixs)
+  8328633   57.769    0.000   57.769    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\bollinger_rsi_strategy.py:1505(_uptrend_confirmation)
+ 38055477   54.571    0.000   54.571    0.000 {method 'get' of 'dict' objects}
+   154676   12.977    0.000   46.588    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\managers.py:977(fast_xs)
+ 47794957   42.983    0.000   42.983    0.000 {built-in method builtins.max}
+  5552422   38.771    0.000   38.875    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\bollinger_rsi_strategy.py:1478(_downtrend_risk_score)
+       36   29.194    0.811   38.662    1.074 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\backtest.py:99(_calc_atr_series)
+       27    0.567    0.021   27.079    1.003 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\earnings_overshoot_hybrid_strategy.py:1036(generate_signals_bulk)
+  9630897   24.915    0.000   24.926    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\arrays\datetimes.py:647(__iter__)
+  2776211   10.236    0.000   24.036    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\spike_event.py:21(build_event_short_setup)
+  2776211   21.870    0.000   21.891    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\bollinger_rsi_strategy.py:1451(_uptrend_risk_score)
+       27    0.298    0.011   17.661    0.654 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\earnings_negative_hybrid_strategy.py:456(generate_signals_bulk)
+  9431589   10.430    0.000   15.874    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\managed_portfolio_backtest.py:623(_build_candidate)
+   173169    2.903    0.000   15.343    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\generic.py:6258(__finalize__)
+  2775775    5.128    0.000   14.957    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\fair_gap_fade_short.py:14(fair_gap_fade_short_ready)
+  4527062    3.642    0.000   14.335    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\blocks.py:1319(iget)
+   154622    0.454    0.000   13.589    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\base.py:378(interleaved_dtype)
+     4858    0.067    0.000   13.076    0.003 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\managers.py:317(apply)
+   154676    4.323    0.000   13.055    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\cast.py:1444(find_common_type)
+34812405/34288890   11.880    0.000   12.726    0.000 {built-in method builtins.len}
+1256774/1250098    0.805    0.000   10.875    0.000 {built-in method builtins.getattr}
+      407    0.005    0.000   10.816    0.027 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\generic.py:6485(astype)
+      416    0.002    0.000   10.741    0.026 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\managers.py:440(astype)
+      416    0.004    0.000   10.727    0.026 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\blocks.py:749(astype)
+      416    0.003    0.000   10.710    0.026 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\astype.py:191(astype_array_safe)
+   156056    1.083    0.000   10.707    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\arrays\datetimelike.py:390(__getitem__)
+      416    0.002    0.000   10.692    0.026 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\astype.py:157(astype_array)
+      109   10.531    0.097   10.561    0.097 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\astype.py:56(_astype_nansafe)
+      661    0.003    0.000   10.370    0.016 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\accessor.py:95(_getter)
+
+

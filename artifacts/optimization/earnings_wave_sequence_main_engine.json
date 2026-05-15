@@ -1,0 +1,81 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "notes": [
+    "This validation runs the earnings overshoot wave sequence inside the normal backtest engine with its standard trade accounting and counter-signal behavior.",
+    "To keep the test scoped to the strategy's design intent, it only evaluates the reaction session that follows each off-hours earnings event rather than stitching together the full multi-year timeline.",
+    "Because the standalone research branch did not optimize stop-loss architecture yet, the engine variant uses structural emergency stops around the session peak/trough while relying mainly on reversal signals and session-close fallback for exits."
+  ],
+  "variants": [
+    {
+      "label": "wave_sequence_best_return",
+      "eligible_events": 28,
+      "validated_events": 9,
+      "triggered_events": 9,
+      "coverage_pct": 32.142857142857146,
+      "total_trades": 17,
+      "long_trades": 8,
+      "short_trades": 9,
+      "win_rate_pct": 55.55555555555556,
+      "mean_event_return_pct": 0.6494444444444444,
+      "median_event_return_pct": 0.512,
+      "compounded_event_return_pct": 5.682811303222279,
+      "mean_trade_return_pct": 0.426058140719487,
+      "avg_win_pct": 2.3739190871954743,
+      "avg_loss_pct": -1.305373811703613,
+      "max_drawdown_pct": -3.1321493298014147,
+      "params": {
+        "label": "wave_sequence_best_return",
+        "overshoot_prev_close_min": 20.0,
+        "start_minute": 780,
+        "max_minute": 840,
+        "peak_pullback_min": 3.0,
+        "vwap_break_min": 1.0,
+        "breakdown_impulse_min": 0.5,
+        "short_exit_mode": "time_10",
+        "short_rebound_exit_pct": 0.5,
+        "long_entry_mode": "ema_turn",
+        "long_momentum_min": 0.0,
+        "long_exit_mode": "ema_roll",
+        "long_vwap_touch_buffer": -0.5,
+        "long_ema_roll_gain_min": 1.0
+      }
+    },
+    {
+      "label": "wave_sequence_robust",
+      "eligible_events": 28,
+      "validated_events": 13,
+      "triggered_events": 13,
+      "coverage_pct": 46.42857142857143,
+      "total_trades": 26,
+      "long_trades": 13,
+      "short_trades": 13,
+      "win_rate_pct": 69.23076923076923,
+      "mean_event_return_pct": 0.3040769230769231,
+      "median_event_return_pct": 0.525,
+      "compounded_event_return_pct": 3.8642746518813498,
+      "mean_trade_return_pct": 0.2501721532946389,
+      "avg_win_pct": 2.3525439807492257,
+      "avg_loss_pct": -1.5518608416664357,
+      "max_drawdown_pct": -4.072392820000004,
+      "params": {
+        "label": "wave_sequence_robust",
+        "overshoot_prev_close_min": 20.0,
+        "start_minute": 780,
+        "max_minute": 870,
+        "peak_pullback_min": 3.0,
+        "vwap_break_min": 0.5,
+        "breakdown_impulse_min": 0.5,
+        "short_exit_mode": "rebound",
+        "short_rebound_exit_pct": 0.5,
+        "long_entry_mode": "next_bar",
+        "long_momentum_min": 0.0,
+        "long_exit_mode": "time_20",
+        "long_vwap_touch_buffer": -0.5,
+        "long_ema_roll_gain_min": 0.5
+      }
+    }
+  ]
+}

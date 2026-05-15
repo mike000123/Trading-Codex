@@ -1,0 +1,48 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "baseline": {
+    "label": "baseline_no_continuation",
+    "continuation_enabled": false,
+    "continuation_gap_pct_min": null,
+    "continuation_confirm5_min": null,
+    "continuation_confirm15_min": null,
+    "continuation_confirm30_min": null,
+    "triggered_events": 13,
+    "total_trades": 20,
+    "compounded_event_return_pct": 36.71346764868091,
+    "win_rate_pct": 92.3076923076923,
+    "max_drawdown_pct": -0.5210000000000048,
+    "continuation_event_count": 0
+  },
+  "best_any": {
+    "label": "cont_gap6_c50_c150_c300",
+    "continuation_enabled": true,
+    "continuation_gap_pct_min": 6.0,
+    "continuation_confirm5_min": 0.0,
+    "continuation_confirm15_min": 0.0,
+    "continuation_confirm30_min": 0.0,
+    "triggered_events": 33,
+    "total_trades": 40,
+    "compounded_event_return_pct": 34.94141280246312,
+    "win_rate_pct": 51.515151515151516,
+    "max_drawdown_pct": -6.3219871739351845,
+    "continuation_event_count": 20
+  },
+  "best_additive": {
+    "label": "cont_gap6_c50_c150_c300",
+    "continuation_enabled": true,
+    "continuation_gap_pct_min": 6.0,
+    "continuation_confirm5_min": 0.0,
+    "continuation_confirm15_min": 0.0,
+    "continuation_confirm30_min": 0.0,
+    "triggered_events": 33,
+    "total_trades": 40,
+    "compounded_event_return_pct": 34.94141280246312,
+    "win_rate_pct": 51.515151515151516,
+    "max_drawdown_pct": -6.3219871739351845,
+    "continuation_event_count": 20
+  }
+}

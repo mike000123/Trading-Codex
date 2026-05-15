@@ -1,0 +1,143 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "positive_events": 689,
+  "positive_peak_vs_prev_close_ge_15": 56,
+  "positive_peak_vs_prev_close_ge_20": 28,
+  "best_variant": {
+    "variant": "wave_pc20_start780_end840_pull3.0_vbreak1.0_bd0.5_sexittime_10_sreb0.5_lentryema_turn_lmom0.00_lexitema_roll_lvwap-0.5_lgain1.0",
+    "events": 9,
+    "total_trades": 17,
+    "second_leg_events": 8,
+    "win_rate_pct": 77.77777777777779,
+    "mean_event_return_pct": 1.9001210933623933,
+    "median_event_return_pct": 1.8287185486242308,
+    "compounded_event_return_pct": 18.18242901500502,
+    "mean_trade_return_pct": 1.004829954919887,
+    "labeled_overshoot_match_pct": 66.66666666666666
+  },
+  "top_variants": [
+    {
+      "variant": "wave_pc20_start780_end840_pull3.0_vbreak1.0_bd0.5_sexittime_10_sreb0.5_lentryema_turn_lmom0.00_lexitema_roll_lvwap-0.5_lgain1.0",
+      "events": 9,
+      "total_trades": 17,
+      "second_leg_events": 8,
+      "win_rate_pct": 77.77777777777779,
+      "mean_event_return_pct": 1.9001210933623933,
+      "median_event_return_pct": 1.8287185486242308,
+      "compounded_event_return_pct": 18.18242901500502,
+      "mean_trade_return_pct": 1.004829954919887,
+      "labeled_overshoot_match_pct": 66.66666666666666
+    },
+    {
+      "variant": "wave_pc20_start780_end840_pull3.0_vbreak1.0_bd0.5_sexittime_10_sreb0.5_lentryema_turn_lmom0.00_lexitema_roll_lvwap0.0_lgain1.0",
+      "events": 9,
+      "total_trades": 17,
+      "second_leg_events": 8,
+      "win_rate_pct": 77.77777777777779,
+      "mean_event_return_pct": 1.9001210933623933,
+      "median_event_return_pct": 1.8287185486242308,
+      "compounded_event_return_pct": 18.18242901500502,
+      "mean_trade_return_pct": 1.004829954919887,
+      "labeled_overshoot_match_pct": 66.66666666666666
+    },
+    {
+      "variant": "wave_pc20_start780_end840_pull3.0_vbreak1.0_bd0.5_sexittime_10_sreb1.0_lentryema_turn_lmom0.00_lexitema_roll_lvwap-0.5_lgain1.0",
+      "events": 9,
+      "total_trades": 17,
+      "second_leg_events": 8,
+      "win_rate_pct": 77.77777777777779,
+      "mean_event_return_pct": 1.9001210933623933,
+      "median_event_return_pct": 1.8287185486242308,
+      "compounded_event_return_pct": 18.18242901500502,
+      "mean_trade_return_pct": 1.004829954919887,
+      "labeled_overshoot_match_pct": 66.66666666666666
+    },
+    {
+      "variant": "wave_pc20_start780_end840_pull3.0_vbreak1.0_bd0.5_sexittime_10_sreb1.0_lentryema_turn_lmom0.00_lexitema_roll_lvwap0.0_lgain1.0",
+      "events": 9,
+      "total_trades": 17,
+      "second_leg_events": 8,
+      "win_rate_pct": 77.77777777777779,
+      "mean_event_return_pct": 1.9001210933623933,
+      "median_event_return_pct": 1.8287185486242308,
+      "compounded_event_return_pct": 18.18242901500502,
+      "mean_trade_return_pct": 1.004829954919887,
+      "labeled_overshoot_match_pct": 66.66666666666666
+    },
+    {
+      "variant": "wave_pc20_start780_end870_pull3.0_vbreak0.5_bd0.5_sexitrebound_sreb0.5_lentrynext_bar_lmom0.00_lexittime_20_lvwap-0.5_lgain0.5",
+      "events": 13,
+      "total_trades": 26,
+      "second_leg_events": 13,
+      "win_rate_pct": 92.3076923076923,
+      "mean_event_return_pct": 1.2763387882973922,
+      "median_event_return_pct": 0.9501121946635882,
+      "compounded_event_return_pct": 17.816365043705716,
+      "mean_trade_return_pct": 0.6593867433023226,
+      "labeled_overshoot_match_pct": 61.53846153846154
+    },
+    {
+      "variant": "wave_pc20_start780_end870_pull3.0_vbreak0.5_bd0.5_sexitrebound_sreb0.5_lentrynext_bar_lmom0.00_lexittime_20_lvwap-0.5_lgain1.0",
+      "events": 13,
+      "total_trades": 26,
+      "second_leg_events": 13,
+      "win_rate_pct": 92.3076923076923,
+      "mean_event_return_pct": 1.2763387882973922,
+      "median_event_return_pct": 0.9501121946635882,
+      "compounded_event_return_pct": 17.816365043705716,
+      "mean_trade_return_pct": 0.6593867433023226,
+      "labeled_overshoot_match_pct": 61.53846153846154
+    },
+    {
+      "variant": "wave_pc20_start780_end870_pull3.0_vbreak0.5_bd0.5_sexitrebound_sreb0.5_lentrynext_bar_lmom0.00_lexittime_20_lvwap0.0_lgain0.5",
+      "events": 13,
+      "total_trades": 26,
+      "second_leg_events": 13,
+      "win_rate_pct": 92.3076923076923,
+      "mean_event_return_pct": 1.2763387882973922,
+      "median_event_return_pct": 0.9501121946635882,
+      "compounded_event_return_pct": 17.816365043705716,
+      "mean_trade_return_pct": 0.6593867433023226,
+      "labeled_overshoot_match_pct": 61.53846153846154
+    },
+    {
+      "variant": "wave_pc20_start780_end870_pull3.0_vbreak0.5_bd0.5_sexitrebound_sreb0.5_lentrynext_bar_lmom0.00_lexittime_20_lvwap0.0_lgain1.0",
+      "events": 13,
+      "total_trades": 26,
+      "second_leg_events": 13,
+      "win_rate_pct": 92.3076923076923,
+      "mean_event_return_pct": 1.2763387882973922,
+      "median_event_return_pct": 0.9501121946635882,
+      "compounded_event_return_pct": 17.816365043705716,
+      "mean_trade_return_pct": 0.6593867433023226,
+      "labeled_overshoot_match_pct": 61.53846153846154
+    },
+    {
+      "variant": "wave_pc20_start780_end870_pull3.0_vbreak0.5_bd0.5_sexitrebound_sreb0.5_lentrynext_bar_lmom0.25_lexittime_20_lvwap-0.5_lgain0.5",
+      "events": 13,
+      "total_trades": 26,
+      "second_leg_events": 13,
+      "win_rate_pct": 92.3076923076923,
+      "mean_event_return_pct": 1.2763387882973922,
+      "median_event_return_pct": 0.9501121946635882,
+      "compounded_event_return_pct": 17.816365043705716,
+      "mean_trade_return_pct": 0.6593867433023226,
+      "labeled_overshoot_match_pct": 61.53846153846154
+    },
+    {
+      "variant": "wave_pc20_start780_end870_pull3.0_vbreak0.5_bd0.5_sexitrebound_sreb0.5_lentrynext_bar_lmom0.25_lexittime_20_lvwap-0.5_lgain1.0",
+      "events": 13,
+      "total_trades": 26,
+      "second_leg_events": 13,
+      "win_rate_pct": 92.3076923076923,
+      "mean_event_return_pct": 1.2763387882973922,
+      "median_event_return_pct": 0.9501121946635882,
+      "compounded_event_return_pct": 17.816365043705716,
+      "mean_trade_return_pct": 0.6593867433023226,
+      "labeled_overshoot_match_pct": 61.53846153846154
+    }
+  ]
+}

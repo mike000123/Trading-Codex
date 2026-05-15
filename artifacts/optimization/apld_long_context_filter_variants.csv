@@ -1,0 +1,12 @@
+variant,total_return_pct,max_drawdown_pct,sharpe_ratio,total_trades,blocked_longs,blocked_tuesday_longs,remaining_tuesday_long_trades,remaining_tuesday_long_mean_ret
+qqqweak_rebound15,51.21,-9.647,2.6026,68,8,3,10,-0.993093539338527
+qqqweak_confirm05_rebound15,50.598,-9.697,2.6703,65,11,5,8,-1.2308761702613515
+qqqweak_confirm05,47.518,-9.697,2.4932,66,10,5,8,-1.2308761702613515
+qqqweak_confirm05_rebound10,47.518,-9.697,2.4932,66,10,5,8,-1.2308761702613515
+qqqweak_confirm025_rebound15,47.518,-9.956,2.454,66,10,4,9,-1.4274454846767575
+qqq_nonneg,46.276,-9.697,2.5779,61,16,6,8,-1.2308761702613527
+baseline,45.131,-9.833,2.2011,74,0,0,13,-1.022719185851128
+qqq_nonneg_confirm025,37.887,-8.438,2.5745,49,30,12,2,-1.965504893769403
+qqq_nonneg_confirm025_rebound15,37.767,-8.438,2.6915,47,32,12,2,-1.965504893769403
+qqq_nonneg_rebound15,32.171,-11.209,2.1637,51,27,9,5,-1.3628957244454325
+qqq_005,25.079,-7.015,2.0015,50,29,8,6,-0.9548328232884256

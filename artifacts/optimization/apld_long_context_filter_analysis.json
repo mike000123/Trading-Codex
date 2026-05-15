@@ -1,0 +1,136 @@
+{
+  "symbol": "APLD",
+  "window": {
+    "start": "2024-04-04T00:00:00",
+    "end": "2026-05-01T23:59:59"
+  },
+  "prepared_rows": 338931,
+  "variants_ranked": [
+    {
+      "variant": "qqqweak_rebound15",
+      "total_return_pct": 51.21,
+      "max_drawdown_pct": -9.647,
+      "sharpe_ratio": 2.6026,
+      "total_trades": 68,
+      "blocked_longs": 8,
+      "blocked_tuesday_longs": 3,
+      "remaining_tuesday_long_trades": 10,
+      "remaining_tuesday_long_mean_ret": -0.993093539338527
+    },
+    {
+      "variant": "qqqweak_confirm05_rebound15",
+      "total_return_pct": 50.598,
+      "max_drawdown_pct": -9.697,
+      "sharpe_ratio": 2.6703,
+      "total_trades": 65,
+      "blocked_longs": 11,
+      "blocked_tuesday_longs": 5,
+      "remaining_tuesday_long_trades": 8,
+      "remaining_tuesday_long_mean_ret": -1.2308761702613515
+    },
+    {
+      "variant": "qqqweak_confirm05",
+      "total_return_pct": 47.518,
+      "max_drawdown_pct": -9.697,
+      "sharpe_ratio": 2.4932,
+      "total_trades": 66,
+      "blocked_longs": 10,
+      "blocked_tuesday_longs": 5,
+      "remaining_tuesday_long_trades": 8,
+      "remaining_tuesday_long_mean_ret": -1.2308761702613515
+    },
+    {
+      "variant": "qqqweak_confirm05_rebound10",
+      "total_return_pct": 47.518,
+      "max_drawdown_pct": -9.697,
+      "sharpe_ratio": 2.4932,
+      "total_trades": 66,
+      "blocked_longs": 10,
+      "blocked_tuesday_longs": 5,
+      "remaining_tuesday_long_trades": 8,
+      "remaining_tuesday_long_mean_ret": -1.2308761702613515
+    },
+    {
+      "variant": "qqqweak_confirm025_rebound15",
+      "total_return_pct": 47.518,
+      "max_drawdown_pct": -9.956,
+      "sharpe_ratio": 2.454,
+      "total_trades": 66,
+      "blocked_longs": 10,
+      "blocked_tuesday_longs": 4,
+      "remaining_tuesday_long_trades": 9,
+      "remaining_tuesday_long_mean_ret": -1.4274454846767575
+    },
+    {
+      "variant": "qqq_nonneg",
+      "total_return_pct": 46.276,
+      "max_drawdown_pct": -9.697,
+      "sharpe_ratio": 2.5779,
+      "total_trades": 61,
+      "blocked_longs": 16,
+      "blocked_tuesday_longs": 6,
+      "remaining_tuesday_long_trades": 8,
+      "remaining_tuesday_long_mean_ret": -1.2308761702613527
+    },
+    {
+      "variant": "baseline",
+      "total_return_pct": 45.131,
+      "max_drawdown_pct": -9.833,
+      "sharpe_ratio": 2.2011,
+      "total_trades": 74,
+      "blocked_longs": 0,
+      "blocked_tuesday_longs": 0,
+      "remaining_tuesday_long_trades": 13,
+      "remaining_tuesday_long_mean_ret": -1.022719185851128
+    },
+    {
+      "variant": "qqq_nonneg_confirm025",
+      "total_return_pct": 37.887,
+      "max_drawdown_pct": -8.438,
+      "sharpe_ratio": 2.5745,
+      "total_trades": 49,
+      "blocked_longs": 30,
+      "blocked_tuesday_longs": 12,
+      "remaining_tuesday_long_trades": 2,
+      "remaining_tuesday_long_mean_ret": -1.965504893769403
+    },
+    {
+      "variant": "qqq_nonneg_confirm025_rebound15",
+      "total_return_pct": 37.767,
+      "max_drawdown_pct": -8.438,
+      "sharpe_ratio": 2.6915,
+      "total_trades": 47,
+      "blocked_longs": 32,
+      "blocked_tuesday_longs": 12,
+      "remaining_tuesday_long_trades": 2,
+      "remaining_tuesday_long_mean_ret": -1.965504893769403
+    },
+    {
+      "variant": "qqq_nonneg_rebound15",
+      "total_return_pct": 32.171,
+      "max_drawdown_pct": -11.209,
+      "sharpe_ratio": 2.1637,
+      "total_trades": 51,
+      "blocked_longs": 27,
+      "blocked_tuesday_longs": 9,
+      "remaining_tuesday_long_trades": 5,
+      "remaining_tuesday_long_mean_ret": -1.3628957244454325
+    },
+    {
+      "variant": "qqq_005",
+      "total_return_pct": 25.079,
+      "max_drawdown_pct": -7.015,
+      "sharpe_ratio": 2.0015,
+      "total_trades": 50,
+      "blocked_longs": 29,
+      "blocked_tuesday_longs": 8,
+      "remaining_tuesday_long_trades": 6,
+      "remaining_tuesday_long_mean_ret": -0.9548328232884256
+    }
+  ],
+  "notes": [
+    "This pass focuses only on the long side of the APLD BTC-opening overlay, because Tuesday drag was concentrated in apld_btc_confirm_long trades.",
+    "The new context feature tested here is early QQQ tape confirmation, optionally combined with stricter APLD reclaim-quality thresholds.",
+    "These are research-only filters; they do not change the live strategy unless explicitly promoted later."
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "window_start": "2024-04-04 00:00:00",
+  "window_end": "2026-04-23 23:59:00",
+  "ticker_count": 36,
+  "sleeve_capital": 1000.0,
+  "baseline_full_benchmark_total_pnl": 5109.261532627092,
+  "baseline_full_benchmark_total_return_pct": 14.192393146186365,
+  "baseline_literal_1k_total_pnl": 3405.7471135202404,
+  "baseline_literal_1k_total_return_pct": 9.460408648667334,
+  "dynamic_sizing": true,
+  "allow_replacement": true,
+  "replacement_score_edge_pct": 10.0,
+  "runs": [
+    {
+      "starting_equity": 2000.0,
+      "capital_per_trade": 1000.0,
+      "max_open_positions": 2,
+      "managed_total_pnl": 2565.466869540001,
+      "managed_total_return_pct": 128.27334347700005,
+      "managed_total_trades": 168,
+      "managed_candidate_entries": 960,
+      "managed_skipped_entries": 791,
+      "managed_replaced_positions": 3,
+      "managed_peak_open_positions": 2,
+      "dynamic_sizing": true,
+      "allow_replacement": true,
+      "replacement_score_edge_pct": 10.0,
+      "capture_vs_full_36k_benchmark_pct": 50.21208746425011,
+      "capture_vs_literal_1k_sum_pct": 75.32757964781153,
+      "top_symbol_contributors": [
+        {
+          "ticker": "GLD",
+          "pnl": 1386.2516862765603
+        },
+        {
+          "ticker": "USO",
+          "pnl": 261.2125800460765
+        },
+        {
+          "ticker": "MRVL",
+          "pnl": 181.6588076201138
+        },
+        {
+          "ticker": "MSTR",
+          "pnl": 167.09631999999985
+        },
+        {
+          "ticker": "SNPS",
+          "pnl": 152.20865599999988
+        },
+        {
+          "ticker": "SPY",
+          "pnl": 142.33278117501342
+        },
+        {
+          "ticker": "APLD",
+          "pnl": 88.6008699199995
+        },
+        {
+          "ticker": "TXN",
+          "pnl": 87.06455206912251
+        },
+        {
+          "ticker": "UVXY",
+          "pnl": 57.29831099652273
+        },
+        {
+          "ticker": "XLF",
+          "pnl": 38.400000000000055
+        }
+      ],
+      "elapsed_sec": 45.62331120000454
+    },
+    {
+      "starting_equity": 3000.0,
+      "capital_per_trade": 1000.0,
+      "max_open_positions": 3,
+      "managed_total_pnl": 3038.9244710872335,
+      "managed_total_return_pct": 101.29748236957445,
+      "managed_total_trades": 167,
+      "managed_candidate_entries": 958,
+      "managed_skipped_entries": 790,
+      "managed_replaced_positions": 1,
+      "managed_peak_open_positions": 3,
+      "dynamic_sizing": true,
+      "allow_replacement": true,
+      "replacement_score_edge_pct": 10.0,
+      "capture_vs_full_36k_benchmark_pct": 59.47874172580616,
+      "capture_vs_literal_1k_sum_pct": 89.22930475440226,
+      "top_symbol_contributors": [
+        {
+          "ticker": "GLD",
+          "pnl": 1398.280877695905
+        },
+        {
+          "ticker": "USO",
+          "pnl": 306.5720574478936
+        },
+        {
+          "ticker": "SNPS",
+          "pnl": 304.4173119999998
+        },
+        {
+          "ticker": "SPY",
+          "pnl": 195.2883040483007
+        },
+        {
+          "ticker": "MRVL",
+          "pnl": 181.6588076201138
+        },
+        {
+          "ticker": "MSTR",
+          "pnl": 167.09631999999985
+        },
+        {
+          "ticker": "APLD",
+          "pnl": 125.20994743999951
+        },
+        {
+          "ticker": "TXN",
+          "pnl": 87.06455206912251
+        },
+        {
+          "ticker": "UVXY",
+          "pnl": 76.20034701380413
+        },
+        {
+          "ticker": "TSLA",
+          "pnl": 71.72375923970428
+        }
+      ],
+      "elapsed_sec": 21.681401899986668
+    },
+    {
+      "starting_equity": 10000.0,
+      "capital_per_trade": 1000.0,
+      "max_open_positions": 10,
+      "managed_total_pnl": 6402.381669447486,
+      "managed_total_return_pct": 64.02381669447486,
+      "managed_total_trades": 167,
+      "managed_candidate_entries": 958,
+      "managed_skipped_entries": 790,
+      "managed_replaced_positions": 0,
+      "managed_peak_open_positions": 3,
+      "dynamic_sizing": true,
+      "allow_replacement": true,
+      "replacement_score_edge_pct": 10.0,
+      "capture_vs_full_36k_benchmark_pct": 125.30933538169253,
+      "capture_vs_literal_1k_sum_pct": 187.98758263733419,
+      "top_symbol_contributors": [
+        {
+          "ticker": "GLD",
+          "pnl": 2676.065016233727
+        },
+        {
+          "ticker": "USO",
+          "pnl": 612.4516348957873
+        },
+        {
+          "ticker": "SNPS",
+          "pnl": 608.8346239999996
+        },
+        {
+          "ticker": "SPY",
+          "pnl": 390.5766080966014
+        },
+        {
+          "ticker": "MRVL",
+          "pnl": 363.3176152402276
+        },
+        {
+          "ticker": "MSTR",
+          "pnl": 344.63615999999973
+        },
+        {
+          "ticker": "UVXY",
+          "pnl": 337.321659357211
+        },
+        {
+          "ticker": "TSLA",
+          "pnl": 286.8950369588171
+        },
+        {
+          "ticker": "APLD",
+          "pnl": 249.83925007999903
+        },
+        {
+          "ticker": "TXN",
+          "pnl": 232.17213885099338
+        }
+      ],
+      "elapsed_sec": 21.8081401999807
+    }
+  ],
+  "notes": [
+    "These scarce-capital checks use the current bucket-aware allocator with replacement ON.",
+    "When dynamic_sizing is true, the engine may use 0.5x, 1.0x, 1.5x, or 2.0x of the base trade capital, and may scale higher when cash is abundant and only a few standout setups are active.",
+    "They are intended to isolate allocator quality under scarce capital with the current sizing mode.",
+    "Managed Normalized Return % is still expressed per 1000-dollar base sleeve for cross-ticker comparison, while managed_total_return_pct is the actual portfolio return on the chosen starting equity."
+  ],
+  "timing_sec": {
+    "prepare": 7.055489699996542,
+    "total_managed": 89.1128532999719
+  }
+}

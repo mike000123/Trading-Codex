@@ -1,0 +1,20 @@
+# MRMI Platform — Streamlit theme defaults.
+# These values feed Streamlit's internal components (dataframes, sliders,
+# selectboxes, the Glide-data-grid widget the Trade Log uses, etc.) which
+# can't be reached from CSS alone. ui/themes.py still applies the
+# per-theme-name CSS overlay on top, so the "Light", "Terminal", and
+# "Midnight Blue" themes still work — the user just toggles between
+# them via the sidebar dropdown — but the *base* always renders dark
+# so a user who picks any non-MRMI theme still sees readable widgets.
+
+[theme]
+base = "dark"
+primaryColor          = "#d4af37"
+backgroundColor       = "#0c0d14"
+secondaryBackgroundColor = "#181a25"
+textColor             = "#f0e8d0"
+font                  = "sans serif"
+
+[server]
+# Quiet the file-watcher noise on dev machines while we iterate.
+runOnSave = false

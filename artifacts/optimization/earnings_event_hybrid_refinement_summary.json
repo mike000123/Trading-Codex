@@ -1,0 +1,71 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "baseline": {
+    "summary": {
+      "overall_compounded_return_pct": 195.88749913876796,
+      "overall_triggered_events": 36,
+      "overall_total_trades": 44,
+      "overall_win_rate_pct": 83.33333333333334,
+      "overall_max_drawdown_pct": -4.079999999999995
+    },
+    "negative_rebound": {
+      "branch": "negative_rebound",
+      "branch_events": 10,
+      "branch_compounded_return_pct": 10.99352903646107,
+      "branch_mean_return_pct": 1.0586,
+      "branch_win_rate_pct": 70.0
+    },
+    "wave_best": {
+      "branch": "wave_best",
+      "branch_events": 5,
+      "branch_compounded_return_pct": 11.28269817914218,
+      "branch_mean_return_pct": 2.1924,
+      "branch_win_rate_pct": 80.0
+    }
+  },
+  "best_negative_variant": {
+    "variant": "negative|entry_min_close_from_open_pct=0p0|rebound_from_trough_min=4p0|rebound_impulse_min=0p5|vwap_reclaim_min=-0p5",
+    "params_json": "{\"negative\": {\"entry_min_close_from_open_pct\": 0.0, \"rebound_from_trough_min\": 4.0, \"rebound_impulse_min\": 0.5, \"vwap_reclaim_min\": -0.5}}",
+    "overall_compounded_return_pct": 195.88749913876796,
+    "overall_triggered_events": 36,
+    "overall_total_trades": 44,
+    "overall_win_rate_pct": 83.33333333333334,
+    "overall_max_drawdown_pct": -4.079999999999995,
+    "branch": "negative_rebound",
+    "branch_events": 10,
+    "branch_compounded_return_pct": 10.99352903646107,
+    "branch_mean_return_pct": 1.0586,
+    "branch_win_rate_pct": 70.0
+  },
+  "best_wave_variant": {
+    "variant": "positive|wave_best_long_entry_min_close_from_open_pct=none|wave_best_long_entry_mode=ema_turn|wave_best_long_momentum_min=0p0",
+    "params_json": "{\"positive\": {\"wave_best_long_entry_min_close_from_open_pct\": null, \"wave_best_long_entry_mode\": \"ema_turn\", \"wave_best_long_momentum_min\": 0.0}}",
+    "overall_compounded_return_pct": 195.88749913876796,
+    "overall_triggered_events": 36,
+    "overall_total_trades": 44,
+    "overall_win_rate_pct": 83.33333333333334,
+    "overall_max_drawdown_pct": -4.079999999999995,
+    "branch": "wave_best",
+    "branch_events": 5,
+    "branch_compounded_return_pct": 11.28269817914218,
+    "branch_mean_return_pct": 2.1924,
+    "branch_win_rate_pct": 80.0
+  },
+  "best_combined_variant": {
+    "variant": "baseline",
+    "params_json": "{}",
+    "overall_compounded_return_pct": 195.88749913876796,
+    "overall_triggered_events": 36,
+    "overall_total_trades": 44,
+    "overall_win_rate_pct": 83.33333333333334,
+    "overall_max_drawdown_pct": -4.079999999999995,
+    "branch": "wave_best",
+    "branch_events": 5,
+    "branch_compounded_return_pct": 11.28269817914218,
+    "branch_mean_return_pct": 2.1924,
+    "branch_win_rate_pct": 80.0
+  }
+}

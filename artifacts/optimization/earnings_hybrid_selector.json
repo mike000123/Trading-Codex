@@ -1,0 +1,377 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "notes": [
+    "This pass first engine-validates a compact failed-reclaim branch grid on event days.",
+    "It then merges the best failed-reclaim engine branch with the earlier wave-sequence engine branch and the conditional wave branch.",
+    "The selector search is intentionally simple: constant baselines, oracle upper bounds, single-feature thresholds, timing splits, and a small two-stage shape rule."
+  ],
+  "best_failed_reclaim_branch": {
+    "label": "failed_reclaim_pc15_start720_break0.00_reb0.25_lh3.0",
+    "eligible_events": 56,
+    "triggered_events": 7,
+    "coverage_pct": 12.5,
+    "total_trades": 7,
+    "win_rate_pct": 85.71428571428571,
+    "mean_event_return_pct": 2.365285714285714,
+    "median_event_return_pct": 2.031,
+    "compounded_event_return_pct": 17.55130293316953,
+    "mean_trade_return_pct": 2.365285714285714,
+    "max_drawdown_pct": -0.7809999999999984,
+    "params": {
+      "label": "failed_reclaim_pc15_start720_break0.00_reb0.25_lh3.0",
+      "overshoot_prev_close_min": 15.0,
+      "start_minute": 720,
+      "max_minute": 840,
+      "vwap_break_min": 0.0,
+      "rebound_min": 0.25,
+      "reclaim_window_bars": 10,
+      "reclaim_vwap_buffer": 0.0,
+      "lower_high_min": 3.0,
+      "breakdown_impulse_min": 0.5
+    }
+  },
+  "top_selectors": [
+    {
+      "label": "oracle_wave_failed_reclaim_conditional",
+      "trades": 14,
+      "win_rate_pct": 78.57142857142857,
+      "mean_return_pct": 1.8768571428571428,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 29.18951262936893,
+      "coverage_pct": 2.0319303338171264,
+      "selector_details": {
+        "mode": "oracle",
+        "branches": [
+          "wave",
+          "failed_reclaim",
+          "conditional"
+        ]
+      }
+    },
+    {
+      "label": "oracle_wave_vs_failed_reclaim",
+      "trades": 14,
+      "win_rate_pct": 78.57142857142857,
+      "mean_return_pct": 1.7315714285714285,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 26.549567048089152,
+      "coverage_pct": 2.0319303338171264,
+      "selector_details": {
+        "mode": "oracle",
+        "branches": [
+          "wave",
+          "failed_reclaim"
+        ]
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_20.8",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 20.8,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_21.0",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 21.0,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_21.1",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 21.1,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_21.121",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 21.121,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_21.389",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 21.389,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_21.4",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 21.4,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_21.42",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 21.42,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_21.975",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 21.975,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_peak_vs_prev_close_pct_ge_22.0",
+      "trades": 12,
+      "win_rate_pct": 83.33333333333334,
+      "mean_return_pct": 1.9750833333333333,
+      "median_return_pct": 0.7825,
+      "compounded_return_pct": 25.90701226222505,
+      "coverage_pct": 1.741654571843251,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "peak_vs_prev_close_pct",
+        "op": ">=",
+        "threshold": 22.0,
+        "high_branch": "wave",
+        "low_branch": "failed_reclaim"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.658_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.658,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.667_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.667,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.674_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.674,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.7_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.7,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.704_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.704,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.729_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.729,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.778_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.778,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.779_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.779,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    },
+    {
+      "label": "selector_gap_pct_ge_0.797_flip",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 3.194142857142857,
+      "median_return_pct": 2.172,
+      "compounded_return_pct": 24.32812234870432,
+      "coverage_pct": 1.0159651669085632,
+      "selector_details": {
+        "mode": "threshold",
+        "feature": "gap_pct",
+        "op": ">=",
+        "threshold": 0.797,
+        "high_branch": "failed_reclaim",
+        "low_branch": "wave"
+      }
+    }
+  ]
+}

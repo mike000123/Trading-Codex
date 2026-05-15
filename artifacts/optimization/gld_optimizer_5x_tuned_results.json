@@ -1,0 +1,431 @@
+{
+  "symbol": "GLD",
+  "window_start": "2024-04-04 00:00:00",
+  "window_end": "2026-04-03 23:59:59",
+  "costs": {
+    "spread_pct": 0.06,
+    "slippage_pct": 0.02,
+    "commission": 0.0
+  },
+  "sizing_mode": "min(capital_per_trade, current_equity)",
+  "risk_cap_note": "Leverage-tuned search uses 5x leverage with max 50% capital loss cap via RiskManager.",
+  "base_candidate": "gld_best_1x_sweep_20260419",
+  "target_leverage": 5.0,
+  "best_5x_tuned": {
+    "label": "shock_rebound_sl_pct=0.8",
+    "leverage": 5.0,
+    "total_return_pct": 536.333,
+    "max_drawdown_pct": -8.434,
+    "sharpe_ratio": 4.1842,
+    "total_trades": 65,
+    "score": 575.9702,
+    "params": {
+      "intraday_pullback_rsi_trigger": 85.0,
+      "shock_reversal_tp_pct": 1.6,
+      "shock_reversal_trail_pct": 0.4,
+      "cascade_breakdown_tp_pct": 0.8,
+      "shock_rebound_tp_pct": 2.2,
+      "shock_rebound_trail_pct": 1.3,
+      "spike_momentum_max": 6,
+      "shock_rebound_sl_pct": 0.8
+    }
+  },
+  "top_search": [
+    {
+      "label": "shock_rebound_sl_pct=0.8",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8
+      }
+    },
+    {
+      "label": "spike_momentum_max=5",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 5,
+        "shock_rebound_sl_pct": 0.8
+      }
+    },
+    {
+      "label": "spike_momo_sl_pct=1.2",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "spike_momo_sl_pct": 1.2
+      }
+    },
+    {
+      "label": "spike_momo_trail_pct=3.0",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "spike_momo_trail_pct": 3.0
+      }
+    },
+    {
+      "label": "intraday_pullback_sl_pct=0.6",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "intraday_pullback_sl_pct": 0.6
+      }
+    },
+    {
+      "label": "intraday_pullback_sl_pct=0.8",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "intraday_pullback_sl_pct": 0.8
+      }
+    },
+    {
+      "label": "intraday_pullback_sl_pct=1.0",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "intraday_pullback_sl_pct": 1.0
+      }
+    },
+    {
+      "label": "intraday_pullback_tp_pct=1.2",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "intraday_pullback_tp_pct": 1.2
+      }
+    },
+    {
+      "label": "intraday_pullback_trail_pct=0.6",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "intraday_pullback_trail_pct": 0.6
+      }
+    },
+    {
+      "label": "shock_reversal_sl_pct=0.6",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "shock_reversal_sl_pct": 0.6
+      }
+    },
+    {
+      "label": "shock_reversal_sl_pct=0.8",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "shock_reversal_sl_pct": 0.8
+      }
+    },
+    {
+      "label": "shock_reversal_sl_pct=1.0",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "shock_reversal_sl_pct": 1.0
+      }
+    },
+    {
+      "label": "cascade_breakdown_sl_pct=0.6",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "cascade_breakdown_sl_pct": 0.6
+      }
+    },
+    {
+      "label": "cascade_breakdown_sl_pct=0.8",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "cascade_breakdown_sl_pct": 0.8
+      }
+    },
+    {
+      "label": "cascade_breakdown_sl_pct=1.0",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "cascade_breakdown_sl_pct": 1.0
+      }
+    },
+    {
+      "label": "cascade_breakdown_trail_pct=0.6",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "cascade_breakdown_trail_pct": 0.6
+      }
+    },
+    {
+      "label": "cascade_breakdown_trail_pct=0.8",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "cascade_breakdown_trail_pct": 0.8
+      }
+    },
+    {
+      "label": "spike_momentum_max=5",
+      "leverage": 5.0,
+      "total_return_pct": 536.333,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1842,
+      "total_trades": 65,
+      "score": 575.9702,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 5,
+        "shock_rebound_sl_pct": 0.8
+      }
+    },
+    {
+      "label": "intraday_pullback_trail_pct=0.8",
+      "leverage": 5.0,
+      "total_return_pct": 536.098,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1834,
+      "total_trades": 65,
+      "score": 575.7239999999999,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.4,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8,
+        "intraday_pullback_trail_pct": 0.8
+      }
+    },
+    {
+      "label": "shock_reversal_trail_pct=0.5",
+      "leverage": 5.0,
+      "total_return_pct": 535.999,
+      "max_drawdown_pct": -8.434,
+      "sharpe_ratio": 4.1852,
+      "total_trades": 65,
+      "score": 575.6502,
+      "params": {
+        "intraday_pullback_rsi_trigger": 85.0,
+        "shock_reversal_tp_pct": 1.6,
+        "shock_reversal_trail_pct": 0.5,
+        "cascade_breakdown_tp_pct": 0.8,
+        "shock_rebound_tp_pct": 2.2,
+        "shock_rebound_trail_pct": 1.3,
+        "spike_momentum_max": 6,
+        "shock_rebound_sl_pct": 0.8
+      }
+    }
+  ]
+}

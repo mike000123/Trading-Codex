@@ -11,12 +11,13 @@ import os
 import streamlit as st
 
 from config.settings import settings, TradingMode
+from risk.runtime_controls import get_effective_risk_config, save_runtime_risk_overrides
 from ui.components import render_mode_banner
 
 
 def render() -> None:
     render_mode_banner()
-    st.title("⚙️ Settings")
+    st.title("Settings")
 
     tab_mode, tab_risk, tab_creds, tab_about = st.tabs(
         ["🔄 Trading Mode", "🛡️ Risk Controls", "🔑 Credentials", "ℹ️ About"]
@@ -51,10 +52,31 @@ def render() -> None:
 
     # ── Risk Controls ─────────────────────────────────────────────────────────
     with tab_risk:
-        st.subheader("Risk Controls (read from .env)")
-        st.caption("Modify these values in your `.env` file and restart.")
+        st.subheader("Risk Controls")
+        st.caption(
+            "The global max-capital cap below is editable in-app and persists in the app database. "
+            "Other risk controls still come from `.env` / Streamlit secrets."
+        )
 
-        r = settings.risk
+        base_r = settings.risk
+        r = get_effective_risk_config()
+        with st.form("risk_runtime_form"):
+            max_capital_runtime = st.slider(
+                "Global max capital per trade (%)",
+                min_value=1,
+                max_value=100,
+                value=int(round(float(r.max_capital_per_trade_pct))),
+                help=(
+                    "Portfolio-level cap used by Paper Trading, Forward Test, and shadow Alpaca routing. "
+                    "100% means the full per-run capital allocation may be used if equity is available."
+                ),
+            )
+            save_risk = st.form_submit_button("Save Risk Controls", type="primary")
+        if save_risk:
+            save_runtime_risk_overrides(max_capital_per_trade_pct=float(max_capital_runtime))
+            st.success(f"Saved global max capital per trade = {int(max_capital_runtime)}%.")
+            st.rerun()
+
         col1, col2 = st.columns(2)
         col1.metric("Max Capital per Trade", f"{r.max_capital_per_trade_pct:.1f}%",
                     help="Max % of total portfolio allocated to a single trade.")
@@ -63,13 +85,17 @@ def render() -> None:
         col1.metric("Max Open Positions", str(r.max_open_positions))
         col2.metric("Max Loss per Trade", f"{r.default_max_loss_pct_of_capital:.1f}%",
                     help="SL is clamped so loss cannot exceed this % of trade capital.")
+        st.caption(
+            f"Environment baseline for max capital per trade: `{base_r.max_capital_per_trade_pct:.1f}%`. "
+            "The runtime slider above overrides it for the app without touching `.env`."
+        )
 
-        st.markdown("#### .env Variables")
+        st.markdown("#### Baseline .env Variables")
         st.code(
-            f"""MAX_CAPITAL_PER_TRADE_PCT={r.max_capital_per_trade_pct}
-MAX_DAILY_LOSS_PCT={r.max_daily_loss_pct}
-MAX_OPEN_POSITIONS={r.max_open_positions}
-DEFAULT_MAX_LOSS_PCT_OF_CAPITAL={r.default_max_loss_pct_of_capital}""",
+            f"""MAX_CAPITAL_PER_TRADE_PCT={base_r.max_capital_per_trade_pct}
+MAX_DAILY_LOSS_PCT={base_r.max_daily_loss_pct}
+MAX_OPEN_POSITIONS={base_r.max_open_positions}
+DEFAULT_MAX_LOSS_PCT_OF_CAPITAL={base_r.default_max_loss_pct_of_capital}""",
             language="bash",
         )
 
@@ -112,7 +138,7 @@ ALPACA_LIVE_SECRET_KEY=""",
 
     # ── About ─────────────────────────────────────────────────────────────────
     with tab_about:
-        st.subheader("AlgoTrader Pro")
+        st.subheader("MRMI Platform")
         st.markdown("""
 **Architecture Overview**
 

@@ -112,6 +112,10 @@ class VWAPRSIStrategy(BaseStrategy):
             errors.append("atr_tp_mult must be > 0.")
         return errors
 
+    def min_warmup_bars(self, symbol=None, source=None, interval=None) -> int:
+        p = {**self.default_params(), **self.params}
+        return max(int(p["rsi_period"]), int(p["atr_period"])) + 10
+
     def generate_signal(self, data: pd.DataFrame, symbol: str) -> Signal:
         p           = {**self.default_params(), **self.params}
         rsi_period  = int(p["rsi_period"])

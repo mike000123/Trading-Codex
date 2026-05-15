@@ -1,0 +1,145 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "symbols_studied": 103,
+  "symbols_with_events": 101,
+  "events": 845,
+  "bucket_summary": {
+    "positive_surprise_gap_up": {
+      "events": 363,
+      "mean_gap_pct": 4.578663400641059,
+      "mean_open_to_close_pct": 0.08022922487908167,
+      "mean_confirm5_pct": 0.0473022529785738,
+      "median_open_to_close_pct": -0.2080083203328198,
+      "win_rate_open_to_close_pct": 49.03581267217631
+    },
+    "negative_surprise_gap_down": {
+      "events": 90,
+      "mean_gap_pct": -4.124333946896659,
+      "mean_open_to_close_pct": -0.5038031463647076,
+      "mean_confirm5_pct": -0.0625714048112902,
+      "median_open_to_close_pct": -0.18429603288673824,
+      "win_rate_open_to_close_pct": 47.77777777777778
+    },
+    "timing_breakdown": {
+      "amc": 544,
+      "bmo": 301
+    }
+  },
+  "best_variant": {
+    "variant": "continuation_5m_gap4",
+    "trades": 120,
+    "win_rate_pct": 46.666666666666664,
+    "mean_return_pct": 0.4426707374642404,
+    "median_return_pct": -0.3112890201336094,
+    "compounded_return_pct": 45.00902490212524,
+    "long_trades": 95,
+    "short_trades": 25
+  },
+  "top_fade_variants": [
+    {
+      "variant": "fade_30m_gap8",
+      "trades": 39,
+      "win_rate_pct": 64.1025641025641,
+      "mean_return_pct": 0.01901670124000926,
+      "median_return_pct": 1.1960193554277354,
+      "compounded_return_pct": -4.051458956544263,
+      "long_trades": 6,
+      "short_trades": 33
+    },
+    {
+      "variant": "fade_5m_gap8",
+      "trades": 50,
+      "win_rate_pct": 64.0,
+      "mean_return_pct": 0.04589682509656595,
+      "median_return_pct": 1.0768824099631535,
+      "compounded_return_pct": -4.49675836215031,
+      "long_trades": 7,
+      "short_trades": 43
+    },
+    {
+      "variant": "fade_15m_gap8",
+      "trades": 43,
+      "win_rate_pct": 60.46511627906976,
+      "mean_return_pct": -0.349249230393476,
+      "median_return_pct": 1.2434217315034468,
+      "compounded_return_pct": -18.702689237006265,
+      "long_trades": 5,
+      "short_trades": 38
+    },
+    {
+      "variant": "fade_5m_gap2",
+      "trades": 184,
+      "win_rate_pct": 54.347826086956516,
+      "mean_return_pct": -0.06842118366240112,
+      "median_return_pct": 0.27339746037460255,
+      "compounded_return_pct": -32.14587624474178,
+      "long_trades": 34,
+      "short_trades": 150
+    },
+    {
+      "variant": "fade_5m_gap6",
+      "trades": 82,
+      "win_rate_pct": 54.87804878048781,
+      "mean_return_pct": -0.4256896604585162,
+      "median_return_pct": 0.22437523381774738,
+      "compounded_return_pct": -36.3631403721525,
+      "long_trades": 14,
+      "short_trades": 68
+    }
+  ],
+  "top_continuation_variants": [
+    {
+      "variant": "continuation_5m_gap4",
+      "trades": 120,
+      "win_rate_pct": 46.666666666666664,
+      "mean_return_pct": 0.4426707374642404,
+      "median_return_pct": -0.3112890201336094,
+      "compounded_return_pct": 45.00902490212524,
+      "long_trades": 95,
+      "short_trades": 25
+    },
+    {
+      "variant": "continuation_5m_gap2",
+      "trades": 189,
+      "win_rate_pct": 44.97354497354497,
+      "mean_return_pct": 0.2888254638750689,
+      "median_return_pct": -0.5651124980332489,
+      "compounded_return_pct": 33.87364368817871,
+      "long_trades": 148,
+      "short_trades": 41
+    },
+    {
+      "variant": "continuation_15m_gap4",
+      "trades": 118,
+      "win_rate_pct": 48.30508474576271,
+      "mean_return_pct": 0.31549159135062,
+      "median_return_pct": -0.28356804058852214,
+      "compounded_return_pct": 22.764629274630256,
+      "long_trades": 90,
+      "short_trades": 28
+    },
+    {
+      "variant": "continuation_5m_gap6",
+      "trades": 82,
+      "win_rate_pct": 45.1219512195122,
+      "mean_return_pct": 0.270948163973437,
+      "median_return_pct": -0.4514357965786808,
+      "compounded_return_pct": 14.599486501463431,
+      "long_trades": 68,
+      "short_trades": 14
+    },
+    {
+      "variant": "continuation_30m_gap4",
+      "trades": 112,
+      "win_rate_pct": 44.642857142857146,
+      "mean_return_pct": 0.23690242856944504,
+      "median_return_pct": -0.365784111856321,
+      "compounded_return_pct": 11.729034275840089,
+      "long_trades": 90,
+      "short_trades": 22
+    }
+  ]
+}

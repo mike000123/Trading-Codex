@@ -11,17 +11,37 @@ import pandas as pd
 import streamlit as st
 
 from strategies import list_strategies, get_strategy
-from ui.components import render_mode_banner, render_data_source_selector, render_strategy_params
+from ui.components import (
+    auto_select_strategy_name_for_state,
+    ordered_strategy_items,
+    render_mode_banner,
+    render_data_source_selector,
+    render_strategy_params,
+    render_strategy_selection_help,
+    render_symbol_strategy_guide,
+    strategy_option_label_from_name,
+)
 from ui.charts import price_chart, rsi_chart
 from core.models import SignalAction
 
-_GREEN = "#26a69a"
-_RED   = "#ef5350"
+
+def _theme_chart_color(key: str = "primary") -> str:
+    """Active-theme palette shim — reads ui.charts._palette() so this page's
+    chart colours follow the user's theme selection. Falls back to gold."""
+    try:
+        from ui.charts import _palette
+        return _palette().get(key, "#d4af37")
+    except Exception:
+        return "#d4af37"
+
+
+_GREEN = "#2faa6a"
+_RED   = "#c64242"
 
 
 def render() -> None:
     render_mode_banner()
-    st.title("🔬 Strategy Lab")
+    st.title("Strategy Lab")
     st.caption("Inspect strategy signals on historical data. No orders are placed here.")
 
     prices = render_data_source_selector()
@@ -33,14 +53,30 @@ def render() -> None:
     st.success(f"**{symbol}** — {len(prices)} bars")
     st.divider()
 
-    strategies = list_strategies()
+    strategies = ordered_strategy_items(list_strategies())
     strat_names = {s["name"]: s["id"] for s in strategies}
+    lab_start = prices["date"].min() if "date" in prices.columns and not prices.empty else None
+    lab_end = prices["date"].max() if "date" in prices.columns and not prices.empty else None
 
     col_strat, col_params = st.columns([0.35, 0.65])
     with col_strat:
-        selected_name = st.selectbox("Strategy", list(strat_names.keys()), key="lab_strategy")
+        auto_select_strategy_name_for_state(
+            "lab_strategy",
+            symbol=symbol,
+            strategies=strategies,
+            start=lab_start,
+            end=lab_end,
+        )
+        selected_name = st.selectbox(
+            "Strategy",
+            list(strat_names.keys()),
+            key="lab_strategy",
+            format_func=lambda name: strategy_option_label_from_name(name, strategies),
+        )
         selected_id   = strat_names[selected_name]
         strat_info    = next(s for s in strategies if s["id"] == selected_id)
+        render_symbol_strategy_guide(symbol, mode_label="Strategy Lab", start=lab_start, end=lab_end)
+        render_strategy_selection_help(selected_id, symbol=symbol, start=lab_start, end=lab_end)
         st.caption(strat_info["description"])
 
     with col_params:
@@ -93,7 +129,7 @@ def render() -> None:
         # Base price line
         base = (
             alt.Chart(prices)
-            .mark_line(color="#4a9eff")
+            .mark_line(color=_theme_chart_color("primary"))
             .encode(
                 x=alt.X("date:T", title="Date"),
                 y=alt.Y("close:Q", title="Close", scale=alt.Scale(zero=False)),
@@ -123,11 +159,15 @@ def render() -> None:
         chart = (
             alt.layer(*layers)
             .properties(title=f"{symbol} – {selected_name} Signals", height=320)
-            .configure_view(strokeOpacity=0)
-            .configure_axis(gridColor="#1e2130", labelColor="#c9d8f5", titleColor="#c9d8f5")
-            .configure_title(color="#c9d8f5")
+            .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
+            .configure_axis(
+                gridColor=_theme_chart_color("axis_grid"),
+                labelColor=_theme_chart_color("axis_label"),
+                titleColor=_theme_chart_color("axis_title"),
+            )
+            .configure_title(color=_theme_chart_color("title"))
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width='stretch')
 
         if selected_id == "rsi_threshold":
             period = int(params.get("rsi_period", 14))
@@ -136,11 +176,11 @@ def render() -> None:
             sell_lvls = [float(x) for x in str(params.get("sell_levels","70")).replace(";",",").split(",") if x.strip()]
             st.altair_chart(
                 rsi_chart(prices, period, buy_lvls, sell_lvls)
-                .configure_view(strokeOpacity=0)
-                .configure_axis(gridColor="#2a2d3e", labelColor="#d0d4f0",
-                                titleColor="#d0d4f0", labelFontSize=12, titleFontSize=13)
-                .configure_title(color="#e8eaf6", fontSize=14, fontWeight="bold"),
-                use_container_width=True,
+                .configure(background="#0c0d14").configure_view(fill="#181a25", strokeOpacity=0)
+                .configure_axis(gridColor=_theme_chart_color("axis_grid"), labelColor=_theme_chart_color("axis_label"),
+                                titleColor=_theme_chart_color("axis_title"), labelFontSize=12, titleFontSize=13)
+                .configure_title(color=_theme_chart_color("title"), fontSize=14, fontWeight="bold"),
+                width='stretch',
             )
 
         with st.expander("📋 All Signals", expanded=False):
@@ -148,7 +188,7 @@ def render() -> None:
             if active.empty:
                 st.info("No BUY/SELL signals generated on this dataset with these parameters.")
             else:
-                st.dataframe(active.sort_values("date", ascending=False), use_container_width=True)
+                st.dataframe(active.sort_values("date", ascending=False), width='stretch')
                 st.caption(
                     f"{len(active)} signals · "
                     f"{len(active[active['action']=='BUY'])} BUY · "

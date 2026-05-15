@@ -1,0 +1,17 @@
+label,blocked_weekdays,total_return_pct,max_drawdown_pct,sharpe_ratio,win_rate_pct,total_trades,avg_win_pct,avg_loss_pct,score
+block_Friday_Tuesday,"['Friday', 'Tuesday']",58.641,-8.988,4.5446,63.6,44,3.551,-2.329,76.09479999999999
+block_Tuesday,['Tuesday'],63.001,-8.918,3.8182,60.7,56,3.503,-2.344,75.1611
+block_Tuesday_Wednesday,"['Tuesday', 'Wednesday']",54.629,-7.033,4.1721,64.3,42,3.552,-2.527,73.44154999999999
+block_Thursday_Tuesday,"['Thursday', 'Tuesday']",50.08,-10.183,3.7638,61.4,44,3.43,-2.294,58.59864999999999
+baseline,[],45.131,-9.833,2.2011,52.7,74,3.394,-2.323,42.83555
+block_Monday_Tuesday,"['Monday', 'Tuesday']",29.165,-7.17,2.6715,55.0,40,3.318,-2.254,35.6045
+block_Wednesday,['Wednesday'],37.042,-9.845,2.1078,53.2,62,3.345,-2.356,33.613150000000005
+block_Friday,['Friday'],34.952,-9.916,2.0475,50.0,64,3.465,-2.213,30.940999999999995
+block_Friday_Wednesday,"['Friday', 'Wednesday']",27.512,-8.567,1.9624,51.0,51,3.419,-2.286,25.465449999999997
+block_Thursday,['Thursday'],31.68,-11.869,1.8259,50.8,63,3.309,-2.222,21.47195
+block_Thursday_Wednesday,"['Thursday', 'Wednesday']",23.121,-9.186,1.6466,51.0,51,3.227,-2.235,17.155299999999997
+block_Friday_Thursday,"['Friday', 'Thursday']",21.618,-11.989,1.5937,48.1,52,3.376,-2.157,8.952349999999996
+block_Monday,['Monday'],5.89,-12.069,0.524,43.3,60,3.264,-2.181,-15.27325
+block_Friday_Monday,"['Friday', 'Monday']",2.224,-11.386,0.3322,42.9,49,3.142,-2.137,-19.266899999999996
+block_Monday_Wednesday,"['Monday', 'Wednesday']",-2.64,-16.309,-0.0333,42.6,47,3.123,-2.239,-38.19165
+block_Monday_Thursday,"['Monday', 'Thursday']",-8.225,-18.977,-0.5072,39.6,48,3.072,-2.123,-53.54085

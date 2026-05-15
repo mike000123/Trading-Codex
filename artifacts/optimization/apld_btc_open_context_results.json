@@ -1,0 +1,51 @@
+{
+  "symbol": "APLD",
+  "source": "yfinance_cache",
+  "interval": "5m",
+  "sessions": 39,
+  "prepared_rows": 3120,
+  "best_short": {
+    "label": "short_apld_gap_pct_entry_10m_exit_close",
+    "side": "short",
+    "gap_metric": "apld_gap_pct",
+    "btc_threshold": 3.0,
+    "gap_threshold": 0.5,
+    "entry_offset_min": 10,
+    "stretch_threshold": 0.0,
+    "exit_mode": "close",
+    "signals": 4,
+    "win_rate_pct": 100.0,
+    "mean_return_pct": 3.303927807451004,
+    "median_return_pct": 2.70615914450501,
+    "compounded_return_pct": 13.798060991393267,
+    "score": 26.205916606295276
+  },
+  "best_long": {
+    "label": "long_relative_gap_pct_entry_0m_exit_60m",
+    "side": "long",
+    "gap_metric": "relative_gap_pct",
+    "btc_threshold": 1.0,
+    "gap_threshold": 1.0,
+    "entry_offset_min": 0,
+    "stretch_threshold": 0.0,
+    "exit_mode": "60m",
+    "signals": 3,
+    "win_rate_pct": 66.66666666666666,
+    "mean_return_pct": 2.3319797780132787,
+    "median_return_pct": 0.9735202376520702,
+    "compounded_return_pct": 7.013685279149762,
+    "score": 15.610978168509652
+  },
+  "combined_best_pair": {
+    "signals": 7,
+    "win_rate_pct": 85.71428571428571,
+    "mean_return_pct": 2.8873786519776936,
+    "median_return_pct": 2.4021656129938562,
+    "compounded_return_pct": 21.779498843104484
+  },
+  "notes": [
+    "This second pass searches practical open-context event rules rather than an always-on strategy.",
+    "Rules are built from the existing companion-data framework using QQQ and BTC-USD merged onto cached APLD bars.",
+    "The strongest candidate should be treated as research until it survives a larger sample and a cleaner walk-forward split."
+  ]
+}

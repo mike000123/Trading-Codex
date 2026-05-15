@@ -1,0 +1,331 @@
+{
+  "symbol": "APLD",
+  "source": "alpaca",
+  "interval": "1Min",
+  "window": {
+    "start": "2024-04-01 00:00:00",
+    "end": "2026-05-01 07:43:14.461848"
+  },
+  "folds": [
+    {
+      "start": "2024-04-01",
+      "end": "2024-09-30"
+    },
+    {
+      "start": "2024-10-01",
+      "end": "2025-03-31"
+    },
+    {
+      "start": "2025-04-01",
+      "end": "2025-09-30"
+    },
+    {
+      "start": "2025-10-01",
+      "end": "2026-05-01"
+    }
+  ],
+  "stop_candidates": [
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    2.0,
+    2.5,
+    3.0
+  ],
+  "min_train_signals": 4,
+  "short_rule": {
+    "name": "apld_btc_confirm_short",
+    "side": "short",
+    "gap_metric": "relative_gap_pct",
+    "btc_threshold": 1.0,
+    "gap_threshold": 0.5,
+    "entry_offset_min": 15,
+    "peak_threshold": 0.5,
+    "trough_threshold": null,
+    "pullback_threshold": 0.25,
+    "rebound_threshold": null,
+    "confirm_close_threshold": -0.25
+  },
+  "long_rule": {
+    "name": "apld_btc_confirm_long",
+    "side": "long",
+    "gap_metric": "apld_gap_pct",
+    "btc_threshold": 1.0,
+    "gap_threshold": 0.5,
+    "entry_offset_min": 5,
+    "peak_threshold": null,
+    "trough_threshold": 0.5,
+    "pullback_threshold": null,
+    "rebound_threshold": 0.25,
+    "confirm_close_threshold": -1.0
+  },
+  "short_walkforward_choices": [
+    {
+      "train_start": "2024-04-01 00:00:00",
+      "train_end": "2024-09-30 00:00:00",
+      "test_start": "2024-10-01 00:00:00",
+      "test_end": "2025-03-31 00:00:00",
+      "chosen_stop_pct": 2.0,
+      "train_result": {
+        "stop_loss_pct": 2.0,
+        "signals": 6,
+        "win_rate_pct": 50.0,
+        "mean_return_pct": 3.2193742476084934,
+        "compounded_return_pct": 19.870747079264728,
+        "score": 27.099808450677465
+      },
+      "test_result": {
+        "stop_loss_pct": 2.0,
+        "signals": 12,
+        "win_rate_pct": 41.66666666666667,
+        "mean_return_pct": 2.1340777452845,
+        "compounded_return_pct": 26.532323174446915,
+        "score": 32.78343979237366
+      }
+    },
+    {
+      "train_start": "2024-04-01 00:00:00",
+      "train_end": "2025-03-31 00:00:00",
+      "test_start": "2025-04-01 00:00:00",
+      "test_end": "2025-09-30 00:00:00",
+      "chosen_stop_pct": 2.5,
+      "train_result": {
+        "stop_loss_pct": 2.5,
+        "signals": 18,
+        "win_rate_pct": 50.0,
+        "mean_return_pct": 2.681651159816367,
+        "compounded_return_pct": 56.445814311084376,
+        "score": 64.66829105080893
+      },
+      "test_result": {
+        "stop_loss_pct": 2.5,
+        "signals": 10,
+        "win_rate_pct": 70.0,
+        "mean_return_pct": 1.3027631553903807,
+        "compounded_return_pct": 13.448314715254117,
+        "score": 19.00245944833969
+      }
+    },
+    {
+      "train_start": "2024-04-01 00:00:00",
+      "train_end": "2025-09-30 00:00:00",
+      "test_start": "2025-10-01 00:00:00",
+      "test_end": "2026-05-01 00:00:00",
+      "chosen_stop_pct": 2.5,
+      "train_result": {
+        "stop_loss_pct": 2.5,
+        "signals": 28,
+        "win_rate_pct": 57.14285714285714,
+        "mean_return_pct": 2.1891911582356576,
+        "compounded_return_pct": 77.48513977848104,
+        "score": 86.68321223012023
+      },
+      "test_result": {
+        "stop_loss_pct": 2.5,
+        "signals": 6,
+        "win_rate_pct": 50.0,
+        "mean_return_pct": 1.1045765655476474,
+        "compounded_return_pct": 6.26838862035346,
+        "score": 10.325253468674932
+      }
+    }
+  ],
+  "short_walkforward_summary": {
+    "compounded_oos_return_pct": 52.547,
+    "average_oos_fold_return_pct": 15.416,
+    "median_oos_fold_return_pct": 13.448,
+    "average_oos_win_rate_pct": 53.889,
+    "positive_oos_folds": 3,
+    "total_oos_folds": 3,
+    "total_oos_signals": 28,
+    "selection_counts": {
+      "2.0": 1,
+      "2.5": 2
+    }
+  },
+  "short_fixed_stop_pct": 2.5,
+  "short_fixed_oos": [
+    {
+      "fold_start": "2024-10-01 00:00:00",
+      "fold_end": "2025-03-31 00:00:00",
+      "stop_loss_pct": 2.5,
+      "signals": 12,
+      "win_rate_pct": 50.0,
+      "mean_return_pct": 2.5377896159203015,
+      "compounded_return_pct": 32.53028017894353,
+      "score": 39.63696460282398
+    },
+    {
+      "fold_start": "2025-04-01 00:00:00",
+      "fold_end": "2025-09-30 00:00:00",
+      "stop_loss_pct": 2.5,
+      "signals": 10,
+      "win_rate_pct": 70.0,
+      "mean_return_pct": 1.3027631553903807,
+      "compounded_return_pct": 13.448314715254117,
+      "score": 19.00245944833969
+    },
+    {
+      "fold_start": "2025-10-01 00:00:00",
+      "fold_end": "2026-05-01 00:00:00",
+      "stop_loss_pct": 2.5,
+      "signals": 6,
+      "win_rate_pct": 50.0,
+      "mean_return_pct": 1.1045765655476474,
+      "compounded_return_pct": 6.26838862035346,
+      "score": 10.325253468674932
+    }
+  ],
+  "short_fixed_summary": {
+    "compounded_oos_return_pct": 59.778,
+    "average_oos_fold_return_pct": 17.416,
+    "median_oos_fold_return_pct": 13.448,
+    "average_oos_win_rate_pct": 56.667,
+    "positive_oos_folds": 3,
+    "total_oos_folds": 3,
+    "total_oos_signals": 28
+  },
+  "long_walkforward_choices": [
+    {
+      "train_start": "2024-04-01 00:00:00",
+      "train_end": "2024-09-30 00:00:00",
+      "test_start": "2024-10-01 00:00:00",
+      "test_end": "2025-03-31 00:00:00",
+      "chosen_stop_pct": 3.0,
+      "train_result": {
+        "stop_loss_pct": 3.0,
+        "signals": 8,
+        "win_rate_pct": 87.5,
+        "mean_return_pct": 3.500894827295487,
+        "compounded_return_pct": 30.980739318292883,
+        "score": 40.05708155923612
+      },
+      "test_result": {
+        "stop_loss_pct": 3.0,
+        "signals": 15,
+        "win_rate_pct": 40.0,
+        "mean_return_pct": 0.9601103020589525,
+        "compounded_return_pct": 13.529143578822467,
+        "score": 18.419309031910895
+      }
+    },
+    {
+      "train_start": "2024-04-01 00:00:00",
+      "train_end": "2025-03-31 00:00:00",
+      "test_start": "2025-04-01 00:00:00",
+      "test_end": "2025-09-30 00:00:00",
+      "chosen_stop_pct": 3.0,
+      "train_result": {
+        "stop_loss_pct": 3.0,
+        "signals": 23,
+        "win_rate_pct": 56.52173913043478,
+        "mean_return_pct": 1.84386144127166,
+        "compounded_return_pct": 48.701311601267896,
+        "score": 56.61275593708844
+      },
+      "test_result": {
+        "stop_loss_pct": 3.0,
+        "signals": 7,
+        "win_rate_pct": 42.857142857142854,
+        "mean_return_pct": 2.0788107974684364,
+        "compounded_return_pct": 13.418498016226676,
+        "score": 18.872428498143616
+      }
+    },
+    {
+      "train_start": "2024-04-01 00:00:00",
+      "train_end": "2025-09-30 00:00:00",
+      "test_start": "2025-10-01 00:00:00",
+      "test_end": "2026-05-01 00:00:00",
+      "chosen_stop_pct": 3.0,
+      "train_result": {
+        "stop_loss_pct": 3.0,
+        "signals": 30,
+        "win_rate_pct": 53.333333333333336,
+        "mean_return_pct": 1.8986829577175748,
+        "compounded_return_pct": 68.65479414858702,
+        "score": 77.60281858516338
+      },
+      "test_result": {
+        "stop_loss_pct": 3.0,
+        "signals": 16,
+        "win_rate_pct": 56.25,
+        "mean_return_pct": 1.3683290589333037,
+        "compounded_return_pct": 22.37794951195888,
+        "score": 28.517943100358835
+      }
+    }
+  ],
+  "long_walkforward_summary": {
+    "compounded_oos_return_pct": 57.578,
+    "average_oos_fold_return_pct": 16.442,
+    "median_oos_fold_return_pct": 13.529,
+    "average_oos_win_rate_pct": 46.369,
+    "positive_oos_folds": 3,
+    "total_oos_folds": 3,
+    "total_oos_signals": 38,
+    "selection_counts": {
+      "3.0": 3
+    }
+  },
+  "long_fixed_stop_pct": 3.0,
+  "long_fixed_oos": [
+    {
+      "fold_start": "2024-10-01 00:00:00",
+      "fold_end": "2025-03-31 00:00:00",
+      "stop_loss_pct": 3.0,
+      "signals": 15,
+      "win_rate_pct": 40.0,
+      "mean_return_pct": 0.9601103020589525,
+      "compounded_return_pct": 13.529143578822467,
+      "score": 18.419309031910895
+    },
+    {
+      "fold_start": "2025-04-01 00:00:00",
+      "fold_end": "2025-09-30 00:00:00",
+      "stop_loss_pct": 3.0,
+      "signals": 7,
+      "win_rate_pct": 42.857142857142854,
+      "mean_return_pct": 2.0788107974684364,
+      "compounded_return_pct": 13.418498016226676,
+      "score": 18.872428498143616
+    },
+    {
+      "fold_start": "2025-10-01 00:00:00",
+      "fold_end": "2026-05-01 00:00:00",
+      "stop_loss_pct": 3.0,
+      "signals": 16,
+      "win_rate_pct": 56.25,
+      "mean_return_pct": 1.3683290589333037,
+      "compounded_return_pct": 22.37794951195888,
+      "score": 28.517943100358835
+    }
+  ],
+  "long_fixed_summary": {
+    "compounded_oos_return_pct": 57.578,
+    "average_oos_fold_return_pct": 16.442,
+    "median_oos_fold_return_pct": 13.529,
+    "average_oos_win_rate_pct": 46.369,
+    "positive_oos_folds": 3,
+    "total_oos_folds": 3,
+    "total_oos_signals": 38
+  },
+  "combined_walkforward_summary": {
+    "signals": 66,
+    "win_rate_pct": 50.0,
+    "mean_return_pct": 1.4562214991924225,
+    "compounded_return_pct": 140.37984540805078
+  },
+  "combined_fixed_summary": {
+    "signals": 66,
+    "win_rate_pct": 51.515151515151516,
+    "mean_return_pct": 1.5296236574898412,
+    "compounded_return_pct": 151.77446728278943
+  },
+  "notes": [
+    "This pass applies a stricter chronological walk-forward to the stop_eod long and short overlays only.",
+    "For each out-of-sample fold, the stop percentage is chosen on prior data only, then frozen on the next fold.",
+    "The fixed baseline compares against the full-sample stop choices from the prior overlay pass."
+  ]
+}

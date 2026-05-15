@@ -1,0 +1,68 @@
+         1601449625 function calls (1571183242 primitive calls) in 556.150 seconds
+
+   Ordered by: cumulative time
+   List reduced from 1331 to 60 due to restriction <60>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    9.809    9.809  558.423  558.423 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\managed_portfolio_backtest.py:185(run)
+       36    5.394    0.150  521.239   14.479 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\managed_portfolio_backtest.py:525(_prepare_symbol_state)
+        9  145.888   16.210  469.349   52.150 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\bollinger_rsi_strategy.py:823(generate_signals_bulk)
+ 28733033   25.578    0.000  258.408    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexing.py:1177(__getitem__)
+ 28733032   38.086    0.000  197.217    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexing.py:1720(_getitem_axis)
+262952073/262942013   38.404    0.000   85.503    0.000 {built-in method builtins.isinstance}
+ 28737269    8.449    0.000   60.518    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\common.py:97(is_bool_indexer)
+115017092   19.502    0.000   47.097    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\generic.py:42(_instancecheck)
+ 28734778   10.771    0.000   40.099    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexing.py:1668(_validate_integer)
+115017092   19.312    0.000   27.593    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\generic.py:37(_check)
+       27    8.758    0.324   27.055    1.002 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\earnings_event_hybrid_strategy.py:73(generate_signals_bulk)
+ 29048907   11.871    0.000   20.547    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexing.py:2801(check_dict_or_set_indexers)
+ 28576646    8.879    0.000   19.234    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\series.py:1085(_ixs)
+91963585/62864219   13.195    0.000   18.319    0.000 {built-in method builtins.len}
+ 16657266   10.236    0.000   17.811    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\gold_macro_regime.py:4(directional_trend_state)
+  2775775    1.418    0.000   16.465    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\macro_bear_continuation_short.py:13(macro_bear_continuation_short_ready)
+3103198/3103117    3.010    0.000   15.274    0.000 {built-in method builtins.all}
+ 28740648   10.890    0.000   13.651    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\generic.py:589(_get_axis)
+ 27757750    5.027    0.000   12.145    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\macro_bear_continuation_short.py:54(<genexpr>)
+115561213/115554537    8.353    0.000   10.614    0.000 {built-in method builtins.getattr}
+ 28910074    6.157    0.000   10.559    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\series.py:834(_values)
+   161324    0.409    0.000   10.420    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\frame.py:3994(_ixs)
+       36    7.285    0.202    9.628    0.267 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\backtest.py:99(_calc_atr_series)
+ 38052921    9.533    0.000    9.533    0.000 {method 'get' of 'dict' objects}
+       27    0.225    0.008    9.042    0.335 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\earnings_overshoot_hybrid_strategy.py:1036(generate_signals_bulk)
+ 28776328    5.003    0.000    8.004    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexes\range.py:999(__len__)
+ 28731233    5.553    0.000    7.694    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexing.py:1166(_check_deprecated_callable_usage)
+ 29051213    5.035    0.000    7.681    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\common.py:372(apply_if_callable)
+  9630897    7.655    0.000    7.658    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\arrays\datetimes.py:647(__iter__)
+ 24981975    5.281    0.000    7.118    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\macro_bear_continuation_short.py:6(_is_finite)
+ 47794957    7.081    0.000    7.081    0.000 {built-in method builtins.max}
+       27    0.127    0.005    6.715    0.249 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\earnings_negative_hybrid_strategy.py:456(generate_signals_bulk)
+   154532    1.887    0.000    6.346    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\managers.py:977(fast_xs)
+  8328633    5.860    0.000    5.860    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\bollinger_rsi_strategy.py:1485(_uptrend_confirmation)
+ 16975117    3.767    0.000    5.768    0.000 {built-in method builtins.any}
+ 28733032    5.135    0.000    5.135    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexing.py:162(iloc)
+ 57792049    4.787    0.000    4.787    0.000 {built-in method builtins.callable}
+     4723    0.021    0.000    4.637    0.001 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\managers.py:317(apply)
+ 28734778    4.616    0.000    4.616    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexers\utils.py:62(is_list_like_indexer)
+ 28910074    4.383    0.000    4.402    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\managers.py:2023(internal_values)
+  2776211    1.832    0.000    4.169    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\spike_event.py:21(build_event_short_setup)
+  5552422    4.023    0.000    4.041    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\bollinger_rsi_strategy.py:1458(_downtrend_risk_score)
+ 36459023    4.005    0.000    4.005    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\gold_macro_regime.py:28(<genexpr>)
+      407    0.002    0.000    3.779    0.009 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\generic.py:6485(astype)
+      416    0.001    0.000    3.755    0.009 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\managers.py:440(astype)
+      416    0.002    0.000    3.751    0.009 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\internals\blocks.py:749(astype)
+      416    0.001    0.000    3.745    0.009 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\astype.py:191(astype_array_safe)
+      416    0.001    0.000    3.739    0.009 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\astype.py:157(astype_array)
+      109    3.696    0.034    3.704    0.034 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\dtypes\astype.py:56(_astype_nansafe)
+       27    3.123    0.116    3.123    0.116 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\earnings_negative_hybrid_strategy.py:394(_empty_meta)
+       27    2.853    0.106    2.853    0.106 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\earnings_overshoot_hybrid_strategy.py:539(_empty_meta)
+ 28745698    2.763    0.000    2.763    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\generic.py:575(_get_axis_number)
+   172890    0.496    0.000    2.634    0.000 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\generic.py:6258(__finalize__)
+  9431589    1.662    0.000    2.509    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\managed_portfolio_backtest.py:586(_build_candidate)
+  2776211    2.438    0.000    2.442    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\bollinger_rsi_strategy.py:1431(_uptrend_risk_score)
+       36    1.113    0.031    2.372    0.066 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\reporting\managed_portfolio_backtest.py:562(_compute_prior_day_close_arr)
+  2775775    0.962    0.000    2.369    0.000 C:\Users\dimzo\Documents\ENTERTAINMENT\Coding\Forward_Simulation\codex\after-restart\v2\strategies\components\fair_gap_fade_short.py:14(fair_gap_fade_short_ready)
+      661    0.001    0.000    2.364    0.004 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\accessor.py:95(_getter)
+      661    0.006    0.000    2.363    0.004 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexes\accessors.py:88(_delegate_property_get)
+      742    0.002    0.000    2.262    0.003 C:\Users\dimzo\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\core\indexes\extension.py:67(fget)
+
+

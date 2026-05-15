@@ -1,0 +1,110 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "positive_events": 689,
+  "positive_peak_vs_prev_close_ge_15": 56,
+  "positive_peak_vs_prev_close_ge_20": 28,
+  "best_variant": {
+    "variant": "vwapfail_pc15_start720_end840_break0.00_reb0.25_win10_rvwap0.00_lh3.0_bd0.5",
+    "trades": 7,
+    "win_rate_pct": 85.71428571428571,
+    "mean_return_pct": 2.4450619889923715,
+    "median_return_pct": 2.1107078996946194,
+    "compounded_return_pct": 18.19445325404434,
+    "labeled_overshoot_match_pct": 85.71428571428571
+  },
+  "top_variants": [
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.00_reb0.25_win10_rvwap0.00_lh3.0_bd0.5",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 2.4450619889923715,
+      "median_return_pct": 2.1107078996946194,
+      "compounded_return_pct": 18.19445325404434,
+      "labeled_overshoot_match_pct": 85.71428571428571
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.25_reb0.25_win10_rvwap0.00_lh3.0_bd0.5",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 2.4450619889923715,
+      "median_return_pct": 2.1107078996946194,
+      "compounded_return_pct": 18.19445325404434,
+      "labeled_overshoot_match_pct": 85.71428571428571
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.50_reb0.25_win10_rvwap0.00_lh3.0_bd0.5",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 2.4450619889923715,
+      "median_return_pct": 2.1107078996946194,
+      "compounded_return_pct": 18.19445325404434,
+      "labeled_overshoot_match_pct": 85.71428571428571
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.50_reb0.25_win10_rvwap0.25_lh3.0_bd0.5",
+      "trades": 7,
+      "win_rate_pct": 85.71428571428571,
+      "mean_return_pct": 2.4450619889923715,
+      "median_return_pct": 2.1107078996946194,
+      "compounded_return_pct": 18.19445325404434,
+      "labeled_overshoot_match_pct": 85.71428571428571
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.00_reb0.25_win15_rvwap0.00_lh3.0_bd0.5",
+      "trades": 5,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 3.2911831365390953,
+      "median_return_pct": 2.0642289836166117,
+      "compounded_return_pct": 17.371477397839953,
+      "labeled_overshoot_match_pct": 80.0
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.00_reb0.25_win15_rvwap0.25_lh3.0_bd0.5",
+      "trades": 5,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 3.2911831365390953,
+      "median_return_pct": 2.0642289836166117,
+      "compounded_return_pct": 17.371477397839953,
+      "labeled_overshoot_match_pct": 80.0
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.00_reb0.25_win15_rvwap0.50_lh3.0_bd0.5",
+      "trades": 5,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 3.2911831365390953,
+      "median_return_pct": 2.0642289836166117,
+      "compounded_return_pct": 17.371477397839953,
+      "labeled_overshoot_match_pct": 80.0
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.25_reb0.25_win15_rvwap0.00_lh3.0_bd0.5",
+      "trades": 5,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 3.2911831365390953,
+      "median_return_pct": 2.0642289836166117,
+      "compounded_return_pct": 17.371477397839953,
+      "labeled_overshoot_match_pct": 80.0
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.25_reb0.25_win15_rvwap0.25_lh3.0_bd0.5",
+      "trades": 5,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 3.2911831365390953,
+      "median_return_pct": 2.0642289836166117,
+      "compounded_return_pct": 17.371477397839953,
+      "labeled_overshoot_match_pct": 80.0
+    },
+    {
+      "variant": "vwapfail_pc15_start720_end840_break0.25_reb0.25_win15_rvwap0.50_lh3.0_bd0.5",
+      "trades": 5,
+      "win_rate_pct": 100.0,
+      "mean_return_pct": 3.2911831365390953,
+      "median_return_pct": 2.0642289836166117,
+      "compounded_return_pct": 17.371477397839953,
+      "labeled_overshoot_match_pct": 80.0
+    }
+  ]
+}

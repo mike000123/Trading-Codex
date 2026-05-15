@@ -1,0 +1,65 @@
+{
+  "baseline": {
+    "label": "wb_openNone_wb_mom0.0_wr_modenext_bar_wr_openNone_wr_mom0.0",
+    "events": 13,
+    "total_trades": 20,
+    "win_rate_pct": 92.3076923076923,
+    "mean_event_return_pct": 2.4555384615384614,
+    "median_event_return_pct": 2.087,
+    "compounded_event_return_pct": 36.71346764868091,
+    "max_drawdown_pct": -0.5210000000000048,
+    "branch_counts": {
+      "failed_reclaim": 5,
+      "wave_best": 5,
+      "wave_robust": 2,
+      "short_only": 1
+    },
+    "params": {}
+  },
+  "best_any": {
+    "label": "wb_openNone_wb_mom0.0_wr_modenext_bar_wr_openNone_wr_mom0.0",
+    "events": 13,
+    "total_trades": 20,
+    "win_rate_pct": 92.3076923076923,
+    "mean_event_return_pct": 2.4555384615384614,
+    "median_event_return_pct": 2.087,
+    "compounded_event_return_pct": 36.71346764868091,
+    "max_drawdown_pct": -0.5210000000000048,
+    "branch_counts": {
+      "failed_reclaim": 5,
+      "wave_best": 5,
+      "wave_robust": 2,
+      "short_only": 1
+    },
+    "params": {
+      "wave_best_long_entry_min_close_from_open_pct": null,
+      "wave_best_long_momentum_min": 0.0,
+      "wave_robust_long_entry_mode": "next_bar",
+      "wave_robust_long_entry_min_close_from_open_pct": null,
+      "wave_robust_long_momentum_min": 0.0
+    }
+  },
+  "best_full13": {
+    "label": "wb_openNone_wb_mom0.0_wr_modenext_bar_wr_openNone_wr_mom0.0",
+    "events": 13,
+    "total_trades": 20,
+    "win_rate_pct": 92.3076923076923,
+    "mean_event_return_pct": 2.4555384615384614,
+    "median_event_return_pct": 2.087,
+    "compounded_event_return_pct": 36.71346764868091,
+    "max_drawdown_pct": -0.5210000000000048,
+    "branch_counts": {
+      "failed_reclaim": 5,
+      "wave_best": 5,
+      "wave_robust": 2,
+      "short_only": 1
+    },
+    "params": {
+      "wave_best_long_entry_min_close_from_open_pct": null,
+      "wave_best_long_momentum_min": 0.0,
+      "wave_robust_long_entry_mode": "next_bar",
+      "wave_robust_long_entry_min_close_from_open_pct": null,
+      "wave_robust_long_momentum_min": 0.0
+    }
+  }
+}

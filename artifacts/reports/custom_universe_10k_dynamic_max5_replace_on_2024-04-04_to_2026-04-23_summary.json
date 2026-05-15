@@ -1,0 +1,275 @@
+{
+  "window_start": "2024-04-04 00:00:00",
+  "window_end": "2026-04-23 23:59:00",
+  "universe": [
+    "APLD",
+    "ARM",
+    "AVGO",
+    "AXON",
+    "CHTR",
+    "IDXX",
+    "INTC",
+    "MNST",
+    "MRVL",
+    "MSTR",
+    "PDD",
+    "PYPL",
+    "WBD",
+    "ZS",
+    "GLD",
+    "UVXY",
+    "USO",
+    "SPY",
+    "QQQ",
+    "IWM",
+    "RBLX",
+    "SNPS",
+    "STX",
+    "TSLA",
+    "VXX",
+    "VXZ",
+    "XLF",
+    "DASH",
+    "DDOG",
+    "FTNT",
+    "UUP",
+    "SLV",
+    "XLE"
+  ],
+  "ticker_count": 33,
+  "starting_equity": 10000.0,
+  "capital_per_trade": 1000.0,
+  "max_open_positions": 5,
+  "dynamic_sizing": true,
+  "allow_replacement": true,
+  "replacement_score_edge_pct": 10.0,
+  "managed_total_pnl": 7444.74902,
+  "managed_final_equity": 17444.74902,
+  "managed_total_return_pct": 74.44749,
+  "managed_total_trades": 220,
+  "managed_candidate_entries": 1147,
+  "managed_skipped_entries": 927,
+  "managed_replaced_positions": 0,
+  "managed_peak_open_positions": 4,
+  "win_rate_pct": 45.9,
+  "max_drawdown_pct": -4.599,
+  "sharpe_ratio": 0.1496,
+  "elapsed_sec": 532.664,
+  "top_symbol_contributors": [
+    {
+      "ticker": "SLV",
+      "pnl": 2484.189401
+    },
+    {
+      "ticker": "GLD",
+      "pnl": 1752.897026
+    },
+    {
+      "ticker": "USO",
+      "pnl": 546.588115
+    },
+    {
+      "ticker": "UVXY",
+      "pnl": 467.072097
+    },
+    {
+      "ticker": "MSTR",
+      "pnl": 344.63616
+    },
+    {
+      "ticker": "UUP",
+      "pnl": 326.695922
+    },
+    {
+      "ticker": "XLE",
+      "pnl": 307.062975
+    },
+    {
+      "ticker": "SNPS",
+      "pnl": 304.417312
+    },
+    {
+      "ticker": "APLD",
+      "pnl": 249.83925
+    },
+    {
+      "ticker": "MRVL",
+      "pnl": 220.874328
+    },
+    {
+      "ticker": "SPY",
+      "pnl": 195.288304
+    },
+    {
+      "ticker": "TSLA",
+      "pnl": 143.447518
+    }
+  ],
+  "assignments": [
+    {
+      "symbol": "APLD",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "ARM",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "AVGO",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "AXON",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "CHTR",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "IDXX",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "INTC",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "MNST",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "MRVL",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "MSTR",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "PDD",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "PYPL",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "WBD",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "ZS",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "GLD",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "UVXY",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "USO",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "SPY",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "QQQ",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "IWM",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "RBLX",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "SNPS",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "STX",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "TSLA",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "VXX",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "VXZ",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "XLF",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "DASH",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "DDOG",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "FTNT",
+      "strategy_id": "earnings_event_hybrid",
+      "strategy_name": "Earnings Event Hybrid (Research)"
+    },
+    {
+      "symbol": "UUP",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "SLV",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    },
+    {
+      "symbol": "XLE",
+      "strategy_id": "bollinger_rsi",
+      "strategy_name": "Bollinger + RSI (Spike-Aware)"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "window_start": "2024-04-01 00:00:00",
+  "window_end": "2026-04-30 23:59:00",
+  "nasdaq100_cached_symbols": 101,
+  "mega_cap_proxy": [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "AMZN",
+    "META",
+    "GOOG",
+    "GOOGL",
+    "AVGO",
+    "TSLA",
+    "COST"
+  ],
+  "days": 522,
+  "correlations": {
+    "ew_gap_vs_qqq_pm_gap": 0.9646,
+    "mega_gap_vs_qqq_pm_gap": 0.96,
+    "ew_dislocation_vs_qqq_open_to_1000": 0.0104,
+    "mega_dislocation_vs_qqq_open_to_1000": 0.012
+  },
+  "best_variant": {
+    "variant": "median_entry0930_exit1600_thr20_none",
+    "trades": 20,
+    "long_trades": 10,
+    "short_trades": 10,
+    "win_rate_pct": 65.0,
+    "mean_return_pct": 0.1374749178739832,
+    "median_return_pct": 0.4217139040939977,
+    "compounded_return_pct": 2.6449168867229256,
+    "max_drawdown_pct": -5.158057572643971,
+    "sharpe_ratio": 0.513837871691698,
+    "basket": "median",
+    "entry_time": "09:30",
+    "exit_time": "1600",
+    "threshold_pct": 0.2,
+    "breadth_min": NaN
+  },
+  "best_min12_variant": "median_entry0930_exit1600_thr20_none",
+  "walkforward": {
+    "folds": [
+      {
+        "train_start": "2024-04-01",
+        "train_end": "2024-09-30",
+        "test_start": "2024-10-01",
+        "test_end": "2025-03-31",
+        "selected_variant": "mega_entry0929_exit1600_thr40_b60",
+        "test_summary": {
+          "variant": "mega_entry0929_exit1600_thr40_b60",
+          "trades": 28,
+          "long_trades": 18,
+          "short_trades": 10,
+          "win_rate_pct": 35.714285714285715,
+          "mean_return_pct": -0.1756101206624007,
+          "median_return_pct": -0.3233019006622394,
+          "compounded_return_pct": -4.890494837888248,
+          "max_drawdown_pct": -7.012227705097295,
+          "sharpe_ratio": -1.1229273066090564
+        }
+      },
+      {
+        "train_start": "2024-04-01",
+        "train_end": "2025-03-31",
+        "test_start": "2025-04-01",
+        "test_end": "2025-09-30",
+        "selected_variant": "mega_entry0929_exit1600_thr30_b60",
+        "test_summary": {
+          "variant": "mega_entry0929_exit1600_thr30_b60",
+          "trades": 33,
+          "long_trades": 19,
+          "short_trades": 14,
+          "win_rate_pct": 39.39393939393939,
+          "mean_return_pct": -0.2531056614016336,
+          "median_return_pct": -0.19058774679760127,
+          "compounded_return_pct": -8.27160030809183,
+          "max_drawdown_pct": -12.270441773397312,
+          "sharpe_ratio": -1.1204795967679912
+        }
+      },
+      {
+        "train_start": "2024-04-01",
+        "train_end": "2025-09-30",
+        "test_start": "2025-10-01",
+        "test_end": "2026-04-30",
+        "selected_variant": "mega_entry0930_exit1100_thr50_b60",
+        "test_summary": {
+          "variant": "mega_entry0930_exit1100_thr50_b60",
+          "trades": 4,
+          "long_trades": 4,
+          "short_trades": 0,
+          "win_rate_pct": 0.0,
+          "mean_return_pct": -0.40484931313174477,
+          "median_return_pct": -0.35456159425500167,
+          "compounded_return_pct": -1.6115820726293029,
+          "max_drawdown_pct": -1.6115820726293029,
+          "sharpe_ratio": -2.2132510257062368
+        }
+      }
+    ],
+    "summary": {
+      "compounded_return_pct": -14.164,
+      "max_drawdown_pct": -14.164,
+      "sharpe_ratio": -1.7292,
+      "trades": 65,
+      "win_rate_pct": 35.385
+    }
+  },
+  "artifacts": {
+    "daily": "C:\\Users\\dimzo\\Documents\\ENTERTAINMENT\\Coding\\Forward_Simulation\\codex\\after-restart\\v2\\artifacts\\optimization\\nasdaq_premarket_dislocation_daily.csv",
+    "variants": "C:\\Users\\dimzo\\Documents\\ENTERTAINMENT\\Coding\\Forward_Simulation\\codex\\after-restart\\v2\\artifacts\\optimization\\nasdaq_premarket_dislocation_variants.csv",
+    "top_trades": "C:\\Users\\dimzo\\Documents\\ENTERTAINMENT\\Coding\\Forward_Simulation\\codex\\after-restart\\v2\\artifacts\\optimization\\nasdaq_premarket_dislocation_top_trades.csv",
+    "walkforward_trades": "C:\\Users\\dimzo\\Documents\\ENTERTAINMENT\\Coding\\Forward_Simulation\\codex\\after-restart\\v2\\artifacts\\optimization\\nasdaq_premarket_dislocation_walkforward_trades.csv"
+  }
+}

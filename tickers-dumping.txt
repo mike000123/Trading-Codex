@@ -1,0 +1,32 @@
+The best-variant trade set was:
+
+initially:
+ZS on 2024-05-31
+TEAM on 2024-11-01
+MCHP on 2025-05-09
+DDOG on 2025-08-07
+AVGO on 2025-09-05
+PYPL on 2025-10-28
+INTC on 2026-04-24
+
+After Update:
+RBLX 2024-10-31
+TEAM 2024-11-01
+IDXX 2025-08-04
+APLD 2025-10-10
+AXON 2026-02-25
+INTC 2026-04-24
+STX 2026-04-29
+
+ZS on 2024-05-31 — failed_reclaim — +4.926% — earnings: 2024-05-30 16:00 ET (amc) — reaction day: 2024-05-31
+RBLX on 2024-10-31 — wave — +6.444%         — earnings: 2024-10-31 08:00 ET (bmo) — reaction day: 2024-10-31
+TEAM on 2024-11-01 — wave — +0.525%         — earnings: 2024-10-31 16:00 ET (amc) — reaction day: 2024-11-01
+MCHP on 2025-05-09 — failed_reclaim — +0.836%— earnings: 2025-05-08 16:00 ET (amc) — reaction day: 2025-05-09
+IDXX on 2025-08-04 — wave — +0.729%         — earnings: 2025-08-04 06:00 ET (bmo) — reaction day: 2025-08-04
+DDOG on 2025-08-07 — failed_reclaim — +6.731% — earnings: 2025-08-07 07:00 ET (bmo) — reaction day: 2025-08-07
+AVGO on 2025-09-05 — failed_reclaim — +2.172%— earnings: 2025-09-04 16:00 ET (amc) — reaction day: 2025-09-05
+APLD on 2025-10-10 — wave — -2.339%         — earnings: 2025-10-09 16:00 ET (amc) — reaction day: 2025-10-10
+PYPL on 2025-10-28 — failed_reclaim — +0.642%— earnings: 2025-10-28 07:00 ET (bmo) — reaction day: 2025-10-28
+AXON on 2026-02-25 — wave — +0.512%         — earnings: 2026-02-24 16:00 ET (amc) — reaction day: 2026-02-25
+INTC on 2026-04-24 — wave — -1.059%         — earnings: 2026-04-23 16:00 ET (amc) — reaction day: 2026-04-24
+STX on 2026-04-29 — wave — +3.582%         — earnings: 2026-04-28 16:00 ET (amc) — reaction day: 2026-04-29

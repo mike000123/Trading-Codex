@@ -1,0 +1,110 @@
+{
+  "window": {
+    "start": "2024-04-04",
+    "end": "2026-05-01"
+  },
+  "positive_events": 689,
+  "positive_peak_vs_prev_close_ge_15": 56,
+  "positive_peak_vs_prev_close_ge_20": 28,
+  "best_variant": {
+    "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak0.5_bd0.5_exittime_20_reb0.5_vr0.0_hold30",
+    "trades": 7,
+    "win_rate_pct": 71.42857142857143,
+    "mean_return_pct": 1.1589684966371234,
+    "median_return_pct": 0.7333192648582232,
+    "compounded_return_pct": 8.335281673920015,
+    "labeled_overshoot_match_pct": 57.14285714285714
+  },
+  "top_variants": [
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak0.5_bd0.5_exittime_20_reb0.5_vr0.0_hold30",
+      "trades": 7,
+      "win_rate_pct": 71.42857142857143,
+      "mean_return_pct": 1.1589684966371234,
+      "median_return_pct": 0.7333192648582232,
+      "compounded_return_pct": 8.335281673920015,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak0.5_bd0.5_exittime_20_reb0.5_vr0.5_hold30",
+      "trades": 7,
+      "win_rate_pct": 71.42857142857143,
+      "mean_return_pct": 1.1589684966371234,
+      "median_return_pct": 0.7333192648582232,
+      "compounded_return_pct": 8.335281673920015,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak0.5_bd0.5_exittime_20_reb1.0_vr0.0_hold30",
+      "trades": 7,
+      "win_rate_pct": 71.42857142857143,
+      "mean_return_pct": 1.1589684966371234,
+      "median_return_pct": 0.7333192648582232,
+      "compounded_return_pct": 8.335281673920015,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak0.5_bd0.5_exittime_20_reb1.0_vr0.5_hold30",
+      "trades": 7,
+      "win_rate_pct": 71.42857142857143,
+      "mean_return_pct": 1.1589684966371234,
+      "median_return_pct": 0.7333192648582232,
+      "compounded_return_pct": 8.335281673920015,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak1.0_bd0.5_exittime_20_reb0.5_vr0.0_hold30",
+      "trades": 7,
+      "win_rate_pct": 71.42857142857143,
+      "mean_return_pct": 0.9418078110362185,
+      "median_return_pct": 0.7333192648582232,
+      "compounded_return_pct": 6.683624487402762,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak1.0_bd0.5_exittime_20_reb0.5_vr0.5_hold30",
+      "trades": 7,
+      "win_rate_pct": 71.42857142857143,
+      "mean_return_pct": 0.9418078110362185,
+      "median_return_pct": 0.7333192648582232,
+      "compounded_return_pct": 6.683624487402762,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak1.0_bd0.5_exittime_20_reb1.0_vr0.0_hold30",
+      "trades": 7,
+      "win_rate_pct": 71.42857142857143,
+      "mean_return_pct": 0.9418078110362185,
+      "median_return_pct": 0.7333192648582232,
+      "compounded_return_pct": 6.683624487402762,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak1.0_bd0.5_exittime_20_reb1.0_vr0.5_hold30",
+      "trades": 7,
+      "win_rate_pct": 71.42857142857143,
+      "mean_return_pct": 0.9418078110362185,
+      "median_return_pct": 0.7333192648582232,
+      "compounded_return_pct": 6.683624487402762,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak0.5_bd1.0_exittime_20_reb0.5_vr0.0_hold30",
+      "trades": 7,
+      "win_rate_pct": 57.14285714285714,
+      "mean_return_pct": 0.7700326699043524,
+      "median_return_pct": 0.2839910313901295,
+      "compounded_return_pct": 5.407270281585075,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    },
+    {
+      "variant": "firstdump_pc20_start780_end840_pull4.0_vbreak0.5_bd1.0_exittime_20_reb0.5_vr0.5_hold30",
+      "trades": 7,
+      "win_rate_pct": 57.14285714285714,
+      "mean_return_pct": 0.7700326699043524,
+      "median_return_pct": 0.2839910313901295,
+      "compounded_return_pct": 5.407270281585075,
+      "labeled_overshoot_match_pct": 57.14285714285714
+    }
+  ]
+}

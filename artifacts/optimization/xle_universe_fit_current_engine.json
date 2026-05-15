@@ -1,0 +1,22 @@
+{
+  "symbol": "XLE",
+  "window_start": "2024-04-04 00:00:00",
+  "window_end": "2026-04-23 23:59:00",
+  "comparison_universe_count": 38,
+  "baseline_active_day_count_excluding_xle": 706,
+  "tuned_eval_against_pre_xle_universe": {
+    "label": "xle_tuned_current_engine",
+    "total_return_pct": 44.768551069181555,
+    "engine_return_pct": 1.244,
+    "pnl": 447.6855106918156,
+    "end_equity": 1447.6855106918156,
+    "max_drawdown_pct": -0.112,
+    "sharpe_ratio": 3.6941,
+    "win_rate_pct": 50.0,
+    "total_trades": 52,
+    "active_days": 382,
+    "outside_current_days": 21,
+    "outside_current_ratio_pct": 5.49738219895288,
+    "fit_score": 90.62143483881506
+  }
+}

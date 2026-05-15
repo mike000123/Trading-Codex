@@ -1,0 +1,81 @@
+{
+  "window_start": "2024-04-04 00:00:00",
+  "window_end": "2026-04-23 23:59:00",
+  "ticker_count": 36,
+  "sleeve_capital": 1000.0,
+  "baseline_full_benchmark_total_pnl": 5109.261532627092,
+  "baseline_full_benchmark_total_return_pct": 14.192393146186365,
+  "baseline_literal_1k_total_pnl": 3405.7471135202404,
+  "baseline_literal_1k_total_return_pct": 9.460408648667334,
+  "dynamic_sizing": true,
+  "runs": [
+    {
+      "starting_equity": 10000.0,
+      "capital_per_trade": 1000.0,
+      "max_open_positions": 10,
+      "managed_total_pnl": 3195.4828153012827,
+      "managed_total_return_pct": 31.954828153012826,
+      "managed_total_trades": 167,
+      "managed_candidate_entries": 958,
+      "managed_skipped_entries": 790,
+      "managed_replaced_positions": 0,
+      "managed_peak_open_positions": 3,
+      "dynamic_sizing": true,
+      "capture_vs_full_36k_benchmark_pct": 62.5429486217399,
+      "capture_vs_literal_1k_sum_pct": 93.8261916927348,
+      "top_symbol_contributors": [
+        {
+          "ticker": "GLD",
+          "pnl": 1336.8801090268635
+        },
+        {
+          "ticker": "USO",
+          "pnl": 306.5720574478936
+        },
+        {
+          "ticker": "SNPS",
+          "pnl": 304.4173119999998
+        },
+        {
+          "ticker": "SPY",
+          "pnl": 195.2883040483007
+        },
+        {
+          "ticker": "MRVL",
+          "pnl": 181.6588076201138
+        },
+        {
+          "ticker": "MSTR",
+          "pnl": 167.09631999999985
+        },
+        {
+          "ticker": "UVXY",
+          "pnl": 145.6993440870636
+        },
+        {
+          "ticker": "TSLA",
+          "pnl": 143.44751847940856
+        },
+        {
+          "ticker": "APLD",
+          "pnl": 125.20994743999951
+        },
+        {
+          "ticker": "TXN",
+          "pnl": 116.08606942549669
+        }
+      ],
+      "elapsed_sec": 45.627235199994175
+    }
+  ],
+  "notes": [
+    "These scarce-capital checks use the current bucket-aware allocator with replacement OFF.",
+    "When dynamic_sizing is true, the engine may use 0.5x, 1.0x, 1.5x, or 2.0x of the base trade capital.",
+    "They are intended to isolate allocator quality under scarce capital with the current sizing mode.",
+    "Managed Normalized Return % is still expressed per 1000-dollar base sleeve for cross-ticker comparison, while managed_total_return_pct is the actual portfolio return on the chosen starting equity."
+  ],
+  "timing_sec": {
+    "prepare": 6.930163500001072,
+    "total_managed": 45.627235199994175
+  }
+}

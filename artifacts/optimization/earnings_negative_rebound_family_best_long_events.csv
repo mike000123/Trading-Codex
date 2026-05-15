@@ -1,0 +1,13 @@
+symbol,reaction_date,timing,surprise_pct,trough_vs_prev_close_pct,entry_time,entry_px,exit_time,exit_px,return_pct,exit_reason,label_match,variant
+SBUX,2024-05-01,amc,-15.19,-17.386133904150324,2024-05-01T12:02:00,75.38,2024-05-01T12:04:00,75.25,-0.1724595383390759,vwap_touch,False,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+DASH,2024-05-02,amc,-25.76,-14.663536776212826,2024-05-02T12:00:00,116.6,2024-05-02T12:01:00,119.5,2.487135506003435,vwap_touch,False,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+ABNB,2024-08-07,amc,-9.23,-16.671134770786256,2024-08-07T12:46:00,113.2,2024-08-07T12:47:00,113.0,-0.17667844522968323,vwap_touch,True,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+MNST,2024-08-08,amc,-9.61,-15.580239695995324,2024-08-08T14:21:00,45.09,2024-08-08T14:22:00,45.105,0.03326679973385538,vwap_touch,True,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+WBD,2024-08-08,amc,-2174.12,-14.741544352265478,2024-08-08T12:00:00,6.95,2024-08-08T12:02:00,7.01,0.8633093525179714,vwap_touch,False,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+PDD,2024-11-21,bmo,-5.47,-15.04641793659135,2024-11-21T12:00:00,106.59,2024-11-21T12:01:00,105.78,-0.7599211933577266,vwap_touch,True,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+PDD,2025-05-27,bmo,-39.82,-20.39122703023117,2025-05-27T13:20:00,98.66,2025-05-27T13:40:00,97.9399,-0.7298803973241452,vwap_touch_timeout,True,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+ARM,2025-07-31,amc,-0.31,-14.446345636763624,2025-07-31T14:14:00,145.67,2025-07-31T14:15:00,145.93,0.1784856181780814,vwap_touch,False,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+CHTR,2025-10-31,bmo,-10.5,-14.414451485474444,2025-10-31T13:28:00,216.49,2025-10-31T13:31:00,222.895,2.95856621552959,vwap_touch,True,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+PYPL,2026-02-03,bmo,-4.4,-20.132575757575754,2026-02-03T13:01:00,52.97,2026-02-03T13:03:00,53.74,1.4536530111383783,vwap_touch,False,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+CPRT,2026-02-20,amc,-7.54,-12.831518427258048,2026-02-20T14:28:00,34.45,2026-02-20T14:29:00,34.4,-0.14513788098694524,vwap_touch,True,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
+MELI,2026-02-25,amc,-3.52,-12.669989019342854,2026-02-25T14:37:00,1727.64,2026-02-25T14:40:00,1743.99,0.9463777175800381,vwap_touch,True,neg_long_t12.5_start720_end900_reb4_vwap-0.5_imp0.5_exitvwap_touch_lvwap1_lgain1
